@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>로그인 테스트</title>
+    <script src="https://developers.kakao.com/sdk/js/kakao.js"></script>
+</head>
+<body>
+<h1>🌟 로그인 테스트 페이지 (Thymeleaf)</h1>
+
+<h2>카카오 로그인</h2>
+<button onclick="kakaoLogin()">카카오 로그인</button>
+
+<script th:inline="javascript">
+    Kakao.init([[${kakaoApiKey}]]);
+
+    function kakaoLogin() {
+        Kakao.Auth.authorize({
+            redirectUri: [[${kakaoRedirectUri}]]
+        });
+    }
+</script>
+</body>
+</html>
