@@ -16,6 +16,24 @@ spring:
         use_sql_comments: true
         default_batch_fetch_size: 1000
 
+  oauth:
+    kakao:
+      client-id: ${KAKAO_CLIENT_ID}
+      redirect-uri: http://localhost:8080/login/oauth/kakao
+      token-uri: https://kauth.kakao.com/oauth/token
+      user-info-uri: https://kapi.kakao.com/v2/user/me
+
+  jwt:
+    secret: ${JWT_SECRET}
+
+  thymeleaf:
+    enabled: true
+    prefix: classpath:/templates/
+    suffix: .html
+    mode: HTML
+    encoding: UTF-8
+    cache: false
+
   servlet:
     multipart:
       max-file-size: 100MB
