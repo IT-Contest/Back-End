@@ -15,7 +15,7 @@ import ssuchaehwa.it_project.global.error.code.status.SuccessStatus;
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/test")
-public class TestController {
+public class ModelController {
 
     @GetMapping("/execute")
     @Operation(summary = "테스트 API", description = "예 : path variable을 통해 id를 주세요.")
