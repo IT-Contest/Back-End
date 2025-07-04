@@ -6,12 +6,15 @@ import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.web.bind.annotation.ResponseBody;
 import ssuchaehwa.it_project.domain.login.application.LoginService;
 import ssuchaehwa.it_project.domain.login.domain.KakaoOAuthClient;
 import ssuchaehwa.it_project.domain.login.dto.AuthResponseDto;
 import ssuchaehwa.it_project.domain.user.entity.User;
 import ssuchaehwa.it_project.domain.user.repository.UserRepository;
 import ssuchaehwa.it_project.global.config.security.jwt.JwtUtil;
+import ssuchaehwa.it_project.global.config.security.auth.UserPrincipal;
 
 @Controller
 @RequiredArgsConstructor
@@ -22,7 +25,7 @@ public class TestController {
     private final UserRepository userRepository;
     private final JwtUtil jwtUtil;
 
-    @Value("${spring.oauth.kakao.client-id}")
+    @Value("${spring.oauth.kakao.js-key}")
     private String kakaoApiKey;
 
     @Value("${spring.oauth.kakao.redirect-uri}")
