@@ -32,8 +32,18 @@ dependencies {
 	runtimeOnly 'com.mysql:mysql-connector-j'
 	annotationProcessor 'org.projectlombok:lombok'
 	testImplementation 'org.springframework.boot:spring-boot-starter-test'
-	testImplementation 'org.springframework.security:spring-security-test'
+//	testImplementation 'org.springframework.security:spring-security-test'
 	testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+
+	implementation 'io.jsonwebtoken:jjwt-api:0.11.5' // JWT 토큰 생성을 위한 핵심 API (Claims 생성, 서명 등)
+	runtimeOnly 'io.jsonwebtoken:jjwt-impl:0.11.5' // JWT 내부 구현체 - 런타임에 필요한 실제 로직 (암호화, 서명 처리 등)
+	runtimeOnly 'io.jsonwebtoken:jjwt-jackson:0.11.5' // JWT와 JSON 매핑 처리를 위한 Jackson 지원 모듈
+
+	implementation 'org.springframework.boot:spring-boot-starter-thymeleaf'
+
+	// swagger
+	implementation 'org.springdoc:springdoc-openapi-starter-webmvc-ui:2.7.0'
+
 }
 
 tasks.named('test') {

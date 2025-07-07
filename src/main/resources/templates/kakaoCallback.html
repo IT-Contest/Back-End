@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>카카오 로그인 처리 결과</title>
+    <style>
+        .modal {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            width: 90%;
+            max-width: 600px;
+            transform: translate(-50%, -50%);
+            background-color: #fff;
+            border: 2px solid #aaa;
+            border-radius: 8px;
+            padding: 20px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+        }
+        .modal h2 {
+            margin-bottom: 20px;
+        }
+        .token-block {
+            margin-bottom: 15px;
+        }
+        .label {
+            font-weight: bold;
+        }
+        .value {
+            width: 100%;
+            margin-top: 5px;
+            resize: none;
+            height: 50px;
+            font-family: monospace;
+        }
+        .copy-btn {
+            margin-top: 5px;
+            padding: 5px 10px;
+            font-size: 0.9rem;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+
+<div class="modal">
+    <h2>🟡 카카오 로그인 처리 결과</h2>
+
+    <div class="token-block">
+        <div class="label">인가 코드:</div>
+        <textarea class="value" readonly th:text="${authCode}">NO_CODE</textarea>
+    </div>
+
+    <div class="token-block">
+        <div class="label">카카오 Access Token:</div>
+        <textarea class="value" readonly th:text="${kakaoAccessToken}">undefined</textarea>
+    </div>
+
+    <div class="token-block">
+        <div class="label">카카오 Refresh Token:</div>
+        <textarea class="value" readonly th:text="${kakaoRefreshToken}">undefined</textarea>
+    </div>
+
+    <div class="token-block">
+        <div class="label">JWT Access Token:</div>
+        <textarea class="value" readonly th:text="${accessToken}">undefined</textarea>
+    </div>
+
+    <div class="token-block">
+        <div class="label">JWT Refresh Token:</div>
+        <textarea class="value" readonly th:text="${refreshToken}">undefined</textarea>
+    </div>
+</div>
+
+<script>
+    document.querySelectorAll('.token-block').forEach(block => {
+        const textarea = block.querySelector('textarea');
+        const button = document.createElement('button');
+        button.className = 'copy-btn';
+        button.innerText = '복사';
+        button.onclick = () => {
+            textarea.select();
+            document.execCommand('copy');
+            button.innerText = '복사됨!';
+            setTimeout(() => button.innerText = '복사', 1000);
+        };
+        block.appendChild(button);
+    });
+</script>
+
+</body>
+</html>
