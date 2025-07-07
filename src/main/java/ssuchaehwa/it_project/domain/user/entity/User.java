@@ -5,7 +5,7 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
-import ssuchaehwa.it_project.global.common.BaseTimeEntity;
+import ssuchaehwa.it_project.domain.model.entity.BaseTimeEntity;
 
 @Entity
 @Table(name = "user")
