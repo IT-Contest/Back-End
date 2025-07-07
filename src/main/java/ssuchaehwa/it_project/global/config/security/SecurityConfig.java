@@ -23,7 +23,18 @@ public class SecurityConfig {
             .csrf(csrf -> csrf.disable())
             .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
             .authorizeHttpRequests(auth -> auth
-                .requestMatchers("/", "/auth/**", "/login/**","/test/**").permitAll()
+                .requestMatchers(
+                        "/",
+                        "/auth/**",
+                        "/login/**",
+                        "/test/**",
+                        "/swagger-ui/**",                // Swagger UI
+                        "/swagger-ui.html",              // Swagger HTML (optional)
+                        "/v3/api-docs/**",               // OpenAPI docs
+                        "/webjars/**",                    // Swagger 리소스
+                        "/quests/**" // quest api
+
+                ).permitAll()
                 .anyRequest().authenticated()
             )
             .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);

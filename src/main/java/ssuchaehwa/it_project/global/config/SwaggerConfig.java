@@ -13,10 +13,10 @@ import org.springframework.context.annotation.Configuration;
 public class SwaggerConfig {
 
     @Bean
-    public OpenAPI goormStudyAPI() {
+    public OpenAPI itContestAPI() {
         Info info = new Info()
-                .title("GOORM API")
-                .description("GOORM API 명세서")
+                .title("IT-Contest API")
+                .description("IT-Contest API 명세서")
                 .version("1.0.0");
 
         String jwtSchemeName = "JWT TOKEN";
