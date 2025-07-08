@@ -5,7 +5,7 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
-import ssuchaehwa.it_project.global.common.BaseTimeEntity;
+import ssuchaehwa.it_project.domain.model.entity.BaseTimeEntity;
 
 @Entity
 @Table(name = "user")
@@ -37,4 +37,14 @@ public class User extends BaseTimeEntity {
 
     @Column(name = "profile_image_url")
     private String profileImageUrl;
+
+    // 보상 지급 시 유저의 경험치 증가
+    // addExp(amount) 형태로 호출
+    public void addExp(int amount) {
+        this.exp += amount;
+    }
+
+    public void addGold(int amount) {
+        this.gold += amount;
+    }
 }

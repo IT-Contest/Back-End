@@ -1,4 +1,4 @@
-package ssuchaehwa.it_project.global.common;
+package ssuchaehwa.it_project.domain.model.entity;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.EntityListeners;
