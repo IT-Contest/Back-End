@@ -11,7 +11,7 @@ spring:
     properties:
       hibernate:
         dialect: org.hibernate.dialect.MySQL8Dialect
-        show_sql: true
+        show_sql: false
         format_sql: true
         use_sql_comments: true
         default_batch_fetch_size: 1000
@@ -42,6 +42,7 @@ spring:
 
 logging:
   level:
-    org.hibernate.SQL: DEBUG
+    org.hibernate.SQL: off
     org.hibernate.type.descriptor.sql.BasicBinder: TRACE
     org.springframework.jdbc.core: DEBUG
+    ssuchaehwa.it_project.global.config.security.jwt: warn
