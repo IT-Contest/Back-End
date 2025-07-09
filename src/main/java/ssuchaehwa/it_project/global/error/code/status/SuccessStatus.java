@@ -14,7 +14,11 @@ public enum SuccessStatus implements BaseCode {
     // quest
     QUEST_CREATED(HttpStatus.CREATED, "QUEST_201", "퀘스트가 성공적으로 생성되었습니다."),
 
-    POMODORO_COMPLETED(HttpStatus.CREATED, "POMODORO_201", "뽀모도로가 성공적으로 완료되었습니다.");
+    // 뽀모도로
+    POMODORO_COMPLETED(HttpStatus.CREATED, "POMODORO_201", "뽀모도로가 성공적으로 완료되었습니다."),
+
+    // token
+    TOKEN_REISSUE_SUCCESS(HttpStatus.OK, "TOKEN_200", "토큰 재발급 성공");
 
     private final HttpStatus httpStatus;
     private final String code;
