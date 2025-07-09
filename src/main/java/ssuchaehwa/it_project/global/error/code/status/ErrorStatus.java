@@ -19,10 +19,11 @@ public enum ErrorStatus implements BaseErrorCode{
 
     // token
     INVALID_REFRESH_TOKEN(HttpStatus.UNAUTHORIZED, "TOKEN_401", "유효하지 않거나 만료된 refreshToken입니다."),
-    REFRESH_TOKEN_NOT_FOUND(HttpStatus.NOT_FOUND, "TOKEN_404", "Redis에 해당 userId의 refreshToken이 존재하지 않습니다.");
+    REFRESH_TOKEN_NOT_FOUND(HttpStatus.NOT_FOUND, "TOKEN_404", "Redis에 해당 userId의 refreshToken이 존재하지 않습니다."),
 
 
     // quest
+    NO_SUCH_QUEST(HttpStatus.BAD_REQUEST, "QUEST_4001", "해당 퀘스트가 존재하지 않습니다.");
 
     private final HttpStatus httpStatus;
     private final String code;
