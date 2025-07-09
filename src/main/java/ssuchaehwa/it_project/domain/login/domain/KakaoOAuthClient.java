@@ -10,6 +10,8 @@ import org.springframework.util.MultiValueMap;
 import org.springframework.web.client.RestTemplate;
 import ssuchaehwa.it_project.domain.login.dto.AuthResponseDto;
 
+import java.util.Optional;
+
 @Slf4j
 @Component
 @RequiredArgsConstructor
@@ -35,20 +37,26 @@ public class KakaoOAuthClient {
      * @return 카카오 토큰 응답 DTO
      */
     public AuthResponseDto.KakaoToken requestToken(String code) {
-        HttpHeaders headers = new HttpHeaders();
-        headers.setContentType(MediaType.APPLICATION_FORM_URLENCODED);
+        try {
+            HttpHeaders headers = new HttpHeaders();
+            headers.setContentType(MediaType.APPLICATION_FORM_URLENCODED);
 
-        MultiValueMap<String, String> body = new LinkedMultiValueMap<>();
-        body.add("grant_type", "authorization_code");
-        body.add("client_id", clientId);
-        body.add("redirect_uri", redirectUri);
-        body.add("code", code);
+            MultiValueMap<String, String> body = new LinkedMultiValueMap<>();
+            body.add("grant_type", "authorization_code");
+            body.add("client_id", clientId);
+            body.add("redirect_uri", redirectUri);
+            body.add("code", code);
 
-        HttpEntity<MultiValueMap<String, String>> request = new HttpEntity<>(body, headers);
-        ResponseEntity<AuthResponseDto.KakaoToken> response =
-                restTemplate.postForEntity(tokenUri, request, AuthResponseDto.KakaoToken.class);
+            HttpEntity<MultiValueMap<String, String>> request = new HttpEntity<>(body, headers);
+            ResponseEntity<AuthResponseDto.KakaoToken> response =
+                    restTemplate.postForEntity(tokenUri, request, AuthResponseDto.KakaoToken.class);
 
-        return response.getBody();
+            return Optional.ofNullable(response.getBody())
+                    .orElseThrow(() -> new RuntimeException("카카오 토큰 응답이 null입니다."));
+        } catch (Exception e) {
+            log.error("❌ 카카오 토큰 요청 실패: {}", e.getMessage(), e);
+            throw new RuntimeException("카카오 토큰 요청 실패", e);
+        }
     }
 
     /**
@@ -57,15 +65,21 @@ public class KakaoOAuthClient {
      * @return 카카오 사용자 정보 응답 DTO
      */
     public AuthResponseDto.KakaoUserInfo requestUserInfo(String accessToken) {
-        log.info("🟡 requestUserInfo() - accessToken: {}", accessToken);
+        try {
+            log.info("🟡 requestUserInfo() - accessToken: {}", accessToken);
 
-        HttpHeaders headers = new HttpHeaders();
-        headers.setBearerAuth(accessToken);
-        HttpEntity<Void> entity = new HttpEntity<>(headers);
+            HttpHeaders headers = new HttpHeaders();
+            headers.setBearerAuth(accessToken);
+            HttpEntity<Void> entity = new HttpEntity<>(headers);
 
-        ResponseEntity<AuthResponseDto.KakaoUserInfo> response =
-                restTemplate.exchange(userInfoUri, HttpMethod.GET, entity, AuthResponseDto.KakaoUserInfo.class);
+            ResponseEntity<AuthResponseDto.KakaoUserInfo> response =
+                    restTemplate.exchange(userInfoUri, HttpMethod.GET, entity, AuthResponseDto.KakaoUserInfo.class);
 
-        return response.getBody();
+            return Optional.ofNullable(response.getBody())
+                    .orElseThrow(() -> new RuntimeException("카카오 사용자 정보 응답이 null입니다."));
+        } catch (Exception e) {
+            log.error("❌ 카카오 사용자 정보 요청 실패: {}", e.getMessage(), e);
+            throw new RuntimeException("카카오 사용자 정보 요청 실패", e);
+        }
     }
 }
