@@ -5,5 +5,5 @@ import ssuchaehwa.it_project.domain.pomodoro.dto.PomodoroResponseDTO;
 import ssuchaehwa.it_project.domain.user.entity.User;
 
 public interface PomodoroService {
-    PomodoroResponseDTO.PomodoroCompleteResponse completePomodoro(User user, PomodoroRequestDTO request);
+    PomodoroResponseDTO.PomodoroCompleteResponse completePomodoro(Long userId, PomodoroRequestDTO request);
 }
