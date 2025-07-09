@@ -15,9 +15,10 @@ public enum ErrorStatus implements BaseErrorCode{
     _FORBIDDEN(HttpStatus.FORBIDDEN, "COMMON403", "금지된 요청입니다."),
 
     // user
-    NO_SUCH_USER(HttpStatus.BAD_REQUEST, "USER_4001", "유저가 존재하지 않습니다.");
+    NO_SUCH_USER(HttpStatus.BAD_REQUEST, "USER_4001", "유저가 존재하지 않습니다."),
 
     // quest
+    NO_SUCH_QUEST(HttpStatus.BAD_REQUEST, "QUEST_4001", "해당 퀘스트가 존재하지 않습니다.");
 
     private final HttpStatus httpStatus;
     private final String code;

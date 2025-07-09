@@ -33,9 +33,10 @@ public class SecurityConfig {
                         "/v3/api-docs/**",               // OpenAPI docs
                         "/webjars/**",                    // Swagger 리소스
                         "/quests/**" // quest api
-
+                       // "/pomodoro/**"
                 ).permitAll()
-                .anyRequest().authenticated()
+                    .requestMatchers("/pomodoro/**").authenticated()
+                    .anyRequest().authenticated()
             )
             .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
 

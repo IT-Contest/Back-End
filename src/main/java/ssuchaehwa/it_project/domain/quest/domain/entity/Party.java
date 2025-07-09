@@ -18,7 +18,7 @@ import java.time.LocalTime;
 @AllArgsConstructor
 @NoArgsConstructor
 @Builder
-public class Quest extends BaseTimeEntity {
+public class Party extends BaseTimeEntity {
 
     @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
@@ -60,6 +60,7 @@ public class Quest extends BaseTimeEntity {
     @JoinColumn(name = "user_id", nullable = false)
     private User user;
 
-    @OneToOne(mappedBy = "quest", fetch = FetchType.LAZY)
-    private Party party;
+    @OneToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "quest_id", unique = true)
+    private Quest quest;
 }
