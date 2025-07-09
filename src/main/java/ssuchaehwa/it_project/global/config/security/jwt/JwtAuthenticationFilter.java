@@ -33,7 +33,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         log.debug("🛡️ JwtAuthenticationFilter 진입 - URI: {}", request.getRequestURI());
 
         String requestURI = request.getRequestURI();
-        if (requestURI.startsWith("/dev/login/kakao")) {
+        if (requestURI.startsWith("/auth/")) {
             filterChain.doFilter(request, response);
             return;
         }
@@ -62,7 +62,11 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                 SecurityContextHolder.getContext().setAuthentication(authentication);
                 log.debug("✅ SecurityContextHolder에 인증정보 설정 완료");
             } else {
-                log.warn("❌ 토큰 검증 실패");
+                if (jwtUtil.isTokenExpired(token)) {
+                    log.warn("⌛ 토큰 만료됨 - 재발급 필요");
+                } else {
+                    log.warn("❌ 토큰 검증 실패 or 로그인, 회원가입 관련 api");
+                }
             }
         } else {
             //log.warn("🚫 Authorization 헤더 없음 또는 Bearer 형식 아님");
