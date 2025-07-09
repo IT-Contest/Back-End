@@ -1,9 +1,6 @@
 package ssuchaehwa.it_project.domain.login.dto;
 
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
+import lombok.*;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 public class AuthResponseDto {
@@ -52,6 +49,7 @@ public class AuthResponseDto {
             private Profile profile;
 
             @Getter
+            @Setter
             @NoArgsConstructor
             @AllArgsConstructor
             public static class Profile {

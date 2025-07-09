@@ -16,7 +16,8 @@
 
     function kakaoLogin() {
         Kakao.Auth.authorize({
-            redirectUri: [[${kakaoRedirectUri}]]
+            redirectUri: [[${kakaoRedirectUri}]],
+            scope: "profile_nickname, profile_image"
         });
     }
 </script>
