@@ -1,6 +1,8 @@
 package ssuchaehwa.it_project.domain.login.application;
 
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.redis.core.RedisTemplate;
+import java.util.concurrent.TimeUnit;
 import org.springframework.stereotype.Service;
 import ssuchaehwa.it_project.domain.login.dto.AuthResponseDto;
 import ssuchaehwa.it_project.domain.user.entity.User;
@@ -15,6 +17,7 @@ public class LoginServiceImpl implements LoginService {
     private final KakaoOAuthClient kakaoOAuthClient;
     private final UserRepository userRepository;
     private final JwtUtil jwtUtil;
+    private final RedisTemplate<String, String> redisTemplate;
 
     // 웹용
     @Override
@@ -45,6 +48,13 @@ public class LoginServiceImpl implements LoginService {
         // 4. JWT 토큰 발급
         String jwtAccessToken = jwtUtil.generateAccessToken(String.valueOf(user.getId()));
         String jwtRefreshToken = jwtUtil.generateRefreshToken(String.valueOf(user.getId()));
+        // Redis에 refreshToken 저장
+        redisTemplate.opsForValue().set(
+            "refresh:userId:" + user.getId(),
+            jwtRefreshToken,
+            jwtUtil.getRefreshTokenValidity(),
+            TimeUnit.MILLISECONDS
+        );
 
         // 5. 최종 응답 (카카오 access/refresh 토큰도 포함해서 반환)
         return AuthResponseDto.LoginResult.builder()
@@ -81,6 +91,13 @@ public class LoginServiceImpl implements LoginService {
         String accessToken = jwtUtil.generateAccessToken(String.valueOf(user.getId()));
         String refreshToken = jwtUtil.generateRefreshToken(String.valueOf(user.getId()));
 
+        // Redis 에 refreshToken 저장 (유효기간 7일)
+        redisTemplate.opsForValue().set(
+                "refresh:userId:" + user.getId(),
+                refreshToken,
+                7, TimeUnit.DAYS
+        );
+
         // 4. 최종 응답에 kakaoAccessToken도 추가
         return AuthResponseDto.LoginResult.builder()
                 .accessToken(accessToken)
@@ -88,6 +105,31 @@ public class LoginServiceImpl implements LoginService {
                 .kakaoAccessToken(kakaoAccessToken)
                 .kakaoRefreshToken(null)  // 이 흐름에선 refreshToken 없음
                 .isNewUser(user.getId() == null)
+                .build();
+    }
+
+    @Override
+    public AuthResponseDto.LoginResult refreshToken(Long userId, String refreshToken) {
+        String redisKey = "refresh:userId:" + userId;
+        String storedRefreshToken = redisTemplate.opsForValue().get(redisKey);
+
+        if (storedRefreshToken == null || !storedRefreshToken.equals(refreshToken)) {
+            throw new IllegalArgumentException("❌ 유효하지 않은 refresh token입니다.");
+        }
+
+        // 새 JWT 토큰 생성
+        String newAccessToken = jwtUtil.generateAccessToken(String.valueOf(userId));
+        String newRefreshToken = jwtUtil.generateRefreshToken(String.valueOf(userId));
+
+        // Redis에 새 refresh 토큰 갱신
+        redisTemplate.opsForValue().set(redisKey, newRefreshToken, jwtUtil.getRefreshTokenValidity(), TimeUnit.MILLISECONDS);
+
+        return AuthResponseDto.LoginResult.builder()
+                .accessToken(newAccessToken)
+                .refreshToken(newRefreshToken)
+                .kakaoAccessToken(null)
+                .kakaoRefreshToken(null)
+                .isNewUser(false)
                 .build();
     }
 }

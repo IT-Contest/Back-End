@@ -1,16 +1,15 @@
 package ssuchaehwa.it_project.domain.login.api;
 
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import lombok.RequiredArgsConstructor;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 import ssuchaehwa.it_project.domain.login.application.LoginService;
 import ssuchaehwa.it_project.domain.login.dto.AuthResponseDto;
+import ssuchaehwa.it_project.domain.login.dto.AuthRequestDto;
 
-import java.util.Map;
-import java.util.NoSuchElementException;
 
 @RestController
 @RequestMapping("/auth")
@@ -19,13 +18,31 @@ public class LoginController {
 
     private final LoginService loginService;
 
-    // [앱용] 카카오 accessToken 을 받아 JWT 토큰 발급
-    @Operation(summary = "카카오 로그인 - iOS/Flutter", description = "앱에서 받은 카카오 access token을 사용해 JWT 토큰을 발급")
-    @PostMapping("/login/kakao/token")
-    public ResponseEntity<AuthResponseDto.LoginResult> kakaoLoginWithAccessToken(@RequestBody Map<String, String> body) {
-        String kakaoAccessToken = body.get("accessToken");
-        // 이 메서드는 아직 LoginService에 없으니 구현 필요
+    // 카카오 accessToken 을 받아 JWT access/refresh 토큰을 발급하고 refreshToken은 Redis에 저장
+    @Operation(
+        summary = "카카오 로그인 - Flutter",
+        description = "앱에서 받은 카카오 access token을 사용해 JWT access/refresh 토큰을 발급하고 refresh token은 Redis에 저장"
+    )
+    @PostMapping("/login/kakao")
+    public ResponseEntity<AuthResponseDto.LoginResult> kakaoLoginWithAccessToken(@RequestBody AuthRequestDto.KakaoAccessToken request) {
+        String kakaoAccessToken = request.getAccessToken();
         AuthResponseDto.LoginResult result = loginService.kakaoLoginWithAccessToken(kakaoAccessToken);
+        return ResponseEntity.ok(result);
+    }
+
+    @Operation(
+            summary = "토큰 재발급 - refreshToken",
+            description = "만료된 accessToken을 대체할 새로운 accessToken과 refreshToken을 발급합니다. \n\n" +
+                    "클라이언트는 userId와 refreshToken을 함께 전송해야 하며, 서버는 Redis에 저장된 refreshToken과 일치하는지 검증 후 새로운 JWT를 반환합니다."
+    )
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "TOKEN_200", description = "토큰 재발급 성공"),
+            @ApiResponse(responseCode = "TOKEN_401", description = "유효하지 않거나 만료된 refreshToken"),
+            @ApiResponse(responseCode = "TOKEN_404", description = "Redis에 해당 userId의 refreshToken이 존재하지 않음")
+    })
+    @PostMapping("/refreshToken")
+    public ResponseEntity<AuthResponseDto.LoginResult> refreshToken(@RequestBody AuthRequestDto.RefreshToken request) {
+        AuthResponseDto.LoginResult result = loginService.refreshToken(request.getUserId(), request.getRefreshToken());
         return ResponseEntity.ok(result);
     }
 }

@@ -1,4 +1,9 @@
 package ssuchaehwa.it_project.domain.pomodoro.api;
+import ssuchaehwa.it_project.global.common.response.BaseResponse;
+import ssuchaehwa.it_project.global.error.code.status.SuccessStatus;
+
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -7,8 +12,6 @@ import org.springframework.web.bind.annotation.*;
 import ssuchaehwa.it_project.domain.pomodoro.application.PomodoroService;
 import ssuchaehwa.it_project.domain.pomodoro.dto.PomodoroRequestDTO;
 import ssuchaehwa.it_project.domain.pomodoro.dto.PomodoroResponseDTO;
-import ssuchaehwa.it_project.domain.user.entity.User;
-import ssuchaehwa.it_project.domain.user.repository.UserRepository;
 import ssuchaehwa.it_project.global.config.security.auth.UserPrincipal;
 
 @RestController
@@ -17,17 +20,17 @@ import ssuchaehwa.it_project.global.config.security.auth.UserPrincipal;
 public class PomodoroController {
 
     private final PomodoroService pomodoroService;
-    private final UserRepository userRepository;
 
     @PostMapping("/complete")
+    @Operation(summary = "뽀모도로 세션 완료 API", description = "사용자가 완료한 뽀모도로 정보를 저장합니다.")
+    @ApiResponses({
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "POMODORO_201", description = "뽀모도로가 성공적으로 완료되었습니다.")
+    })
     public ResponseEntity<?> completePomodoro(
             @AuthenticationPrincipal UserPrincipal principal,
             @RequestBody PomodoroRequestDTO request
     ) {
-        User user = userRepository.findById(principal.getId())
-                .orElseThrow(() -> new RuntimeException("사용자 없음"));
-
-        PomodoroResponseDTO.PomodoroCompleteResponse response = pomodoroService.completePomodoro(user, request);
-        return ResponseEntity.ok(response);
+        PomodoroResponseDTO.PomodoroCompleteResponse response = pomodoroService.completePomodoro(principal.getId(), request);
+        return ResponseEntity.ok(BaseResponse.onSuccess(SuccessStatus.POMODORO_COMPLETED, response));
     }
 }
