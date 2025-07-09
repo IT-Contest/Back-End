@@ -19,18 +19,6 @@ public class LoginController {
 
     private final LoginService loginService;
 
-    // [웹용] 인가 코드(code)를 받아 JWT 토큰 발급
-    @Operation(summary = "카카오 로그인 - 웹", description = "프론트엔드에서 전달받은 카카오 인가코드를 사용해 JWT 토큰 발급")
-    @PostMapping("/login/kakao")
-    public ResponseEntity<AuthResponseDto.LoginResult> kakaoLogin(@RequestBody Map<String, String> body) {
-        try {
-            String code = body.get("code");
-            return ResponseEntity.ok(loginService.kakaoLogin(code));
-        } catch (NoSuchElementException e) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
-        }
-    }
-
     // [앱용] 카카오 accessToken 을 받아 JWT 토큰 발급
     @Operation(summary = "카카오 로그인 - iOS/Flutter", description = "앱에서 받은 카카오 access token을 사용해 JWT 토큰을 발급")
     @PostMapping("/login/kakao/token")

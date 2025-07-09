@@ -14,11 +14,42 @@ import java.util.List;
 
 public class QuestRequestDTO {
 
+    // 퀘스트 생성 요청 DTO
     @Builder
     @Getter
     @AllArgsConstructor
     @NoArgsConstructor
     public static class QuestCreateRequest {
+
+        @Column(length = 100)
+        private String content;
+
+        private int priority;
+        private QuestType questType;
+        private CompletionStatus completionStatus;
+        private LocalTime startTime;
+        private LocalTime endTime;
+        private LocalDate startDate;
+        private LocalDate dueDate;
+        private List<String> hashtags;
+    }
+
+    @Builder
+    @Getter
+    @AllArgsConstructor
+    @NoArgsConstructor
+    public static class FriendInviteRequest {
+
+        private List<Long> invitedFriendIds;
+    }
+
+
+    // 파티 생성 요청 DTO
+    @Builder
+    @Getter
+    @AllArgsConstructor
+    @NoArgsConstructor
+    public static class PartyCreateRequest {
 
         @Column(length = 100)
         private String content;
