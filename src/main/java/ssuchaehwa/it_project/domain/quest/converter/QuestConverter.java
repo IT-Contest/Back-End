@@ -1,5 +1,6 @@
 package ssuchaehwa.it_project.domain.quest.converter;
 
+import ssuchaehwa.it_project.domain.model.enums.QuestType;
 import ssuchaehwa.it_project.domain.quest.domain.entity.Party;
 import ssuchaehwa.it_project.domain.quest.domain.entity.Quest;
 import ssuchaehwa.it_project.domain.quest.dto.QuestResponseDTO;
@@ -68,6 +69,41 @@ public class QuestConverter {
                         .partyName(
                                 quest.getParty() != null ? quest.getParty().getTitle() : null
                         )
+                        .build())
+                .toList();
+    }
+
+    // 메인 페이지 조회
+    public static QuestResponseDTO.MainPageResponse toMainPageResponse(
+            User user,
+            int dailyCount,
+            int weeklyCount,
+            int monthlyCount,
+            int yearlyCount,
+            List<QuestResponseDTO.FriendList> friendLists,
+            List<QuestResponseDTO.DailyOngoingQuest> dailyOngoingQuests
+    ) {
+        return QuestResponseDTO.MainPageResponse.builder()
+                .nickname(user.getNickname())
+                .exp(user.getExp())
+                .gold(user.getGold())
+                .profileImageUrl(user.getProfileImageUrl())
+                .dailyCount(dailyCount)
+                .weeklyCount(weeklyCount)
+                .monthlyCount(monthlyCount)
+                .yearlyCount(yearlyCount)
+                .friends(friendLists)
+                .dailyOngoingQuests(dailyOngoingQuests)
+                .build();
+    }
+
+    // 퀘스트 완료 상태 변경
+    public static List<QuestResponseDTO.QuestStatusChangeResponse> toQuestStatusChangeResponse(List<Quest> quests) {
+        return quests.stream()
+                .map(q -> QuestResponseDTO.QuestStatusChangeResponse.builder()
+                        .questId(q.getId())
+                        .title(q.getTitle())
+                        .completionStatus(q.getCompletionStatus())
                         .build())
                 .toList();
     }
