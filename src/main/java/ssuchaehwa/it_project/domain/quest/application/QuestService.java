@@ -22,4 +22,10 @@ public interface QuestService {
 
     // 퀘스트 조회
     List<QuestResponseDTO.QuestListResponse> getQuests();
+
+    // 메인 화면 조회
+    QuestResponseDTO.MainPageResponse getMainPage(Long userId);
+
+    // 퀘스트 완료 / 취소
+    List<QuestResponseDTO.QuestStatusChangeResponse> changeQuestStatus(QuestRequestDTO.QuestStatusChangeRequest request, Long userId);
 }

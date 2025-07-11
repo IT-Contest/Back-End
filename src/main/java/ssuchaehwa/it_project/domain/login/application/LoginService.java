@@ -6,5 +6,6 @@ import ssuchaehwa.it_project.domain.login.dto.AuthResponseDto.LoginResult;
 public interface LoginService {
     LoginResult kakaoLogin(String code);
     AuthResponseDto.LoginResult kakaoLoginWithAccessToken(String kakaoAccessToken);
+    AuthResponseDto.LoginResult refreshToken(Long userId, String refreshToken);
 
 }
