@@ -23,6 +23,6 @@ public class InvitedFriend extends BaseTimeEntity {
     private Quest quest;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "friend_id", nullable = false)
-    private User friend;
+    @JoinColumn(name = "user_id", nullable = false)
+    private User user;
 }

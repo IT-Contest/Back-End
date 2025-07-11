@@ -7,13 +7,22 @@ import lombok.NoArgsConstructor;
 
 public class AuthRequestDto {
 
-    // 카카오 로그인 요청 DTO (프론트에서 인가 코드 받은 후 보내는 것)
+    // Flutter 에서 카카오 로그인을 통해 발급받은 accessToken 을 서버에 전달
     @Builder
     @Getter
     @NoArgsConstructor
     @AllArgsConstructor
-    public static class KakaoLogin {
-        private String authorizationCode; // 프론트에서 받은 카카오 인가 코드
-        private String redirectUri;       // 리다이렉트 URI (선택)
+    public static class KakaoAccessToken {
+        private String accessToken;
+    }
+
+    // 클라이언트가 토큰 재발급 요청을 보낼 때 사용하는 요청 데이터 객체
+    @Builder
+    @Getter
+    @NoArgsConstructor
+    @AllArgsConstructor
+    public static class RefreshToken {
+        private Long userId;
+        private String refreshToken;
     }
 }

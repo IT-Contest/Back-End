@@ -4,12 +4,15 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import ssuchaehwa.it_project.domain.quest.application.QuestService;
 import ssuchaehwa.it_project.domain.quest.dto.QuestRequestDTO;
 import ssuchaehwa.it_project.domain.quest.dto.QuestResponseDTO;
 import ssuchaehwa.it_project.global.common.response.BaseResponse;
+import ssuchaehwa.it_project.global.config.security.auth.UserPrincipal;
 import ssuchaehwa.it_project.global.error.code.status.SuccessStatus;
 
 import java.util.List;
@@ -68,7 +71,7 @@ public class QuestRestController {
 
     // 친구 조회 API
     @GetMapping("/{quest-id}")
-    @Operation(summary = "친구 리스트 불러오는 API")
+    @Operation(summary = "친구 리스트 불러오는 API", description = "path를 통해 quest-id를 넘겨주세요.")
     @ApiResponses({
             @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "FRIEND_200", description = "OK, 친구 조회를 완료했습니다.")
     })
@@ -90,5 +93,34 @@ public class QuestRestController {
         List<QuestResponseDTO.QuestListResponse> result = questService.getQuests();
 
         return BaseResponse.onSuccess(SuccessStatus.QUEST_VIEW_SUCCESS, result);
+    }
+
+    // 메인 화면 조회 API
+    @GetMapping("/mainpage")
+    @Operation(summary = "메인 화면을 불러오는 API")
+    @ApiResponses({
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "USER_200", description = "OK, 메인 페이지 조회를 완료했습니다.")
+    })
+    public BaseResponse<QuestResponseDTO.MainPageResponse> getMainPage(
+            @AuthenticationPrincipal UserPrincipal principal
+    ) {
+        QuestResponseDTO.MainPageResponse result = questService.getMainPage(principal.getId());
+
+        return BaseResponse.onSuccess(SuccessStatus.MAIN_PAGE_VIEW_SUCCESS, result);
+    }
+
+    // 퀘스트 완료 상태 변경 API
+    @PatchMapping("/change")
+    @Operation(summary = "퀘스트 완료 상태를 변경하는 API", description = "유저의 퀘스트 정보를 request body를 통해 리스트로 넘겨주세요.")
+    @ApiResponses({
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "QUEST_201", description = "CREATED, 퀘스트의 상태 변경 완료했습니다.")
+    })
+    public BaseResponse<List<QuestResponseDTO.QuestStatusChangeResponse>> updateQuestStatus(
+            @AuthenticationPrincipal UserPrincipal principal,
+            @RequestBody @Valid QuestRequestDTO.QuestStatusChangeRequest questStatusChangeRequest
+    ) {
+        List<QuestResponseDTO.QuestStatusChangeResponse> result = questService.changeQuestStatus(questStatusChangeRequest, principal.getId());
+
+        return BaseResponse.onSuccess(SuccessStatus.QUEST_STATUS_CHANGE, result);
     }
 }
