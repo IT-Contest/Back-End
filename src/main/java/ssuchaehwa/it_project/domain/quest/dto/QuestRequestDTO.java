@@ -63,4 +63,14 @@ public class QuestRequestDTO {
         private LocalDate dueDate;
         private List<String> hashtags;
     }
+
+    // 퀘스트 완료 / 취소 처리
+    @Builder
+    @Getter
+    @NoArgsConstructor
+    @AllArgsConstructor
+    public static class QuestStatusChangeRequest {
+
+        private List<Long> questIds;
+    }
 }

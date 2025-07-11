@@ -4,6 +4,7 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import ssuchaehwa.it_project.domain.model.enums.CompletionStatus;
 import ssuchaehwa.it_project.domain.model.enums.QuestType;
 
 import java.time.LocalDate;
@@ -83,5 +84,63 @@ public class QuestResponseDTO {
         private int goldReward;
         private int priority;
         private String partyName;
+    }
+
+    // 메인 화면 조회 DTO
+    @Builder
+    @Getter
+    @NoArgsConstructor
+    @AllArgsConstructor
+    public static class MainPageResponse {
+
+        private String nickname;
+        private int exp;
+        private int gold;
+        private String profileImageUrl;
+        private int dailyCount;
+        private int weeklyCount;
+        private int monthlyCount;
+        private int yearlyCount;
+        private List<FriendList> friends;
+        private List<DailyOngoingQuest> dailyOngoingQuests;
+    }
+
+    // 진행중인 퀘스트 정보
+    @Builder
+    @Getter
+    @NoArgsConstructor
+    @AllArgsConstructor
+    public static class DailyOngoingQuest {
+
+        private String title;
+        private int exp;
+        private int gold;
+        private String partyName;
+    }
+
+    // 친구 정보
+    @Builder
+    @Getter
+    @NoArgsConstructor
+    @AllArgsConstructor
+    public static class FriendList {
+
+        private Long userId;
+        private String nickname;
+        private int exp;
+        private int gold;
+        private String profileImageUrl;
+    }
+
+    // 퀘스트 완료 / 취소 처리
+    @Builder
+    @Getter
+    @NoArgsConstructor
+    @AllArgsConstructor
+    public static class QuestStatusChangeResponse {
+
+        private Long questId;
+        private String title;
+        private CompletionStatus completionStatus;
     }
 }
