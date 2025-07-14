@@ -2,6 +2,7 @@ package ssuchaehwa.it_project.domain.quest.converter;
 
 import ssuchaehwa.it_project.domain.model.enums.QuestType;
 import ssuchaehwa.it_project.domain.quest.domain.entity.Party;
+import ssuchaehwa.it_project.domain.quest.domain.entity.PartyUser;
 import ssuchaehwa.it_project.domain.quest.domain.entity.Quest;
 import ssuchaehwa.it_project.domain.quest.dto.QuestResponseDTO;
 import ssuchaehwa.it_project.domain.user.entity.User;
@@ -106,5 +107,30 @@ public class QuestConverter {
                         .completionStatus(q.getCompletionStatus())
                         .build())
                 .toList();
+    }
+
+    // 파티 초대 리스트
+    public static List<QuestResponseDTO.PartyInvitationListResponse> toInvitedPartyListResponse(List<PartyUser> invitations) {
+        return invitations.stream().map(pu -> {
+            Party party = pu.getParty();
+            Quest quest = party.getQuest();
+            User host = party.getUser();
+
+            return QuestResponseDTO.PartyInvitationListResponse.builder()
+                    .nickname(host.getNickname())
+                    .partyName(party.getTitle())
+                    .questName(quest.getTitle())
+                    .expReward(party.getExpReward())
+                    .build();
+        }).toList();
+    }
+
+    // 파티 수락 / 거절
+    public static QuestResponseDTO.PartyInvitationResponse toPartyInvitationResponse(Party party, PartyUser partyUser) {
+        return QuestResponseDTO.PartyInvitationResponse.builder()
+                .partyId(party.getId())
+                .partyName(party.getTitle())
+                .invitationStatus(partyUser.getInvitationStatus())
+                .build();
     }
 }

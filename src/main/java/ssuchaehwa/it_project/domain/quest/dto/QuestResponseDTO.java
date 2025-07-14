@@ -5,6 +5,7 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import ssuchaehwa.it_project.domain.model.enums.CompletionStatus;
+import ssuchaehwa.it_project.domain.model.enums.InvitationStatus;
 import ssuchaehwa.it_project.domain.model.enums.QuestType;
 
 import java.time.LocalDate;
@@ -142,5 +143,30 @@ public class QuestResponseDTO {
         private Long questId;
         private String title;
         private CompletionStatus completionStatus;
+    }
+
+    // 파티 초대 리스트
+    @Builder
+    @Getter
+    @NoArgsConstructor
+    @AllArgsConstructor
+    public static class PartyInvitationListResponse {
+
+        private String nickname;
+        private String partyName;
+        private String questName;
+        private int expReward;
+    }
+
+    // 파티 수락 / 거절
+    @Builder
+    @Getter
+    @NoArgsConstructor
+    @AllArgsConstructor
+    public static class PartyInvitationResponse {
+
+        private Long partyId;
+        private String partyName;
+        private InvitationStatus invitationStatus;
     }
 }
