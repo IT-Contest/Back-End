@@ -1,10 +1,10 @@
 package ssuchaehwa.it_project.domain.quest.application;
 
 import lombok.RequiredArgsConstructor;
-import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import ssuchaehwa.it_project.domain.model.enums.CompletionStatus;
+import ssuchaehwa.it_project.domain.model.enums.InvitationStatus;
 import ssuchaehwa.it_project.domain.model.enums.QuestType;
 import ssuchaehwa.it_project.domain.quest.converter.QuestConverter;
 import ssuchaehwa.it_project.domain.quest.domain.entity.*;
@@ -16,6 +16,7 @@ import ssuchaehwa.it_project.domain.user.entity.User;
 import ssuchaehwa.it_project.domain.user.exception.UserException;
 import ssuchaehwa.it_project.domain.user.repository.UserRepository;
 import ssuchaehwa.it_project.global.error.code.status.ErrorStatus;
+import org.springframework.util.ReflectionUtils;
 
 import java.lang.reflect.Field;
 import java.util.ArrayList;
@@ -31,6 +32,7 @@ public class QuestServiceImpl implements QuestService {
     private final QuestRepository questRepository;
     private final HashtagRepository hashtagRepository;
     private final PartyRepository partyRepository;
+    private final PartyUserRepository partyUserRepository;
     private final InvitedFriendRepository invitedFriendRepository;
     private final HashtagQuestRepository hashtagQuestRepository;
 
@@ -40,7 +42,7 @@ public class QuestServiceImpl implements QuestService {
     public QuestResponseDTO.QuestCreateResponse createQuest(QuestRequestDTO.QuestCreateRequest request) {
 
         // 일단 1번 유저로 테스트
-        User user = userRepository.findById(1L)
+        User user = userRepository.findById(2L)
                 .orElseThrow(() -> new UserException(ErrorStatus.NO_SUCH_USER));
 
         Quest quest = Quest.builder()
@@ -93,7 +95,7 @@ public class QuestServiceImpl implements QuestService {
     @Override
     public QuestResponseDTO.PartyCreateResponse createParty(QuestRequestDTO.PartyCreateRequest request, Long questId) {
 
-        User user = userRepository.findById(1L)
+        User user = userRepository.findById(2L)
                 .orElseThrow(() -> new UserException(ErrorStatus.NO_SUCH_USER));
 
         Quest quest = questRepository.findById(questId)
@@ -113,6 +115,25 @@ public class QuestServiceImpl implements QuestService {
                 .build();
 
         partyRepository.save(party);
+
+        // 친구 초대
+        List<Long> invitedIds = request.getInvitedFriendIds();
+
+        if (invitedIds != null && !invitedIds.isEmpty()) {
+            List<PartyUser> invitedUsers = invitedIds.stream()
+                    .map(userId -> {
+                        User invited = userRepository.findById(userId)
+                                .orElseThrow(() -> new UserException(ErrorStatus.NO_SUCH_USER));
+
+                        return PartyUser.builder()
+                                .party(party)
+                                .user(invited)
+                                .invitationStatus(InvitationStatus.PENDING)
+                                .build();
+                    }).toList();
+
+            partyUserRepository.saveAll(invitedUsers);
+        }
 
         List<String> requestHashtag = request.getHashtags();
 
@@ -307,6 +328,33 @@ public class QuestServiceImpl implements QuestService {
         return QuestConverter.toQuestStatusChangeResponse(quests);
     }
 
+    // 파티 초대 리스트 조회
+    @Transactional(readOnly = true)
+    @Override
+    public List<QuestResponseDTO.PartyInvitationListResponse> getInvitedPartyList(Long userId) {
+
+        List<PartyUser> invitations = partyUserRepository.findAllByUserIdAndInvitationStatus(userId, InvitationStatus.PENDING);
+
+        return QuestConverter.toInvitedPartyListResponse(invitations);
+    }
+
+    // 파티 수락 / 거절
+    @Transactional
+    @Override
+    public QuestResponseDTO.PartyInvitationResponse respondToInvitation(Long userId, QuestRequestDTO.PartyInvitationResponseRequest request) {
+
+        PartyUser partyUser = partyUserRepository.findByUserIdAndPartyId(userId, request.getPartyId())
+                .orElseThrow(() -> new QuestException(ErrorStatus.NO_PARTY_INVITATION));
+
+        // 💡 비즈니스 로직을 서비스 내부에서 수행
+        setInvitationStatus(partyUser, request.getResponseStatus());
+
+        Party party = partyUser.getParty();
+
+        return QuestConverter.toPartyInvitationResponse(party, partyUser);
+    }
+
+
     // 완료 상태 변경 메서드
     private void setCompletionStatusReflectively(Quest quest, CompletionStatus newStatus) {
         try {
@@ -318,4 +366,9 @@ public class QuestServiceImpl implements QuestService {
         }
     }
 
+    private void setInvitationStatus(PartyUser partyUser, InvitationStatus newStatus) {
+        Field field = ReflectionUtils.findField(PartyUser.class, "invitationStatus");
+        field.setAccessible(true);
+        ReflectionUtils.setField(field, partyUser, newStatus);
+    }
 }
