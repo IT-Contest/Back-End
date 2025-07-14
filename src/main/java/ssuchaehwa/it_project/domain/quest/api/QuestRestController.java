@@ -123,4 +123,33 @@ public class QuestRestController {
 
         return BaseResponse.onSuccess(SuccessStatus.QUEST_STATUS_CHANGE, result);
     }
+
+    // 파티 초대 리스트 조회
+    @GetMapping("/party-list")
+    @Operation(summary = "초대 받은 파티 리스트를 조회하는 API")
+    @ApiResponses({
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "PARTY_200", description = "OK, 초대 받은 파티 리스트를 조회 완료했습니다.")
+    })
+    public BaseResponse<List<QuestResponseDTO.PartyInvitationListResponse>> getPartyList(
+            @AuthenticationPrincipal UserPrincipal principal
+    ) {
+        List<QuestResponseDTO.PartyInvitationListResponse> result = questService.getInvitedPartyList(principal.getId());
+
+        return BaseResponse.onSuccess(SuccessStatus.INVITE_PARTY_LIST_VIEW_SUCCESS, result);
+    }
+
+    // 파티 수락 / 거절
+    @PostMapping("/party-response")
+    @Operation(summary = "초대 받은 파티에 대한 수락 혹은 거절 상태 변경 API", description = "초대가 온 파티 정보를 request body를 통해 넘겨주세요.")
+    @ApiResponses({
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "PARTY_201", description = "CREATED, 초대 받은 파티에 대한 응답을 완료했습니다.")
+    })
+    public BaseResponse<QuestResponseDTO.PartyInvitationResponse> updatePartyResponse(
+            @AuthenticationPrincipal UserPrincipal principal,
+            @RequestBody @Valid QuestRequestDTO.PartyInvitationResponseRequest request
+    ) {
+        QuestResponseDTO.PartyInvitationResponse result = questService.respondToInvitation(principal.getId(), request);
+
+        return BaseResponse.onSuccess(SuccessStatus.INVITE_PARTY_STATUS_CHANGE, result);
+    }
 }
