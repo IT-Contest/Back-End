@@ -6,6 +6,7 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import ssuchaehwa.it_project.domain.model.enums.CompletionStatus;
+import ssuchaehwa.it_project.domain.model.enums.InvitationStatus;
 import ssuchaehwa.it_project.domain.model.enums.QuestType;
 
 import java.time.LocalDate;
@@ -62,5 +63,27 @@ public class QuestRequestDTO {
         private LocalDate startDate;
         private LocalDate dueDate;
         private List<String> hashtags;
+        private List<Long> invitedFriendIds;
+    }
+
+    // 퀘스트 완료 / 취소 처리
+    @Builder
+    @Getter
+    @NoArgsConstructor
+    @AllArgsConstructor
+    public static class QuestStatusChangeRequest {
+
+        private List<Long> questIds;
+    }
+
+    // 파티 수락 / 거절
+    @Builder
+    @Getter
+    @NoArgsConstructor
+    @AllArgsConstructor
+    public static class PartyInvitationResponseRequest {
+
+        private Long partyId;
+        private InvitationStatus responseStatus;
     }
 }
