@@ -39,10 +39,10 @@ public class QuestServiceImpl implements QuestService {
     // 퀘스트 생성
     @Transactional
     @Override
-    public QuestResponseDTO.QuestCreateResponse createQuest(QuestRequestDTO.QuestCreateRequest request) {
+    public QuestResponseDTO.QuestCreateResponse createQuest(QuestRequestDTO.QuestCreateRequest request, Long userId) {
 
         // 일단 1번 유저로 테스트
-        User user = userRepository.findById(2L)
+        User user = userRepository.findById(userId)
                 .orElseThrow(() -> new UserException(ErrorStatus.NO_SUCH_USER));
 
         Quest quest = Quest.builder()
@@ -217,9 +217,9 @@ public class QuestServiceImpl implements QuestService {
     // 퀘스트 조회(전체 보기)
     @Transactional(readOnly = true)
     @Override
-    public List<QuestResponseDTO.QuestListResponse> getQuests() {
+    public List<QuestResponseDTO.QuestListResponse> getQuests(Long userId) {
 
-        User user = userRepository.findById(1L)
+        User user = userRepository.findById(userId)
                 .orElseThrow(() -> new UserException(ErrorStatus.NO_SUCH_USER));
 
         List<Quest> quests = questRepository.findAllByUserId(user.getId());
