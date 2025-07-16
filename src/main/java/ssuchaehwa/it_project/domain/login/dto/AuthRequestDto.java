@@ -25,4 +25,13 @@ public class AuthRequestDto {
         private Long userId;
         private String refreshToken;
     }
+
+    // 게스트 유저 생성 요청 dto
+    @Builder
+    @Getter
+    @NoArgsConstructor
+    @AllArgsConstructor
+    public static class GuestRequest {
+        private String deviceId; // 예: UUID 또는 디바이스 고유값
+    }
 }
