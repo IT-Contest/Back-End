@@ -45,4 +45,11 @@ public class LoginController {
         AuthResponseDto.LoginResult result = loginService.refreshToken(request.getUserId(), request.getRefreshToken());
         return ResponseEntity.ok(result);
     }
+
+    @Operation(summary = "게스트 로그인", description = "UUID 기반의 게스트 로그인 - JWT 발급")
+    @PostMapping("/login/guest")
+    public ResponseEntity<AuthResponseDto.LoginResult> guestLogin(@RequestBody AuthRequestDto.GuestRequest request) {
+        AuthResponseDto.LoginResult result = loginService.guestLogin(request.getDeviceId());
+        return ResponseEntity.ok(result);
+    }
 }
