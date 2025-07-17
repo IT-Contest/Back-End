@@ -86,6 +86,7 @@ public class QuestConverter {
     ) {
         return QuestResponseDTO.MainPageResponse.builder()
                 .nickname(user.getNickname())
+                .level(user.getLevel())
                 .exp(user.getExp())
                 .gold(user.getGold())
                 .profileImageUrl(user.getProfileImageUrl())

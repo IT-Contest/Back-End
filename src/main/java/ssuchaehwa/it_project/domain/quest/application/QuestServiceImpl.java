@@ -55,6 +55,8 @@ public class QuestServiceImpl implements QuestService {
                 .dueDate(request.getDueDate())
                 .startTime(request.getStartTime())
                 .endTime(request.getEndTime())
+                .expReward(3000)
+                .goldReward(1250)
                 .build();
 
         questRepository.save(quest);
@@ -233,7 +235,7 @@ public class QuestServiceImpl implements QuestService {
     public QuestResponseDTO.MainPageResponse getMainPage(Long userId) {
 
         // 임시로 1로 테스트
-        User user = userRepository.findById(1L)
+        User user = userRepository.findById(userId)
                 .orElseThrow(() -> new UserException(ErrorStatus.NO_SUCH_USER));
 
         List<Quest> quests = questRepository.findAllByUserId(user.getId());
@@ -305,7 +307,7 @@ public class QuestServiceImpl implements QuestService {
     public List<QuestResponseDTO.QuestStatusChangeResponse> changeQuestStatus(QuestRequestDTO.QuestStatusChangeRequest request, Long userId) {
 
         // 임시로 1L 사용
-        User user = userRepository.findById(1L)
+        User user = userRepository.findById(userId)
                 .orElseThrow(() -> new UserException(ErrorStatus.NO_SUCH_USER));
 
         List<Long> questIds = request.getQuestIds();
