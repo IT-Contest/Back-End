@@ -32,9 +32,10 @@ public class QuestRestController {
             @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "QUEST_201", description = "CREATED, 퀘스트가 성공적으로 생성되었습니다.")
     })
     public BaseResponse<QuestResponseDTO.QuestCreateResponse> createQuest(
+            @AuthenticationPrincipal UserPrincipal principal,
             @RequestBody @Valid QuestRequestDTO.QuestCreateRequest questCreateRequest
             ) {
-        QuestResponseDTO.QuestCreateResponse result = questService.createQuest(questCreateRequest);
+        QuestResponseDTO.QuestCreateResponse result = questService.createQuest(questCreateRequest, principal.getId());
 
         return BaseResponse.onSuccess(SuccessStatus.QUEST_CREATED, result);
     }
@@ -83,15 +84,16 @@ public class QuestRestController {
         return BaseResponse.onSuccess(SuccessStatus.FRIEND_VIEW_SUCCESS, result);
     }
 
-    // 퀘스트 조회 API
+    // 퀘스트 조회 API (로그인한 사용자 기준)
     @GetMapping("/quest-list")
     @Operation(summary = "퀘스트 리스트 불러오는 API")
     @ApiResponses({
             @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "QUEST_200", description = "OK, 퀘스트 조회를 완료했습니다.")
     })
-    public BaseResponse<List<QuestResponseDTO.QuestListResponse>> getQuestList() {
-        List<QuestResponseDTO.QuestListResponse> result = questService.getQuests();
-
+    public BaseResponse<List<QuestResponseDTO.QuestListResponse>> getQuestList(
+            @AuthenticationPrincipal UserPrincipal principal
+    ) {
+        List<QuestResponseDTO.QuestListResponse> result = questService.getQuests(principal.getId());
         return BaseResponse.onSuccess(SuccessStatus.QUEST_VIEW_SUCCESS, result);
     }
 
