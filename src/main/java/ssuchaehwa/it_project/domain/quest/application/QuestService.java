@@ -9,7 +9,7 @@ import java.util.List;
 public interface QuestService {
 
     // 퀘스트
-    QuestResponseDTO.QuestCreateResponse createQuest(QuestRequestDTO.QuestCreateRequest request);
+    QuestResponseDTO.QuestCreateResponse createQuest(QuestRequestDTO.QuestCreateRequest request, Long userId);
 
     // 파티
     QuestResponseDTO.PartyCreateResponse createParty(QuestRequestDTO.PartyCreateRequest request, Long questId);
@@ -21,7 +21,7 @@ public interface QuestService {
     List<QuestResponseDTO.FriendListResponse> getFriends(Long questId);
 
     // 퀘스트 조회
-    List<QuestResponseDTO.QuestListResponse> getQuests();
+    List<QuestResponseDTO.QuestListResponse> getQuests(Long userId);
 
     // 메인 화면 조회
     QuestResponseDTO.MainPageResponse getMainPage(Long userId);

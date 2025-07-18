@@ -7,5 +7,5 @@ public interface LoginService {
     LoginResult kakaoLogin(String code);
     AuthResponseDto.LoginResult kakaoLoginWithAccessToken(String kakaoAccessToken);
     AuthResponseDto.LoginResult refreshToken(Long userId, String refreshToken);
-
+    AuthResponseDto.LoginResult guestLogin(String deviceId);
 }

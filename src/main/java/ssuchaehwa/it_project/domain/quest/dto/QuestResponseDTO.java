@@ -97,6 +97,7 @@ public class QuestResponseDTO {
         private String nickname;
         private int exp;
         private int gold;
+        private int level;
         private String profileImageUrl;
         private int dailyCount;
         private int weeklyCount;

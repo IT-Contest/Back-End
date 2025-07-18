@@ -2,6 +2,8 @@ package ssuchaehwa.it_project.domain.login.application;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.redis.core.RedisTemplate;
+
+import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 import org.springframework.stereotype.Service;
 import ssuchaehwa.it_project.domain.login.dto.AuthResponseDto;
@@ -50,10 +52,10 @@ public class LoginServiceImpl implements LoginService {
         String jwtRefreshToken = jwtUtil.generateRefreshToken(String.valueOf(user.getId()));
         // Redis에 refreshToken 저장
         redisTemplate.opsForValue().set(
-            "refresh:userId:" + user.getId(),
-            jwtRefreshToken,
-            jwtUtil.getRefreshTokenValidity(),
-            TimeUnit.MILLISECONDS
+                "refresh:userId:" + user.getId(),
+                jwtRefreshToken,
+                jwtUtil.getRefreshTokenValidity(),
+                TimeUnit.MILLISECONDS
         );
 
         // 5. 최종 응답 (카카오 access/refresh 토큰도 포함해서 반환)
@@ -71,40 +73,45 @@ public class LoginServiceImpl implements LoginService {
     public AuthResponseDto.LoginResult kakaoLoginWithAccessToken(String kakaoAccessToken) {
         // 1. accessToken으로 사용자 정보 요청
         AuthResponseDto.KakaoUserInfo userInfo = kakaoOAuthClient.requestUserInfo(kakaoAccessToken);
+        String socialId = String.valueOf(userInfo.getId());
 
-        // 2. 유저 존재 여부 확인 또는 저장
-        User user = userRepository.findBySocialId(String.valueOf(userInfo.getId()))
-                .orElseGet(() -> userRepository.save(
-                        User.builder()
-                                .socialId(String.valueOf(userInfo.getId()))
-                                .nickname(userInfo.getKakaoAccount().getProfile().getNickname())
-                                .profileImageUrl(userInfo.getKakaoAccount().getProfile().getProfileImageUrl())
-                                .level(1)
-                                .exp(0)
-                                .gold(0)
-                                .diamond(0)
-                                .onboardingCompleted(false)
-                                .build()
-                ));
+        // 2. 유저 존재 여부 먼저 판단
+        Optional<User> existingUser = userRepository.findBySocialId(socialId);
+        boolean isNewUser = existingUser.isEmpty();
 
-        // 3. JWT 토큰 발급
+        // 3. 없으면 새로 저장
+        User user = existingUser.orElseGet(() -> userRepository.save(
+                User.builder()
+                        .socialId(socialId)
+                        .nickname(userInfo.getKakaoAccount().getProfile().getNickname())
+                        .profileImageUrl(userInfo.getKakaoAccount().getProfile().getProfileImageUrl())
+                        .level(1)
+                        .exp(0)
+                        .gold(0)
+                        .diamond(0)
+                        .onboardingCompleted(false)
+                        .build()
+        ));
+
+        // 4. JWT 토큰 발급
         String accessToken = jwtUtil.generateAccessToken(String.valueOf(user.getId()));
         String refreshToken = jwtUtil.generateRefreshToken(String.valueOf(user.getId()));
 
-        // Redis 에 refreshToken 저장 (유효기간 7일)
+        // 5. Redis 저장
         redisTemplate.opsForValue().set(
                 "refresh:userId:" + user.getId(),
                 refreshToken,
-                7, TimeUnit.DAYS
+                jwtUtil.getRefreshTokenValidity(),
+                TimeUnit.MILLISECONDS
         );
 
-        // 4. 최종 응답에 kakaoAccessToken도 추가
+        // 6. 응답 반환
         return AuthResponseDto.LoginResult.builder()
                 .accessToken(accessToken)
                 .refreshToken(refreshToken)
                 .kakaoAccessToken(kakaoAccessToken)
-                .kakaoRefreshToken(null)  // 이 흐름에선 refreshToken 없음
-                .isNewUser(user.getId() == null)
+                .kakaoRefreshToken(null)
+                .isNewUser(isNewUser)
                 .build();
     }
 
@@ -130,6 +137,49 @@ public class LoginServiceImpl implements LoginService {
                 .kakaoAccessToken(null)
                 .kakaoRefreshToken(null)
                 .isNewUser(false)
+                .build();
+    }
+
+    // 게스트 로그인
+    @Override
+    public AuthResponseDto.LoginResult guestLogin(String deviceId) {
+        // 1. 유저 존재 여부 먼저 판단
+        Optional<User> existingUser = userRepository.findBySocialId(deviceId);
+        boolean isNewUser = existingUser.isEmpty();
+
+        // 2. 없으면 새로 저장
+        User user = existingUser.orElseGet(() -> userRepository.save(
+                User.builder()
+                        .socialId(deviceId)
+                        .nickname("게스트_" + deviceId.substring(0, 5))
+                        .profileImageUrl(null)
+                        .level(1)
+                        .exp(0)
+                        .gold(0)
+                        .diamond(0)
+                        .onboardingCompleted(false)
+                        .build()
+        ));
+
+        // 3. 토큰 발급
+        String accessToken = jwtUtil.generateAccessToken(String.valueOf(user.getId()));
+        String refreshToken = jwtUtil.generateRefreshToken(String.valueOf(user.getId()));
+
+        // 4. Redis 저장
+        redisTemplate.opsForValue().set(
+                "refresh:userId:" + user.getId(),
+                refreshToken,
+                jwtUtil.getRefreshTokenValidity(),
+                TimeUnit.MILLISECONDS
+        );
+
+        // 5. 응답 반환
+        return AuthResponseDto.LoginResult.builder()
+                .accessToken(accessToken)
+                .refreshToken(refreshToken)
+                .isNewUser(isNewUser)
+                .kakaoAccessToken(null)
+                .kakaoRefreshToken(null)
                 .build();
     }
 }
