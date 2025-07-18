@@ -9,7 +9,10 @@ import java.util.List;
 
 public interface InvitedFriendRepository extends JpaRepository<InvitedFriend, Long> {
 
-    @Query("SELECT i FROM InvitedFriend i WHERE i.quest.id = :questId")
-    List<InvitedFriend> findAllByQuestId(@Param("questId") Long questId);
-
+    @Query("""
+        SELECT i FROM InvitedFriend i
+        WHERE (i.fromUser.id = :userId OR i.toUser.id = :userId)
+          AND i.status = 'ACCEPTED'
+    """)
+    List<InvitedFriend> findAcceptedFriends(@Param("userId") Long userId);
 }

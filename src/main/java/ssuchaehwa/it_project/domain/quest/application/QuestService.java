@@ -15,10 +15,10 @@ public interface QuestService {
     QuestResponseDTO.PartyCreateResponse createParty(QuestRequestDTO.PartyCreateRequest request, Long questId);
 
     // 친구 초대
-    QuestResponseDTO.FriendInviteResponse friendInvite(QuestRequestDTO.FriendInviteRequest request, Long questId);
+//    QuestResponseDTO.FriendInviteResponse friendInvite(QuestRequestDTO.FriendInviteRequest request, Long questId);
 
     // 친구 조회
-    List<QuestResponseDTO.FriendListResponse> getFriends(Long questId);
+    List<QuestResponseDTO.FriendListResponse> getFriends(Long userId);
 
     // 퀘스트 조회
     List<QuestResponseDTO.QuestListResponse> getQuests(Long userId);

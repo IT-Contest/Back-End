@@ -169,52 +169,52 @@ public class QuestServiceImpl implements QuestService {
     }
 
     // 친구 초대(친구 추가)
-    @Transactional
-    @Override
-    public QuestResponseDTO.FriendInviteResponse friendInvite(QuestRequestDTO.FriendInviteRequest request, Long questId) {
+//    @Transactional
+//    @Override
+//    public QuestResponseDTO.FriendInviteResponse friendInvite(QuestRequestDTO.FriendInviteRequest request, Long questId) {
+//
+//        Quest quest = questRepository.findById(questId)
+//                .orElseThrow(() -> new QuestException(ErrorStatus.NO_SUCH_QUEST));
+//
+//        // 초대한 친구 추가
+//        List<Long> invitedFriendIds = request.getInvitedFriendIds();
+//
+//        List<String> nicknameList = new ArrayList<>();
+//
+//        if (invitedFriendIds != null && !invitedFriendIds.isEmpty()) {
+//            List<User> invitedFriends = userRepository.findAllById(invitedFriendIds);
+//
+//            List<InvitedFriend> invitedFriendEntities = invitedFriends.stream()
+//                    .map(friend -> InvitedFriend.builder()
+//                            .quest(quest)
+//                            .user(friend)
+//                            .build())
+//                    .toList();
+//
+//            // 친구 닉네임
+//            nicknameList = invitedFriends.stream()
+//                    .map(User::getNickname)
+//                    .toList();
+//
+//            invitedFriendRepository.saveAll(invitedFriendEntities);
+//        }
+//
+//        return QuestConverter.toFriendInviteResponse(nicknameList, questId);
+//    }
 
-        Quest quest = questRepository.findById(questId)
-                .orElseThrow(() -> new QuestException(ErrorStatus.NO_SUCH_QUEST));
-
-        // 초대한 친구 추가
-        List<Long> invitedFriendIds = request.getInvitedFriendIds();
-
-        List<String> nicknameList = new ArrayList<>();
-
-        if (invitedFriendIds != null && !invitedFriendIds.isEmpty()) {
-            List<User> invitedFriends = userRepository.findAllById(invitedFriendIds);
-
-            List<InvitedFriend> invitedFriendEntities = invitedFriends.stream()
-                    .map(friend -> InvitedFriend.builder()
-                            .quest(quest)
-                            .user(friend)
-                            .build())
-                    .toList();
-
-            // 친구 닉네임
-            nicknameList = invitedFriends.stream()
-                    .map(User::getNickname)
-                    .toList();
-
-            invitedFriendRepository.saveAll(invitedFriendEntities);
-        }
-
-        return QuestConverter.toFriendInviteResponse(nicknameList, questId);
-    }
-
-    // 친구 조회(더보기)
     @Transactional(readOnly = true)
     @Override
-    public List<QuestResponseDTO.FriendListResponse> getFriends(Long questId) {
+    public List<QuestResponseDTO.FriendListResponse> getFriends(Long userId) {
+        List<InvitedFriend> accepted = invitedFriendRepository.findAcceptedFriends(userId);
 
-        List<InvitedFriend> invitedFriends = invitedFriendRepository.findAllByQuestId(questId);
-
-        List<User> friends = invitedFriends.stream()
-                .map(InvitedFriend::getUser)  // 즉, User 엔티티
+        // 상대방만 추출 (from이 나면 to가 친구, 반대도 마찬가지)
+        List<User> friendUsers = accepted.stream()
+                .map(f -> f.getFromUser().getId().equals(userId) ? f.getToUser() : f.getFromUser())
                 .toList();
 
-        return QuestConverter.toFriendListResponse(friends);
+        return QuestConverter.toFriendListResponse(friendUsers);
     }
+
 
     // 퀘스트 조회(전체 보기)
     @Transactional(readOnly = true)
@@ -257,13 +257,14 @@ public class QuestServiceImpl implements QuestService {
                 .filter(q -> q.getQuestType() == QuestType.YEARLY)
                 .count();
 
-        // 먼저 매핑 테이블에 등록되어 있는 친구 정보 가져오기
-        List<InvitedFriend> allFriends = invitedFriendRepository.findAll();
+        // 친구 관계에서 ACCEPTED만 추출
+        List<InvitedFriend> allFriends = invitedFriendRepository.findAcceptedFriends(userId);
 
-        // 그 다음 InvitedFriend 테이블에 있는 유저 아이디를 이용하여 친구 리스트를 만듬
+        // 친구 유저 객체 추출 (상대방만)
         List<User> friendUsers = allFriends.stream()
-                .map(InvitedFriend::getUser)
+                .map(f -> f.getFromUser().getId().equals(userId) ? f.getToUser() : f.getFromUser())
                 .toList();
+
 
         // 친구의 필요한 정보만 추출
         List<QuestResponseDTO.FriendList> friendList = friendUsers.stream()
