@@ -85,6 +85,7 @@ public class QuestResponseDTO {
         private int goldReward;
         private int priority;
         private String partyName;
+        private QuestType questType;
     }
 
     // 메인 화면 조회 DTO
