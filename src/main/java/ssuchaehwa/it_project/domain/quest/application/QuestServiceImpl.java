@@ -318,14 +318,13 @@ public class QuestServiceImpl implements QuestService {
                 .filter(q -> q.getUser().getId().equals(user.getId()))
                 .toList();
 
-        // 완료 상태 변경
-        for (Quest quest : quests) {
-            CompletionStatus current = quest.getCompletionStatus();
-            CompletionStatus toggled = (current == CompletionStatus.COMPLETED)
-                    ? CompletionStatus.INCOMPLETE
-                    : CompletionStatus.COMPLETED;
 
-            setCompletionStatusReflectively(quest, toggled);
+        // 요청에서 넘겨준 completionStatus(String → Enum)
+        CompletionStatus targetStatus = CompletionStatus.valueOf(request.getCompletionStatus().toUpperCase());
+
+        // 상태 적용
+        for (Quest quest : quests) {
+            setCompletionStatusReflectively(quest, targetStatus);
         }
 
         return QuestConverter.toQuestStatusChangeResponse(quests);

@@ -70,6 +70,7 @@ public class QuestConverter {
                         .partyName(
                                 quest.getParty() != null ? quest.getParty().getTitle() : null
                         )
+                        .questType(quest.getQuestType())
                         .build())
                 .toList();
     }
