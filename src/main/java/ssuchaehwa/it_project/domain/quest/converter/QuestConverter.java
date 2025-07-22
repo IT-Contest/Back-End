@@ -70,6 +70,7 @@ public class QuestConverter {
                         .partyName(
                                 quest.getParty() != null ? quest.getParty().getTitle() : null
                         )
+                        .questType(quest.getQuestType())
                         .build())
                 .toList();
     }
@@ -86,6 +87,7 @@ public class QuestConverter {
     ) {
         return QuestResponseDTO.MainPageResponse.builder()
                 .nickname(user.getNickname())
+                .level(user.getLevel())
                 .exp(user.getExp())
                 .gold(user.getGold())
                 .profileImageUrl(user.getProfileImageUrl())

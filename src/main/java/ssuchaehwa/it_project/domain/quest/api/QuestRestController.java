@@ -55,31 +55,31 @@ public class QuestRestController {
         return BaseResponse.onSuccess(SuccessStatus.PARTY_CREATED, result);
     }
 
-    // 친구 초대 API
-    @PostMapping(value = "/{quest-id}/invite")
-    @Operation(summary = "친구를 초대하는 API", description = "request body에 friendInviteRequest 형식의 데이터와, path로 questId를 넘겨주세요.")
-    @ApiResponses({
-            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "INVITE_FRIEND_201", description = "CREATED, 친구 초대를 완료했습니다.")
-    })
-    public BaseResponse<QuestResponseDTO.FriendInviteResponse> createFriendInvite(
-            @PathVariable("quest-id") Long questId,
-            @RequestBody @Valid QuestRequestDTO.FriendInviteRequest friendInviteRequest
-    ) {
-        QuestResponseDTO.FriendInviteResponse result = questService.friendInvite(friendInviteRequest, questId);
-
-        return BaseResponse.onSuccess(SuccessStatus.INVITE_FRIEND_CREATED, result);
-    }
+//    // 친구 초대 API
+//    @PostMapping(value = "/{quest-id}/invite")
+//    @Operation(summary = "친구를 초대하는 API", description = "request body에 friendInviteRequest 형식의 데이터와, path로 questId를 넘겨주세요.")
+//    @ApiResponses({
+//            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "INVITE_FRIEND_201", description = "CREATED, 친구 초대를 완료했습니다.")
+//    })
+//    public BaseResponse<QuestResponseDTO.FriendInviteResponse> createFriendInvite(
+//            @PathVariable("quest-id") Long questId,
+//            @RequestBody @Valid QuestRequestDTO.FriendInviteRequest friendInviteRequest
+//    ) {
+//        QuestResponseDTO.FriendInviteResponse result = questService.friendInvite(friendInviteRequest, questId);
+//
+//        return BaseResponse.onSuccess(SuccessStatus.INVITE_FRIEND_CREATED, result);
+//    }
 
     // 친구 조회 API
-    @GetMapping("/{quest-id}")
-    @Operation(summary = "친구 리스트 불러오는 API", description = "path를 통해 quest-id를 넘겨주세요.")
+    @GetMapping("/friend-list")
+    @Operation(summary = "친구 리스트 불러오는 API")
     @ApiResponses({
             @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "FRIEND_200", description = "OK, 친구 조회를 완료했습니다.")
     })
     public BaseResponse<List<QuestResponseDTO.FriendListResponse>> getFriendList(
-            @PathVariable("quest-id") Long questId
+            @AuthenticationPrincipal UserPrincipal principal
     ) {
-        List<QuestResponseDTO.FriendListResponse> result = questService.getFriends(questId);
+        List<QuestResponseDTO.FriendListResponse> result = questService.getFriends(principal.getId());
 
         return BaseResponse.onSuccess(SuccessStatus.FRIEND_VIEW_SUCCESS, result);
     }

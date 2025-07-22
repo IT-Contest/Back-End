@@ -85,6 +85,7 @@ public class QuestResponseDTO {
         private int goldReward;
         private int priority;
         private String partyName;
+        private QuestType questType;
     }
 
     // 메인 화면 조회 DTO
@@ -97,6 +98,7 @@ public class QuestResponseDTO {
         private String nickname;
         private int exp;
         private int gold;
+        private int level;
         private String profileImageUrl;
         private int dailyCount;
         private int weeklyCount;
