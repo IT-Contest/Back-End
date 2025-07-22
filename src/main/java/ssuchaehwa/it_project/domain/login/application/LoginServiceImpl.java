@@ -11,6 +11,8 @@ import ssuchaehwa.it_project.domain.user.entity.User;
 import ssuchaehwa.it_project.domain.user.repository.UserRepository;
 import ssuchaehwa.it_project.global.config.security.jwt.JwtUtil;
 import ssuchaehwa.it_project.domain.login.domain.KakaoOAuthClient;
+import ssuchaehwa.it_project.global.error.code.status.ErrorStatus;
+import ssuchaehwa.it_project.global.exception.GeneralException;
 
 @Service
 @RequiredArgsConstructor
@@ -181,5 +183,70 @@ public class LoginServiceImpl implements LoginService {
                 .kakaoAccessToken(null)
                 .kakaoRefreshToken(null)
                 .build();
+    }
+
+    @Override
+    public AuthResponseDto.AutoLoginResult autoLogin(String accessToken) {
+        String userIdStr;
+
+        try {
+            userIdStr = jwtUtil.validateAndGetUserId(accessToken);
+        } catch (Exception e) {
+            throw new GeneralException(ErrorStatus.INVALID_ACCESS_TOKEN);
+        }
+
+        Long userId = Long.parseLong(userIdStr);
+        boolean exists = userRepository.existsById(userId);
+
+        if (!exists) {
+            throw new GeneralException(ErrorStatus.NO_SUCH_USER);
+        }
+
+        return AuthResponseDto.AutoLoginResult.builder()
+                .valid(true)
+                .userId(userId)
+                .build();
+    }
+
+    @Override
+    public void logout(String accessToken) {
+        String userIdStr;
+        try {
+            userIdStr = jwtUtil.validateAndGetUserId(accessToken); // 유효성 + ID 추출
+        } catch (Exception e) {
+            throw new GeneralException(ErrorStatus.INVALID_ACCESS_TOKEN);
+        }
+
+        Long userId = Long.parseLong(userIdStr);
+        boolean exists = userRepository.existsById(userId);
+        if (!exists) {
+            throw new GeneralException(ErrorStatus.NO_SUCH_USER);
+        }
+
+        String redisKey = "refresh:userId:" + userId;
+        redisTemplate.delete(redisKey);
+    }
+
+    @Override
+    public void withdraw(String accessToken) {
+        String userIdStr;
+        try {
+            userIdStr = jwtUtil.validateAndGetUserId(accessToken);
+        } catch (Exception e) {
+            throw new GeneralException(ErrorStatus.INVALID_ACCESS_TOKEN);
+        }
+
+        Long userId = Long.parseLong(userIdStr);
+        Optional<User> userOptional = userRepository.findById(userId);
+
+        if (userOptional.isEmpty()) {
+            throw new GeneralException(ErrorStatus.NO_SUCH_USER);
+        }
+
+        // 1. 유저 DB 삭제
+        userRepository.deleteById(userId);
+
+        // 2. refreshToken 삭제
+        redisTemplate.delete("refresh:userId:" + userId);
     }
 }
