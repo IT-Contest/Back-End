@@ -73,4 +73,14 @@ public class AuthResponseDto {
         private String kakaoAccessToken;
         private String kakaoRefreshToken;
     }
+
+    // 자동 로그인 응답 DTO
+    @Builder
+    @Getter
+    @NoArgsConstructor
+    @AllArgsConstructor
+    public static class AutoLoginResult {
+        private boolean valid;
+        private Long userId;
+    }
 }

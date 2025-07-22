@@ -1,5 +1,8 @@
 package ssuchaehwa.it_project.global.exception;
 
+import io.jsonwebtoken.ExpiredJwtException;
+import io.jsonwebtoken.MalformedJwtException;
+import io.jsonwebtoken.UnsupportedJwtException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.ConstraintViolationException;
 import lombok.extern.slf4j.Slf4j;
@@ -20,6 +23,7 @@ import ssuchaehwa.it_project.global.error.code.status.BaseErrorCode;
 import ssuchaehwa.it_project.global.error.code.status.ErrorStatus;
 import org.springframework.web.servlet.mvc.method.annotation.ResponseEntityExceptionHandler;
 
+import java.security.SignatureException;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Optional;
@@ -164,6 +168,24 @@ public class GlobalExceptionAdvice extends ResponseEntityExceptionHandler {
 
         return super.handleExceptionInternal(
                 e, body, headers, errorStatus.getHttpStatus(), request);
+    }
+
+    @ExceptionHandler(value = {
+            ExpiredJwtException.class,
+            UnsupportedJwtException.class,
+            MalformedJwtException.class,
+            SignatureException.class,
+            IllegalArgumentException.class
+    })
+    public ResponseEntity<Object> handleJwtExceptions(Exception e, WebRequest request) {
+        return handleExceptionInternalFalse(
+                e,
+                ErrorStatus.INVALID_ACCESS_TOKEN,
+                HttpHeaders.EMPTY,
+                ErrorStatus.INVALID_ACCESS_TOKEN.getHttpStatus(),
+                request,
+                e.getMessage()
+        );
     }
 
 }
