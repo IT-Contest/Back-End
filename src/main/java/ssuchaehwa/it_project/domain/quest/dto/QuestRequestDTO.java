@@ -74,6 +74,7 @@ public class QuestRequestDTO {
     public static class QuestStatusChangeRequest {
 
         private List<Long> questIds;
+        private String completionStatus;
     }
 
     // 파티 수락 / 거절
