@@ -1,3 +1,12 @@
+---
+name: 기능 요청 이슈
+about: 새로운 기능 추가나 개선 사항을 위한 템플릿입니다.
+title: "[Feature] "
+labels: enhancement
+assignees: ''
+
+---
+
 ## ✅ 개요
 - 추가하려는 기능에 대해 간단히 설명해주세요.
 
