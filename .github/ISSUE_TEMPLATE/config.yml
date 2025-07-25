@@ -1,0 +1,7 @@
+# 📄 .github/ISSUE_TEMPLATE/config.yml
+
+blank_issues_enabled: false
+issue_templates:
+  - name: 기능 추가/작업 템플릿
+    description: 새로운 기능 추가나 내부 작업을 위한 이슈 템플릿입니다.
+    file: ISSUE_TEMPLATE.md
