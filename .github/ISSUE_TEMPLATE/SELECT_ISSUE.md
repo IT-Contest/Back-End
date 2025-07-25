@@ -1,8 +1,8 @@
 ---
-name: 기능 요청 이슈
-about: 새로운 기능 추가나 개선 사항을 위한 템플릿입니다.
-title: "[Feature] "
-labels: enhancement
+name: 이슈 추가
+about: 이슈 추가를 위한 템플릿
+title: "[] "
+labels: 
 assignees: ''
 
 ---
