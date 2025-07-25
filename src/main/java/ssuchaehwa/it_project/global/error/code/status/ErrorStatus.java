@@ -24,6 +24,7 @@ public enum ErrorStatus implements BaseErrorCode{
 
     // token
     INVALID_REFRESH_TOKEN(HttpStatus.UNAUTHORIZED, "TOKEN_401", "유효하지 않거나 만료된 refreshToken입니다."),
+    INVALID_ACCESS_TOKEN(HttpStatus.UNAUTHORIZED, "TOKEN_402", "유효하지 않거나 잘못된 accessToken입니다."),
     REFRESH_TOKEN_NOT_FOUND(HttpStatus.NOT_FOUND, "TOKEN_404", "Redis에 해당 userId의 refreshToken이 존재하지 않습니다.");
 
 
