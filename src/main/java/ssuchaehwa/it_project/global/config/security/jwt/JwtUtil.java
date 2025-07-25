@@ -91,4 +91,18 @@ public class JwtUtil {
             return true; // treat invalid token as expired
         }
     }
+
+    // 내부에서만 사용하는 Claims 파싱 메서드
+    private Claims getClaims(String token) {
+        return Jwts.parserBuilder()
+                .setSigningKey(key)
+                .build()
+                .parseClaimsJws(token)
+                .getBody();
+    }
+
+    public String validateAndGetUserId(String token) {
+        Claims claims = getClaims(token); // 토큰 유효성 검증 및 파싱
+        return claims.getSubject();       // subject 에 userId를 넣었다면
+    }
 }
