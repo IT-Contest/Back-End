@@ -67,9 +67,15 @@ public class QuestConverter {
                         .expReward(quest.getExpReward())
                         .goldReward(quest.getGoldReward())
                         .priority(quest.getPriority())
+                        .hashtags(
+                                quest.getHashtagQuests().stream()
+                                        .map(hq -> hq.getHashtag().getName()) // Hashtag → String
+                                        .toList()
+                        )
                         .partyName(
                                 quest.getParty() != null ? quest.getParty().getTitle() : null
                         )
+                        .questType(quest.getQuestType())
                         .build())
                 .toList();
     }

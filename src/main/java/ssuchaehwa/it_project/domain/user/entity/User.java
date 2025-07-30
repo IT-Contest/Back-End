@@ -1,16 +1,17 @@
 package ssuchaehwa.it_project.domain.user.entity;
 
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
+import lombok.*;
+import org.hibernate.annotations.DynamicInsert;
+import org.hibernate.annotations.DynamicUpdate;
 import ssuchaehwa.it_project.domain.model.entity.BaseTimeEntity;
 
 @Entity
 @Table(name = "user")
 @Getter
-@NoArgsConstructor
+@DynamicUpdate
+@DynamicInsert
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
 @AllArgsConstructor
 @Builder
 public class User extends BaseTimeEntity {
@@ -37,6 +38,10 @@ public class User extends BaseTimeEntity {
 
     @Column(name = "profile_image_url")
     private String profileImageUrl;
+
+    // ✅ 초대 코드 추가!
+    @Column(name = "invite_code", unique = true, updatable = false, nullable = false)
+    private String inviteCode;
 
     // 보상 지급 시 유저의 경험치 증가
     // addExp(amount) 형태로 호출
