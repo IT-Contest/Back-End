@@ -1,10 +1,9 @@
 package ssuchaehwa.it_project.domain.quest.domain.entity;
 
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
+import lombok.*;
+import org.hibernate.annotations.DynamicInsert;
+import org.hibernate.annotations.DynamicUpdate;
 import ssuchaehwa.it_project.domain.model.entity.BaseTimeEntity;
 import ssuchaehwa.it_project.domain.model.enums.CompletionStatus;
 import ssuchaehwa.it_project.domain.model.enums.QuestType;
@@ -12,11 +11,15 @@ import ssuchaehwa.it_project.domain.user.entity.User;
 
 import java.time.LocalDate;
 import java.time.LocalTime;
+import java.util.ArrayList;
+import java.util.List;
 
 @Entity
 @Getter
+@DynamicUpdate
+@DynamicInsert
 @AllArgsConstructor
-@NoArgsConstructor
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
 @Builder
 public class Quest extends BaseTimeEntity {
 
@@ -62,4 +65,7 @@ public class Quest extends BaseTimeEntity {
 
     @OneToOne(mappedBy = "quest", fetch = FetchType.LAZY)
     private Party party;
+
+    @OneToMany(mappedBy = "quest", fetch = FetchType.LAZY, cascade = CascadeType.ALL)
+    private List<HashtagQuest> hashtagQuests = new ArrayList<>();
 }

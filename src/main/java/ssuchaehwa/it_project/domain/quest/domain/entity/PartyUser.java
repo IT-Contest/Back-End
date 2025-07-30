@@ -1,10 +1,7 @@
 package ssuchaehwa.it_project.domain.quest.domain.entity;
 
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
+import lombok.*;
 import ssuchaehwa.it_project.domain.model.entity.BaseTimeEntity;
 import ssuchaehwa.it_project.domain.model.enums.InvitationStatus;
 import ssuchaehwa.it_project.domain.user.entity.User;
@@ -12,7 +9,7 @@ import ssuchaehwa.it_project.domain.user.entity.User;
 @Entity
 @Getter
 @AllArgsConstructor
-@NoArgsConstructor
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
 @Builder
 public class PartyUser extends BaseTimeEntity {
 
