@@ -4,6 +4,7 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import org.springframework.lang.Nullable;
 
 public class AuthRequestDto {
 
@@ -14,6 +15,9 @@ public class AuthRequestDto {
     @AllArgsConstructor
     public static class KakaoAccessToken {
         private String accessToken;
+
+        @Nullable
+        private String inviterCode; // 초대 코드 (딥링크로 받은 값, 없을 수도 있음)
     }
 
     // 클라이언트가 토큰 재발급 요청을 보낼 때 사용하는 요청 데이터 객체

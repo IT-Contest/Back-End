@@ -28,7 +28,9 @@ public class LoginController {
     @PostMapping("/login/kakao")
     public ResponseEntity<AuthResponseDto.LoginResult> kakaoLoginWithAccessToken(@RequestBody AuthRequestDto.KakaoAccessToken request) {
         String kakaoAccessToken = request.getAccessToken();
-        AuthResponseDto.LoginResult result = loginService.kakaoLoginWithAccessToken(kakaoAccessToken);
+        String inviterCode = request.getInviterCode(); // 새로 추가된 필드
+
+        AuthResponseDto.LoginResult result = loginService.kakaoLoginWithAccessToken(kakaoAccessToken, inviterCode);
         return ResponseEntity.ok(result);
     }
 
