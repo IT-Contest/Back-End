@@ -1,16 +1,13 @@
 package ssuchaehwa.it_project.domain.quest.domain.entity;
 
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
+import lombok.*;
 import ssuchaehwa.it_project.domain.model.entity.BaseTimeEntity;
 
 @Entity
 @Getter
 @AllArgsConstructor
-@NoArgsConstructor
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
 @Builder
 public class Hashtag extends BaseTimeEntity {
 

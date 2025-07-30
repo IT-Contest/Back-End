@@ -8,7 +8,7 @@ import ssuchaehwa.it_project.domain.user.entity.User;
 
 @Entity
 @Getter
-@NoArgsConstructor
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
 @AllArgsConstructor
 @Builder
 public class InvitedFriend extends BaseTimeEntity {

@@ -202,6 +202,7 @@ public class QuestServiceImpl implements QuestService {
 //        return QuestConverter.toFriendInviteResponse(nicknameList, questId);
 //    }
 
+    // 친구 조회
     @Transactional(readOnly = true)
     @Override
     public List<QuestResponseDTO.FriendListResponse> getFriends(Long userId) {
