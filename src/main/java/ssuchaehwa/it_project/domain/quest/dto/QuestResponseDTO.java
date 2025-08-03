@@ -87,6 +87,7 @@ public class QuestResponseDTO {
         private String partyName;
         private QuestType questType;
         private List<String> hashtags;
+        private CompletionStatus completionStatus;
     }
 
     // 메인 화면 조회 DTO
