@@ -76,6 +76,7 @@ public class QuestConverter {
                                 quest.getParty() != null ? quest.getParty().getTitle() : null
                         )
                         .questType(quest.getQuestType())
+                        .completionStatus(quest.getCompletionStatus())
                         .build())
                 .toList();
     }
