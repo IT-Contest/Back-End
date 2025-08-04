@@ -87,4 +87,24 @@ public class QuestRequestDTO {
         private Long partyId;
         private InvitationStatus responseStatus;
     }
+
+    // 퀘스트 수정 요청 DTO
+    @Builder
+    @Getter
+    @AllArgsConstructor
+    @NoArgsConstructor
+    public static class QuestUpdateRequest {
+
+        @Column(length = 100)
+        private String content;
+
+        private int priority;
+        private QuestType questType;
+        private List<String> hashtags;
+
+        private LocalTime startTime;
+        private LocalTime endTime;
+        private LocalDate startDate;
+        private LocalDate dueDate;
+    }
 }
