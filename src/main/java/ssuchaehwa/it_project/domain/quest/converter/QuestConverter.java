@@ -77,6 +77,10 @@ public class QuestConverter {
                         )
                         .questType(quest.getQuestType())
                         .completionStatus(quest.getCompletionStatus())
+                        .startTime(quest.getStartTime())
+                        .endTime(quest.getEndTime())
+                        .startDate(quest.getStartDate())
+                        .dueDate(quest.getDueDate())
                         .build())
                 .toList();
     }
@@ -139,6 +143,23 @@ public class QuestConverter {
                 .partyId(party.getId())
                 .partyName(party.getTitle())
                 .invitationStatus(partyUser.getInvitationStatus())
+                .build();
+    }
+
+    // 퀘스트 수정 응답 변환
+    public static QuestResponseDTO.QuestUpdateResponse toQuestUpdateResponse(Quest quest) {
+        return QuestResponseDTO.QuestUpdateResponse.builder()
+                .questId(quest.getId())
+                .content(quest.getTitle())
+                .message("퀘스트가 성공적으로 수정되었습니다.")
+                .build();
+    }
+
+    // 퀘스트 삭제 응답 변환
+    public static QuestResponseDTO.QuestDeleteResponse toQuestDeleteResponse(Long questId) {
+        return QuestResponseDTO.QuestDeleteResponse.builder()
+                .questId(questId)
+                .message("퀘스트가 성공적으로 삭제되었습니다.")
                 .build();
     }
 }
