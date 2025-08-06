@@ -88,6 +88,11 @@ public class QuestResponseDTO {
         private QuestType questType;
         private List<String> hashtags;
         private CompletionStatus completionStatus;
+
+        private LocalTime startTime;
+        private LocalTime endTime;
+        private LocalDate startDate;
+        private LocalDate dueDate;
     }
 
     // 메인 화면 조회 DTO
@@ -172,5 +177,28 @@ public class QuestResponseDTO {
         private Long partyId;
         private String partyName;
         private InvitationStatus invitationStatus;
+    }
+
+    // 퀘스트 수정 응답 DTO
+    @Builder
+    @Getter
+    @AllArgsConstructor
+    @NoArgsConstructor
+    public static class QuestUpdateResponse {
+
+        private Long questId;
+        private String content;
+        private String message;
+    }
+
+    // 퀘스트 삭제 응답 DTO
+    @Builder
+    @Getter
+    @AllArgsConstructor
+    @NoArgsConstructor
+    public static class QuestDeleteResponse {
+
+        private Long questId;
+        private String message;
     }
 }

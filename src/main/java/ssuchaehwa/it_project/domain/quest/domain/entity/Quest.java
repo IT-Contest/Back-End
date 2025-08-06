@@ -67,4 +67,17 @@ public class Quest extends BaseTimeEntity {
 
     @OneToMany(mappedBy = "quest", fetch = FetchType.LAZY, cascade = CascadeType.ALL)
     private List<HashtagQuest> hashtagQuests = new ArrayList<>();
+
+    // 퀘스트 수정 메서드
+    public void updateQuest(String content, int priority, QuestType questType,
+                            LocalTime startTime, LocalTime endTime,
+                            LocalDate startDate, LocalDate dueDate) {
+        this.title = content;
+        this.priority = priority;
+        this.questType = questType;
+        this.startTime = startTime;
+        this.endTime = endTime;
+        this.startDate = startDate;
+        this.dueDate = dueDate;
+    }
 }

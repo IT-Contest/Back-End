@@ -373,4 +373,78 @@ public class QuestServiceImpl implements QuestService {
         field.setAccessible(true);
         ReflectionUtils.setField(field, partyUser, newStatus);
     }
+
+    @Override
+    @Transactional
+    public QuestResponseDTO.QuestUpdateResponse updateQuest(Long questId, QuestRequestDTO.QuestUpdateRequest request, Long userId) {
+        // 퀘스트 존재 여부 및 권한 확인
+        Quest quest = questRepository.findById(questId)
+                .orElseThrow(() -> new QuestException(ErrorStatus.QUEST_NOT_FOUND));
+
+        // 퀘스트 소유자 확인
+        if (!quest.getUser().getId().equals(userId)) {
+            throw new QuestException(ErrorStatus.QUEST_ACCESS_DENIED);
+        }
+
+        // 기존 해시태그 연관관계 삭제
+        hashtagQuestRepository.deleteByQuest(quest);
+
+        // 퀘스트 정보 업데이트
+        quest.updateQuest(
+                request.getContent(),
+                request.getPriority(),
+                request.getQuestType(),
+                request.getStartTime(),
+                request.getEndTime(),
+                request.getStartDate(),
+                request.getDueDate()
+        );
+
+        // 새로운 해시태그 처리
+        if (request.getHashtags() != null && !request.getHashtags().isEmpty()) {
+            for (String hashtagName : request.getHashtags()) {
+                // 해시태그 조회 또는 생성
+                Hashtag hashtag = hashtagRepository.findByName(hashtagName)
+                        .orElseGet(() -> hashtagRepository.save(
+                                Hashtag.builder()
+                                        .name(hashtagName)
+                                        .build()
+                        ));
+
+                // 해시태그-퀘스트 연관관계 생성
+                HashtagQuest hashtagQuest = HashtagQuest.builder()
+                        .hashtag(hashtag)
+                        .quest(quest)
+                        .build();
+
+                hashtagQuestRepository.save(hashtagQuest);
+            }
+        }
+
+        // 수정된 퀘스트 저장
+        Quest updatedQuest = questRepository.save(quest);
+
+        return QuestConverter.toQuestUpdateResponse(updatedQuest);
+    }
+
+    @Override
+    @Transactional
+    public QuestResponseDTO.QuestDeleteResponse deleteQuest(Long questId, Long userId) {
+        // 퀘스트 존재 여부 및 권한 확인
+        Quest quest = questRepository.findById(questId)
+                .orElseThrow(() -> new QuestException(ErrorStatus.QUEST_NOT_FOUND));
+
+        // 퀘스트 소유자 확인
+        if (!quest.getUser().getId().equals(userId)) {
+            throw new QuestException(ErrorStatus.QUEST_ACCESS_DENIED);
+        }
+
+        // 연관된 해시태그 관계 삭제
+        hashtagQuestRepository.deleteByQuest(quest);
+
+        // 퀘스트 삭제
+        questRepository.delete(quest);
+
+        return QuestConverter.toQuestDeleteResponse(questId);
+    }
 }
