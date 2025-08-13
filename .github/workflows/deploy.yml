@@ -1,0 +1,44 @@
+name: SSUChaehwa CI/CD
+on:
+  push:
+    branches:
+      - develop
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - name: Build with Gradle
+        run: chmod +x ./gradlew && ./gradlew clean build -x test
+
+      - name: SSH key
+        run: |
+          echo "${{ secrets.EC2_PRIVATE_KEY }}" > private_key.pem
+          chmod 600 private_key.pem
+          mkdir -p ~/.ssh
+          ssh-keyscan -H "${{ secrets.EC2_HOST }}" >> ~/.ssh/known_hosts
+
+      - name: Copy files to EC2
+        run: |
+          ssh -i private_key.pem ${{ secrets.EC2_USERNAME }}@${{ secrets.EC2_HOST }} "mkdir -p /home/ubuntu/app/zip"
+          scp -i private_key.pem build/libs/*.jar  ${{ secrets.EC2_USERNAME }}@${{ secrets.EC2_HOST }}:/home/ubuntu/app/zip/
+          scp -i private_key.pem scripts/*.sh      ${{ secrets.EC2_USERNAME }}@${{ secrets.EC2_HOST }}:/home/ubuntu/app/zip/
+
+      - name: Run deployment scripts on EC2
+        run: |
+          ssh -i private_key.pem ${{ secrets.EC2_USERNAME }}@${{ secrets.EC2_HOST }} << 'EOF'
+            chmod +x /home/ubuntu/app/zip/*.sh
+            /home/ubuntu/app/zip/stop.sh || true
+            /home/ubuntu/app/zip/start.sh
+            /home/ubuntu/app/zip/switch.sh
+          EOF
