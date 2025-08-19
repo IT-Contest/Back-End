@@ -9,6 +9,14 @@ import ssuchaehwa.it_project.domain.model.enums.QuestType;
 import ssuchaehwa.it_project.domain.quest.converter.QuestConverter;
 import ssuchaehwa.it_project.domain.quest.domain.entity.*;
 import ssuchaehwa.it_project.domain.quest.domain.repository.*;
+import ssuchaehwa.it_project.domain.quest.domain.repository.QuestOccurrenceRepository;
+import ssuchaehwa.it_project.domain.quest.domain.entity.QuestOccurrence;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
+import java.time.temporal.ChronoUnit;
+import java.util.Optional;
+import java.util.Map;
 import ssuchaehwa.it_project.domain.quest.dto.QuestRequestDTO;
 import ssuchaehwa.it_project.domain.quest.dto.QuestResponseDTO;
 import ssuchaehwa.it_project.domain.quest.exception.QuestException;
@@ -35,6 +43,8 @@ public class QuestServiceImpl implements QuestService {
     private final PartyUserRepository partyUserRepository;
     private final InvitedFriendRepository invitedFriendRepository;
     private final HashtagQuestRepository hashtagQuestRepository;
+    private final QuestOccurrenceRepository questOccurrenceRepository;
+    private final QuestAnalysisService questAnalysisService;
 
     // 퀘스트 생성
     @Transactional
@@ -60,6 +70,24 @@ public class QuestServiceImpl implements QuestService {
                 .build();
 
         questRepository.save(quest);
+
+        // 현재 기간 occurrence를 즉시 생성 (메인 진입 전에도 DB에서 확인 가능하도록)
+        LocalDate _today = LocalDate.now(ZoneId.of("Asia/Seoul"));
+        LocalDate _pk = questAnalysisService.currentPeriodKeyFromAnchor(quest.getQuestType().name(), quest.getStartDate() != null ? quest.getStartDate() : _today, _today);
+        boolean _exists = questOccurrenceRepository.existsByTemplateIdAndPeriodKey(quest.getId(), _pk);
+        if (!_exists) {
+            QuestOccurrence _occ = QuestOccurrence.builder()
+                    .templateId(quest.getId())
+                    .userId(user.getId())
+                    .questType(quest.getQuestType().name())
+                    .periodKey(_pk)
+                    .status("INCOMPLETE")
+                    .expectedStartTime(quest.getStartTime() == null ? null : quest.getStartTime().toString())
+                    .expectedEndTime(quest.getEndTime() == null ? null : quest.getEndTime().toString())
+                    .title(quest.getTitle())
+                    .build();
+            questOccurrenceRepository.save(_occ);
+        }
 
         List<String> requestHashtag = request.getHashtags();
 
@@ -231,7 +259,7 @@ public class QuestServiceImpl implements QuestService {
     }
 
     // 메인 화면 조회
-    @Transactional(readOnly = true)
+    @Transactional
     @Override
     public QuestResponseDTO.MainPageResponse getMainPage(Long userId) {
 
@@ -240,6 +268,26 @@ public class QuestServiceImpl implements QuestService {
                 .orElseThrow(() -> new UserException(ErrorStatus.NO_SUCH_USER));
 
         List<Quest> quests = questRepository.findAllByUserId(user.getId());
+
+        LocalDate today = LocalDate.now(ZoneId.of("Asia/Seoul"));
+        // QuestAnalysisService를 통해 occurrence 생성
+        quests.forEach(q -> {
+            LocalDate pk = questAnalysisService.currentPeriodKeyFromAnchor(q.getQuestType().name(), q.getStartDate() != null ? q.getStartDate() : today, today);
+            boolean exists = questOccurrenceRepository.existsByTemplateIdAndPeriodKey(q.getId(), pk);
+            if (!exists) {
+                QuestOccurrence occ = QuestOccurrence.builder()
+                        .templateId(q.getId())
+                        .userId(user.getId())
+                        .questType(q.getQuestType().name())
+                        .periodKey(pk)
+                        .status("INCOMPLETE")
+                        .expectedStartTime(q.getStartTime() == null ? null : q.getStartTime().toString())
+                        .expectedEndTime(q.getEndTime() == null ? null : q.getEndTime().toString())
+                        .title(q.getTitle())
+                        .build();
+                questOccurrenceRepository.save(occ);
+            }
+        });
 
         // 퀘스트 유형 별 카운트
         int dailyCount = (int) quests.stream()
@@ -277,17 +325,16 @@ public class QuestServiceImpl implements QuestService {
                         .profileImageUrl(users.getProfileImageUrl())
                         .build())
                 .toList();
-
-        // 진행 중인 퀘스트의 필요한 정보만 추출
         List<QuestResponseDTO.DailyOngoingQuest> dailyOngoingQuests = quests.stream()
-                .filter(q -> !q.getCompletionStatus().equals(CompletionStatus.COMPLETED))
+                .filter(q -> {
+                    LocalDate pk = questAnalysisService.currentPeriodKeyFromAnchor(q.getQuestType().name(), q.getStartDate() != null ? q.getStartDate() : today, today);
+                    return questOccurrenceRepository.findByTemplateIdAndPeriodKey(q.getId(), pk).isPresent();
+                })
                 .map(q -> QuestResponseDTO.DailyOngoingQuest.builder()
                         .title(q.getTitle())
                         .exp(q.getExpReward())
                         .gold(q.getGoldReward())
-                        .partyName(
-                                q.getParty() != null ? q.getParty().getTitle() : null
-                        )
+                        .partyName(q.getParty() != null ? q.getParty().getTitle() : null)
                         .build())
                 .toList();
 
@@ -308,26 +355,52 @@ public class QuestServiceImpl implements QuestService {
     @Override
     public List<QuestResponseDTO.QuestStatusChangeResponse> changeQuestStatus(QuestRequestDTO.QuestStatusChangeRequest request, Long userId) {
 
-        // 임시로 1L 사용
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new UserException(ErrorStatus.NO_SUCH_USER));
 
         List<Long> questIds = request.getQuestIds();
 
-        // 유저 소유의 퀘스트 중에서 해당 ID들에 속하는 것만 필터링
+        // 유저 소유의 퀘스트만 대상으로 선정
         List<Quest> quests = questRepository.findAllById(questIds).stream()
                 .filter(q -> q.getUser().getId().equals(user.getId()))
                 .toList();
 
-
-        // 요청에서 넘겨준 completionStatus(String → Enum)
+        // 요청 상태 파싱 (문자열 → Enum)
         CompletionStatus targetStatus = CompletionStatus.valueOf(request.getCompletionStatus().toUpperCase());
 
-        // 상태 적용
+        // 오늘 기준 period_key 계산용
+        LocalDate today = LocalDate.now(ZoneId.of("Asia/Seoul"));
+
         for (Quest quest : quests) {
-            setCompletionStatusReflectively(quest, targetStatus);
+            // 템플릿의 주기(일/주/월/연)에 맞는 period_key 계산 (앵커 기반)
+            LocalDate periodKey = questAnalysisService.currentPeriodKeyFromAnchor(quest.getQuestType().name(), quest.getStartDate() != null ? quest.getStartDate() : today, today);
+
+            // (template_id, period_key)로 occurrence 조회(or 생성)
+            Optional<QuestOccurrence> existing = questOccurrenceRepository.findByTemplateIdAndPeriodKey(quest.getId(), periodKey);
+            QuestOccurrence occ = existing.orElseGet(() -> QuestOccurrence.builder()
+                    .templateId(quest.getId())
+                    .userId(user.getId())
+                    .questType(quest.getQuestType().name())
+                    .periodKey(periodKey)
+                    .status("INCOMPLETE")
+                    .expectedStartTime(quest.getStartTime() == null ? null : quest.getStartTime().toString())
+                    .expectedEndTime(quest.getEndTime() == null ? null : quest.getEndTime().toString())
+                    .title(quest.getTitle())
+                    .build());
+
+            // 상태 업데이트 (Occurrence 기준)
+            if (targetStatus == CompletionStatus.COMPLETED) {
+                occ.setStatus("COMPLETED");
+                occ.setCompletedAt(LocalDateTime.now(ZoneId.of("Asia/Seoul")));
+            } else {
+                occ.setStatus("INCOMPLETE");
+                occ.setCompletedAt(null);
+            }
+
+            questOccurrenceRepository.save(occ);
         }
 
+        // NOTE: 응답은 기존 포맷을 유지하되, 템플릿 상태는 표시용일 수 있음
         return QuestConverter.toQuestStatusChangeResponse(quests);
     }
 
@@ -425,6 +498,19 @@ public class QuestServiceImpl implements QuestService {
         // 수정된 퀘스트 저장
         Quest updatedQuest = questRepository.save(quest);
 
+        // 현재 기간 occurrence가 있으면 제목/예정시간만 스냅샷 업데이트 (과거 이력은 보존)
+        LocalDate _today = LocalDate.now(ZoneId.of("Asia/Seoul"));
+        LocalDate _pk = questAnalysisService.currentPeriodKeyFromAnchor(updatedQuest.getQuestType().name(), updatedQuest.getStartDate() != null ? updatedQuest.getStartDate() : _today, _today);
+        questOccurrenceRepository.findByTemplateIdAndPeriodKey(updatedQuest.getId(), _pk)
+                .ifPresent(occ -> {
+                    if (!"COMPLETED".equalsIgnoreCase(occ.getStatus())) {
+                        occ.setTitle(updatedQuest.getTitle());
+                        occ.setExpectedStartTime(updatedQuest.getStartTime() == null ? null : updatedQuest.getStartTime().toString());
+                        occ.setExpectedEndTime(updatedQuest.getEndTime() == null ? null : updatedQuest.getEndTime().toString());
+                        questOccurrenceRepository.save(occ);
+                    }
+                });
+
         return QuestConverter.toQuestUpdateResponse(updatedQuest);
     }
 
@@ -442,6 +528,9 @@ public class QuestServiceImpl implements QuestService {
 
         // 연관된 해시태그 관계 삭제
         hashtagQuestRepository.deleteByQuest(quest);
+
+        // 템플릿 삭제 전에 모든 occurrence 삭제 (이력 포함)
+        questOccurrenceRepository.deleteAllByTemplateId(quest.getId());
 
         // 퀘스트 삭제
         questRepository.delete(quest);
