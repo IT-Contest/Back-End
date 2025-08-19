@@ -5,7 +5,10 @@ import ssuchaehwa.it_project.domain.quest.domain.entity.Party;
 import ssuchaehwa.it_project.domain.quest.domain.entity.PartyUser;
 import ssuchaehwa.it_project.domain.quest.domain.entity.Quest;
 import ssuchaehwa.it_project.domain.quest.dto.QuestResponseDTO;
+import ssuchaehwa.it_project.domain.quest.dto.AnalysisResponseDTO;
 import ssuchaehwa.it_project.domain.user.entity.User;
+import ssuchaehwa.it_project.global.common.response.BaseResponse;
+import ssuchaehwa.it_project.global.error.code.status.SuccessStatus;
 
 import java.util.List;
 
@@ -161,5 +164,29 @@ public class QuestConverter {
                 .questId(questId)
                 .message("퀘스트가 성공적으로 삭제되었습니다.")
                 .build();
+    }
+
+    // 분석 응답 변환 - 일일
+    public static BaseResponse<List<AnalysisResponseDTO.Daily>> toDailyAnalysisResponse(
+            List<AnalysisResponseDTO.Daily> rows) {
+        return BaseResponse.onSuccess(SuccessStatus.QUEST_VIEW_SUCCESS, rows);
+    }
+
+    // 주간
+    public static BaseResponse<List<AnalysisResponseDTO.Weekly>> toWeeklyAnalysisResponse(
+            List<AnalysisResponseDTO.Weekly> rows) {
+        return BaseResponse.onSuccess(SuccessStatus.QUEST_VIEW_SUCCESS, rows);
+    }
+
+    // 월간
+    public static BaseResponse<List<AnalysisResponseDTO.Monthly>> toMonthlyAnalysisResponse(
+            List<AnalysisResponseDTO.Monthly> rows) {
+        return BaseResponse.onSuccess(SuccessStatus.QUEST_VIEW_SUCCESS, rows);
+    }
+
+    // 연간
+    public static BaseResponse<List<AnalysisResponseDTO.Yearly>> toYearlyAnalysisResponse(
+            List<AnalysisResponseDTO.Yearly> rows) {
+        return BaseResponse.onSuccess(SuccessStatus.QUEST_VIEW_SUCCESS, rows);
     }
 }

@@ -4,17 +4,21 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
-import org.springframework.http.HttpStatus;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
+import ssuchaehwa.it_project.domain.quest.application.QuestAnalysisService;
 import ssuchaehwa.it_project.domain.quest.application.QuestService;
+import ssuchaehwa.it_project.domain.quest.converter.QuestConverter;
+import ssuchaehwa.it_project.domain.quest.dto.AnalysisResponseDTO;
 import ssuchaehwa.it_project.domain.quest.dto.QuestRequestDTO;
 import ssuchaehwa.it_project.domain.quest.dto.QuestResponseDTO;
 import ssuchaehwa.it_project.global.common.response.BaseResponse;
 import ssuchaehwa.it_project.global.config.security.auth.UserPrincipal;
 import ssuchaehwa.it_project.global.error.code.status.SuccessStatus;
 
+import java.time.LocalDate;
 import java.util.List;
 
 @RestController
@@ -24,6 +28,7 @@ import java.util.List;
 public class QuestRestController {
 
     private final QuestService questService;
+    private final QuestAnalysisService questAnalysisService;
 
     // 퀘스트 생성 API
     @PostMapping(value = "")
