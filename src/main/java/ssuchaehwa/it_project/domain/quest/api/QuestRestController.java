@@ -4,17 +4,21 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
-import org.springframework.http.HttpStatus;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
+import ssuchaehwa.it_project.domain.quest.application.QuestAnalysisService;
 import ssuchaehwa.it_project.domain.quest.application.QuestService;
+import ssuchaehwa.it_project.domain.quest.converter.QuestConverter;
+import ssuchaehwa.it_project.domain.quest.dto.AnalysisResponseDTO;
 import ssuchaehwa.it_project.domain.quest.dto.QuestRequestDTO;
 import ssuchaehwa.it_project.domain.quest.dto.QuestResponseDTO;
 import ssuchaehwa.it_project.global.common.response.BaseResponse;
 import ssuchaehwa.it_project.global.config.security.auth.UserPrincipal;
 import ssuchaehwa.it_project.global.error.code.status.SuccessStatus;
 
+import java.time.LocalDate;
 import java.util.List;
 
 @RestController
@@ -24,6 +28,7 @@ import java.util.List;
 public class QuestRestController {
 
     private final QuestService questService;
+    private final QuestAnalysisService questAnalysisService;
 
     // 퀘스트 생성 API
     @PostMapping(value = "")
@@ -153,5 +158,36 @@ public class QuestRestController {
         QuestResponseDTO.PartyInvitationResponse result = questService.respondToInvitation(principal.getId(), request);
 
         return BaseResponse.onSuccess(SuccessStatus.INVITE_PARTY_STATUS_CHANGE, result);
+    }
+
+    // 퀘스트 수정 API
+    @PutMapping(value = "/{questId}")
+    @Operation(summary = "퀘스트를 수정하는 API", description = "questId와 questUpdateRequest를 전달해주세요.")
+    @ApiResponses({
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "QUEST_202", description = "OK, 퀘스트가 성공적으로 수정되었습니다.")
+    })
+    public BaseResponse<QuestResponseDTO.QuestUpdateResponse> updateQuest(
+            @AuthenticationPrincipal UserPrincipal principal,
+            @PathVariable Long questId,
+            @RequestBody @Valid QuestRequestDTO.QuestUpdateRequest questUpdateRequest
+    ) {
+        QuestResponseDTO.QuestUpdateResponse result = questService.updateQuest(questId, questUpdateRequest, principal.getId());
+
+        return BaseResponse.onSuccess(SuccessStatus.QUEST_UPDATED, result);
+    }
+
+    // 퀘스트 삭제 API
+    @DeleteMapping(value = "/{questId}")
+    @Operation(summary = "퀘스트를 삭제하는 API", description = "questId를 전달해주세요.")
+    @ApiResponses({
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "QUEST_203", description = "OK, 퀘스트가 성공적으로 삭제되었습니다.")
+    })
+    public BaseResponse<QuestResponseDTO.QuestDeleteResponse> deleteQuest(
+            @AuthenticationPrincipal UserPrincipal principal,
+            @PathVariable Long questId
+    ) {
+        QuestResponseDTO.QuestDeleteResponse result = questService.deleteQuest(questId, principal.getId());
+
+        return BaseResponse.onSuccess(SuccessStatus.QUEST_DELETED, result);
     }
 }

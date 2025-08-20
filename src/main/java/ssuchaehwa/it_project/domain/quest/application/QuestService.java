@@ -34,4 +34,10 @@ public interface QuestService {
 
     // 파티 수락 / 거절
     QuestResponseDTO.PartyInvitationResponse respondToInvitation(Long userId, QuestRequestDTO.PartyInvitationResponseRequest request);
+
+    // 퀘스트 수정
+    QuestResponseDTO.QuestUpdateResponse updateQuest(Long questId, QuestRequestDTO.QuestUpdateRequest request, Long userId);
+
+    // 퀘스트 삭제
+    QuestResponseDTO.QuestDeleteResponse deleteQuest(Long questId, Long userId);
 }

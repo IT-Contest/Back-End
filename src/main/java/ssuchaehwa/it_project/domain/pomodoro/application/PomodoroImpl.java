@@ -34,10 +34,14 @@ public class PomodoroImpl implements PomodoroService {
         user.addExp(rewardExp);
         user.addGold(rewardGold);
 
+        // KST 기준으로 한 번만 시간 계산 (일/주/월 집계를 KST로 끊어지게 하기 위함)
+        java.time.LocalDateTime nowKst = java.time.LocalDateTime.now(java.time.ZoneId.of("Asia/Seoul"));
+        int duration = Math.max(1, request.getDurationMinutes()); // 최소 1분 방어
+
         Pomodoro session = Pomodoro.builder()
                 .user(user)
-                .startTime(LocalDateTime.now().minusMinutes(request.getDurationMinutes()))
-                .endTime(LocalDateTime.now())
+                .startTime(nowKst.minusMinutes(duration))
+                .endTime(nowKst)
                 .rewardExp(rewardExp)
                 .rewardGold(rewardGold)
                 .build();
