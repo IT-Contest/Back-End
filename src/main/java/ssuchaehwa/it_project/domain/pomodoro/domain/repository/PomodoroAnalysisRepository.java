@@ -1,4 +1,4 @@
-package ssuchaehwa.it_project.domain.quest.domain.repository;
+package ssuchaehwa.it_project.domain.pomodoro.domain.repository;
 
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
@@ -9,18 +9,18 @@ import java.time.LocalDate;
 import java.util.List;
 
 @Repository
-public interface QuestAnalysisRepository extends JpaRepository<ssuchaehwa.it_project.domain.quest.domain.entity.QuestOccurrence, Long> {
+public interface PomodoroAnalysisRepository extends JpaRepository<ssuchaehwa.it_project.domain.pomodoro.domain.entity.Pomodoro, Long> {
 
     // 일일 분석: D-7 ~ 오늘까지
     @Query(value = """
             SELECT 
-                DATE(period_key) as d,
+                DATE(start_time) as d,
                 COUNT(CASE WHEN status = 'COMPLETED' THEN 1 END) as completed,
                 COUNT(*) as total
-            FROM quest_occurrence 
+            FROM focus_session 
             WHERE user_id = :userId 
-                AND DATE(period_key) BETWEEN :from AND :to
-            GROUP BY DATE(period_key)
+                AND DATE(start_time) BETWEEN :from AND :to
+            GROUP BY DATE(start_time)
             ORDER BY d
             """, nativeQuery = true)
     List<Object[]> countDaily(@Param("userId") Long userId, @Param("from") LocalDate from, @Param("to") LocalDate to);
@@ -28,13 +28,13 @@ public interface QuestAnalysisRepository extends JpaRepository<ssuchaehwa.it_pro
     // 주간 분석: 이번 달 주차별
     @Query(value = """
             SELECT 
-                YEARWEEK(period_key, 1) as week_key,
+                YEARWEEK(start_time, 1) as week_key,
                 COUNT(CASE WHEN status = 'COMPLETED' THEN 1 END) as completed,
                 COUNT(*) as total
-            FROM quest_occurrence 
+            FROM focus_session 
             WHERE user_id = :userId 
-                AND DATE(period_key) BETWEEN :from AND :to
-            GROUP BY YEARWEEK(period_key, 1)
+                AND DATE(start_time) BETWEEN :from AND :to
+            GROUP BY YEARWEEK(start_time, 1)
             ORDER BY week_key
             """, nativeQuery = true)
     List<Object[]> countWeekly(@Param("userId") Long userId, @Param("from") LocalDate from, @Param("to") LocalDate to);
@@ -42,13 +42,13 @@ public interface QuestAnalysisRepository extends JpaRepository<ssuchaehwa.it_pro
     // 월간 분석: 이번 달 포함 전월 12개
     @Query(value = """
             SELECT 
-                DATE_FORMAT(period_key, '%Y-%m') as month_key,
+                DATE_FORMAT(start_time, '%Y-%m') as month_key,
                 COUNT(CASE WHEN status = 'COMPLETED' THEN 1 END) as completed,
                 COUNT(*) as total
-            FROM quest_occurrence 
+            FROM focus_session 
             WHERE user_id = :userId 
-                AND DATE(period_key) BETWEEN :from AND :to
-            GROUP BY DATE_FORMAT(period_key, '%Y-%m')
+                AND DATE(start_time) BETWEEN :from AND :to
+            GROUP BY DATE_FORMAT(start_time, '%Y-%m')
             ORDER BY month_key
             """, nativeQuery = true)
     List<Object[]> countMonthly(@Param("userId") Long userId, @Param("from") LocalDate from, @Param("to") LocalDate to);
@@ -56,13 +56,13 @@ public interface QuestAnalysisRepository extends JpaRepository<ssuchaehwa.it_pro
     // 연간 분석: 이번 년도 포함 전년 10개
     @Query(value = """
             SELECT 
-                YEAR(period_key) as year_key,
+                YEAR(start_time) as year_key,
                 COUNT(CASE WHEN status = 'COMPLETED' THEN 1 END) as completed,
                 COUNT(*) as total
-            FROM quest_occurrence 
+            FROM focus_session 
             WHERE user_id = :userId 
-                AND DATE(period_key) BETWEEN :from AND :to
-            GROUP BY YEAR(period_key)
+                AND DATE(start_time) BETWEEN :from AND :to
+            GROUP BY YEAR(start_time)
             ORDER BY year_key
             """, nativeQuery = true)
     List<Object[]> countYearly(@Param("userId") Long userId, @Param("from") LocalDate from, @Param("to") LocalDate to);

@@ -166,27 +166,21 @@ public class QuestConverter {
                 .build();
     }
 
-    // 분석 응답 변환 - 일일
-    public static BaseResponse<List<AnalysisResponseDTO.Daily>> toDailyAnalysisResponse(
-            List<AnalysisResponseDTO.Daily> rows) {
+    // ========== 퀘스트 분석 응답 변환 메서드들 ==========
+    
+    public static BaseResponse<List<AnalysisResponseDTO.Daily>> toDailyAnalysisResponse(List<AnalysisResponseDTO.Daily> rows) {
         return BaseResponse.onSuccess(SuccessStatus.QUEST_VIEW_SUCCESS, rows);
     }
-
-    // 주간
-    public static BaseResponse<List<AnalysisResponseDTO.Weekly>> toWeeklyAnalysisResponse(
-            List<AnalysisResponseDTO.Weekly> rows) {
+    
+    public static BaseResponse<List<AnalysisResponseDTO.Weekly>> toWeeklyAnalysisResponse(List<AnalysisResponseDTO.Weekly> rows) {
         return BaseResponse.onSuccess(SuccessStatus.QUEST_VIEW_SUCCESS, rows);
     }
-
-    // 월간
-    public static BaseResponse<List<AnalysisResponseDTO.Monthly>> toMonthlyAnalysisResponse(
-            List<AnalysisResponseDTO.Monthly> rows) {
+    
+    public static BaseResponse<List<AnalysisResponseDTO.Monthly>> toMonthlyAnalysisResponse(List<AnalysisResponseDTO.Monthly> rows) {
         return BaseResponse.onSuccess(SuccessStatus.QUEST_VIEW_SUCCESS, rows);
     }
-
-    // 연간
-    public static BaseResponse<List<AnalysisResponseDTO.Yearly>> toYearlyAnalysisResponse(
-            List<AnalysisResponseDTO.Yearly> rows) {
+    
+    public static BaseResponse<List<AnalysisResponseDTO.Yearly>> toYearlyAnalysisResponse(List<AnalysisResponseDTO.Yearly> rows) {
         return BaseResponse.onSuccess(SuccessStatus.QUEST_VIEW_SUCCESS, rows);
     }
 }
