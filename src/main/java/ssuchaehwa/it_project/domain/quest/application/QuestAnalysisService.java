@@ -18,7 +18,7 @@ public interface QuestAnalysisService {
     List<AnalysisResponseDTO.Monthly> getMonthly(Long userId, LocalDate from, LocalDate to);
 
     // 연간 분석
-    List<AnalysisResponseDTO.Yearly>  getYearly(Long userId, LocalDate from, LocalDate to);
+    List<AnalysisResponseDTO.Yearly> getYearly(Long userId, LocalDate from, LocalDate to);
 
     // 경계 계산 유틸리티 메서드들
     LocalDate currentPeriodKeyFromAnchor(String questType, LocalDate anchor, LocalDate today);
