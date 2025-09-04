@@ -27,7 +27,11 @@ public enum ErrorStatus implements BaseErrorCode{
     // token
     INVALID_REFRESH_TOKEN(HttpStatus.UNAUTHORIZED, "TOKEN_401", "유효하지 않거나 만료된 refreshToken입니다."),
     INVALID_ACCESS_TOKEN(HttpStatus.UNAUTHORIZED, "TOKEN_402", "유효하지 않거나 잘못된 accessToken입니다."),
-    REFRESH_TOKEN_NOT_FOUND(HttpStatus.NOT_FOUND, "TOKEN_404", "Redis에 해당 userId의 refreshToken이 존재하지 않습니다.");
+    REFRESH_TOKEN_NOT_FOUND(HttpStatus.NOT_FOUND, "TOKEN_404", "Redis에 해당 userId의 refreshToken이 존재하지 않습니다."),
+
+    // pomodoro
+    NO_SUCH_POMODORO(HttpStatus.BAD_REQUEST, "POMODORO_4001", "해당 뽀모도로가 존재하지 않습니다."),
+    POMODORO_ALREADY_PROCESSED(HttpStatus.BAD_REQUEST, "POMODORO_4002", "이미 처리된 뽀모도로입니다.");
 
 
     private final HttpStatus httpStatus;

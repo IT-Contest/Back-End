@@ -67,24 +67,26 @@ public class QuestAnalysisServiceImpl implements QuestAnalysisService {
 
         var rows = questAnalysisRepository.countWeekly(userId, from, to);
 
-        // 1) MySQL YEARWEEK(...,1) = ISO Week 기준. 자바에서도 ISO 주차로 맞춰 키 생성
+        // 1) 현재 날짜(오늘)를 기준으로 현재 주차부터 과거 4주차까지 총 5개의 주차 버킷을 생성합니다.
         var weekField = java.time.temporal.IsoFields.WEEK_OF_WEEK_BASED_YEAR;
         var yearField = java.time.temporal.IsoFields.WEEK_BASED_YEAR;
 
-        // from을 주의 시작(월요일)로 맞춤
-        java.time.DayOfWeek firstDay = java.time.DayOfWeek.MONDAY;
-        LocalDate cursor = from.minusDays((from.getDayOfWeek().getValue() - firstDay.getValue() + 7) % 7);
+        // 현재 날짜(오늘)가 포함된 주의 월요일을 찾습니다.
+        LocalDate today = LocalDate.now();
+        LocalDate currentMonday = today.with(java.time.temporal.TemporalAdjusters.previousOrSame(java.time.DayOfWeek.MONDAY));
+        // 4주 전의 월요일을 시작점으로 설정합니다.
+        LocalDate firstMonday = currentMonday.minusWeeks(4);
 
-        // 1) 버킷 선생성
         java.util.Map<Integer, int[]> bucket = new java.util.LinkedHashMap<>();
-        java.util.Map<Integer, String> label  = new java.util.HashMap<>();
-        while (!cursor.isAfter(to)) {
-            int isoWeek = cursor.get(weekField);
+        java.util.Map<Integer, String> label = new java.util.HashMap<>();
+
+        // firstMonday부터 currentMonday까지 1주씩 증가하며 5개의 버킷을 생성합니다.
+        for (LocalDate cursor = firstMonday; !cursor.isAfter(currentMonday); cursor = cursor.plusWeeks(1)) {
             int isoYear = cursor.get(yearField);
+            int isoWeek = cursor.get(weekField);
             int key = isoYear * 100 + isoWeek; // MySQL YEARWEEK와 동일한 키
-            bucket.putIfAbsent(key, new int[]{0, 0});
-            label.putIfAbsent(key, isoYear + "-W" + String.format("%02d", isoWeek));
-            cursor = cursor.plusWeeks(1);
+            bucket.put(key, new int[]{0, 0}); // putIfAbsent 대신 put을 사용해도 무방합니다.
+            label.put(key, isoYear + "-W" + String.format("%02d", isoWeek));
         }
 
         // 2) 쿼리 결과 반영 (row[0]=YEARWEEK, row[1]=completed, row[2]=total)
@@ -92,7 +94,10 @@ public class QuestAnalysisServiceImpl implements QuestAnalysisService {
             int key        = ((Number) row[0]).intValue();
             int completed  = ((Number) row[1]).intValue();
             int total      = ((Number) row[2]).intValue();
-            bucket.put(key, new int[]{completed, total});
+            // 버킷에 이미 존재하는 key만 업데이트하여 순서 유지
+            if (bucket.containsKey(key)) {
+                bucket.put(key, new int[]{completed, total});
+            }
         }
 
         // 3) DTO 변환(라벨은 "YYYY-Www")

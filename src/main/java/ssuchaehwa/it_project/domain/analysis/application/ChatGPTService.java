@@ -21,11 +21,11 @@ public class ChatGPTService {
     
     @Value("${openai.api.key}")
     private String apiKey;
-    
-    @Value("${openai.api.url:https://api.openai.com/v1/chat/completions}")
+
+    @Value("${openai.api.url}")
     private String apiUrl;
-    
-    @Value("${openai.model:gpt-4}")
+
+    @Value("${openai.api.model}")
     private String model;
     
     private final RestTemplate restTemplate = new RestTemplate();

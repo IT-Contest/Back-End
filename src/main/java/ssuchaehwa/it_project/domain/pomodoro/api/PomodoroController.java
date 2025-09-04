@@ -10,27 +10,51 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 import ssuchaehwa.it_project.domain.pomodoro.application.PomodoroService;
-import ssuchaehwa.it_project.domain.pomodoro.dto.PomodoroRequestDTO;
 import ssuchaehwa.it_project.domain.pomodoro.dto.PomodoroResponseDTO;
 import ssuchaehwa.it_project.global.config.security.auth.UserPrincipal;
 
 @RestController
-@RequestMapping("/pomodoro")
+@RequestMapping("/pomodoros")
 @RequiredArgsConstructor
 public class PomodoroController {
 
     private final PomodoroService pomodoroService;
 
-    @PostMapping("/complete")
-    @Operation(summary = "뽀모도로 세션 완료 API", description = "사용자가 완료한 뽀모도로 정보를 저장합니다.")
+    @PostMapping("/start")
+    @Operation(summary = "뽀모도로 세션 시작 API", description = "새로운 뽀모도로 세션을 시작합니다.")
+    @ApiResponses({
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "POMODORO_201", description = "뽀모도로가 성공적으로 시작되었습니다.")
+    })
+    public ResponseEntity<BaseResponse<Long>> startPomodoro(
+            @AuthenticationPrincipal UserPrincipal principal
+    ) {
+        Long pomodoroId = pomodoroService.startPomodoro(principal.getId());
+        return ResponseEntity.ok(BaseResponse.onSuccess(SuccessStatus.POMODORO_STARTED, pomodoroId));
+    }
+
+    @PostMapping("/{id}/complete")
+    @Operation(summary = "뽀모도로 세션 완료 API", description = "진행중인 뽀모도로를 완료합니다.")
     @ApiResponses({
             @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "POMODORO_201", description = "뽀모도로가 성공적으로 완료되었습니다.")
     })
-    public ResponseEntity<?> completePomodoro(
+    public ResponseEntity<BaseResponse<PomodoroResponseDTO.PomodoroCompleteResponse>> completePomodoro(
             @AuthenticationPrincipal UserPrincipal principal,
-            @RequestBody PomodoroRequestDTO request
+            @PathVariable("id") Long pomodoroId
     ) {
-        PomodoroResponseDTO.PomodoroCompleteResponse response = pomodoroService.completePomodoro(principal.getId(), request);
+        PomodoroResponseDTO.PomodoroCompleteResponse response = pomodoroService.completePomodoro(principal.getId(), pomodoroId);
         return ResponseEntity.ok(BaseResponse.onSuccess(SuccessStatus.POMODORO_COMPLETED, response));
+    }
+
+    @PostMapping("/{id}/cancel")
+    @Operation(summary = "뽀모도로 세션 취소 API", description = "진행중인 뽀모도로를 취소합니다.")
+    @ApiResponses({
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "POMODORO_200", description = "뽀모도로가 성공적으로 취소되었습니다.")
+    })
+    public ResponseEntity<BaseResponse<Void>> cancelPomodoro(
+            @AuthenticationPrincipal UserPrincipal principal,
+            @PathVariable("id") Long pomodoroId
+    ) {
+        pomodoroService.cancelPomodoro(principal.getId(), pomodoroId);
+        return ResponseEntity.ok(BaseResponse.onSuccess(SuccessStatus.POMODORO_CANCELED, null));
     }
 }
