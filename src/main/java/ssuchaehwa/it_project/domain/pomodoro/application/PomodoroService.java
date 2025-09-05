@@ -1,9 +1,9 @@
 package ssuchaehwa.it_project.domain.pomodoro.application;
 
-import ssuchaehwa.it_project.domain.pomodoro.dto.PomodoroRequestDTO;
 import ssuchaehwa.it_project.domain.pomodoro.dto.PomodoroResponseDTO;
-import ssuchaehwa.it_project.domain.user.entity.User;
 
 public interface PomodoroService {
-    PomodoroResponseDTO.PomodoroCompleteResponse completePomodoro(Long userId, PomodoroRequestDTO request);
+    Long startPomodoro(Long userId);
+    PomodoroResponseDTO.PomodoroCompleteResponse completePomodoro(Long userId, Long pomodoroId);
+    void cancelPomodoro(Long userId, Long pomodoroId);
 }

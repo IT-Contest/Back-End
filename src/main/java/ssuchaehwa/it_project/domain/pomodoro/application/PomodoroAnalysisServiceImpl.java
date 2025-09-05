@@ -21,13 +21,10 @@ public class PomodoroAnalysisServiceImpl implements PomodoroAnalysisService {
     private final PomodoroAnalysisRepository pomodoroAnalysisRepository;
 
     @Override
-    public List<PomodoroAnalysisResponseDTO.Daily> getDaily(Long userId) {
-        log.info("뽀모도로 일일 분석 요청 - 사용자: {}", userId);
-        LocalDate today = LocalDate.now();
-        LocalDate from = today.minusDays(6);  // D-7
-        LocalDate to = today;                 // 오늘
+    public List<PomodoroAnalysisResponseDTO.Daily> getDaily(Long userId, LocalDate from, LocalDate to) {
+        log.info("뽀모도로 일일 분석 요청 - 사용자: {}, 기간: {} ~ {}", userId, from, to);
         
-        // 1) D-7 ~ 오늘까지 버킷 선생성(0으로 채움, 총 7개)
+        // 1) 지정된 기간 버킷 선생성(0으로 채움)
         Map<LocalDate, int[]> bucket = new LinkedHashMap<>();
         for (LocalDate d = from; !d.isAfter(to); d = d.plusDays(1)) {
             bucket.put(d, new int[]{0, 0}); // [completed, total]
@@ -55,44 +52,53 @@ public class PomodoroAnalysisServiceImpl implements PomodoroAnalysisService {
     }
 
     @Override
-    public List<PomodoroAnalysisResponseDTO.Weekly> getWeekly(Long userId) {
-        log.info("뽀모도로 주간 분석 요청 - 사용자: {}", userId);
-        LocalDate today = LocalDate.now();
-        YearMonth currentMonth = YearMonth.from(today);
+    public List<PomodoroAnalysisResponseDTO.Weekly> getWeekly(Long userId, LocalDate from, LocalDate to) {
+        log.info("뽀모도로 주간 분석 요청 - 사용자: {}, 기간: {} ~ {}", userId, from, to);
         
-        // 이번 달 1일부터 마지막 날까지
-        LocalDate monthStart = currentMonth.atDay(1);
-        LocalDate monthEnd = currentMonth.atEndOfMonth();
-        
-        // 1) 5개 주차 버킷 선생성
-        Map<Integer, int[]> bucket = new LinkedHashMap<>();
-        Map<Integer, String> label = new LinkedHashMap<>();
-        
-        // 1주차: 1-7일, 2주차: 8-14일, 3주차: 15-21일, 4주차: 22-28일, 5주차: 29일~
-        for (int i = 0; i < 5; i++) {
-            int weekNum = i + 1;
-            bucket.put(weekNum, new int[]{0, 0});
-            label.put(weekNum, currentMonth.getMonthValue() + "월 " + weekNum + "주차");
+        // 날짜 검증
+        if (from.isAfter(to)) {
+            throw new IllegalArgumentException("시작일은 종료일보다 늦을 수 없습니다: from=" + from + ", to=" + to);
         }
-        
-        // 2) 실제 데이터 조회 및 주차별로 집계
-        List<Object[]> rows = pomodoroAnalysisRepository.countWeekly(userId, monthStart, monthEnd);
+
+        var rows = pomodoroAnalysisRepository.countWeekly(userId, from, to);
+
+        // 1) 현재 날짜(오늘)를 기준으로 현재 주차부터 과거 4주차까지 총 5개의 주차 버킷을 생성합니다.
+        var weekField = java.time.temporal.IsoFields.WEEK_OF_WEEK_BASED_YEAR;
+        var yearField = java.time.temporal.IsoFields.WEEK_BASED_YEAR;
+
+        // 현재 날짜(오늘)가 포함된 주의 월요일을 찾습니다.
+        LocalDate today = LocalDate.now();
+        LocalDate currentMonday = today.with(java.time.temporal.TemporalAdjusters.previousOrSame(java.time.DayOfWeek.MONDAY));
+        // 4주 전의 월요일을 시작점으로 설정합니다.
+        LocalDate firstMonday = currentMonday.minusWeeks(4);
+
+        java.util.Map<Integer, int[]> bucket = new java.util.LinkedHashMap<>();
+        java.util.Map<Integer, String> label = new java.util.HashMap<>();
+
+        // firstMonday부터 currentMonday까지 1주씩 증가하며 5개의 버킷을 생성합니다.
+        for (LocalDate cursor = firstMonday; !cursor.isAfter(currentMonday); cursor = cursor.plusWeeks(1)) {
+            int isoYear = cursor.get(yearField);
+            int isoWeek = cursor.get(weekField);
+            int key = isoYear * 100 + isoWeek; // MySQL YEARWEEK와 동일한 키
+            bucket.put(key, new int[]{0, 0}); // putIfAbsent 대신 put을 사용해도 무방합니다.
+            label.put(key, isoYear + "-W" + String.format("%02d", isoWeek));
+        }
+
+        // 2) 쿼리 결과 반영 (row[0]=YEARWEEK, row[1]=completed, row[2]=total)
         for (Object[] row : rows) {
-            int yearWeek = ((Number) row[0]).intValue();
-            int completed = ((Number) row[1]).intValue();
-            int total = ((Number) row[2]).intValue();
-            
-            // YEARWEEK를 주차 번호로 변환 (1~5)
-            int weekNum = getWeekNumberFromYearWeek(yearWeek, currentMonth);
-            if (weekNum >= 1 && weekNum <= 5) {
-                bucket.put(weekNum, new int[]{completed, total});
+            int key        = ((Number) row[0]).intValue();
+            int completed  = ((Number) row[1]).intValue();
+            int total      = ((Number) row[2]).intValue();
+            // 버킷에 이미 존재하는 key만 업데이트하여 순서 유지
+            if (bucket.containsKey(key)) {
+                bucket.put(key, new int[]{completed, total});
             }
         }
-        
-        // 3) DTO 변환(라벨은 "MM월 N주차")
+
+        // 3) DTO 변환(라벨은 "YYYY-Www")
         return bucket.entrySet().stream()
                 .map(e -> new PomodoroAnalysisResponseDTO.Weekly(
-                        label.get(e.getKey()),
+                        label.getOrDefault(e.getKey(), String.valueOf(e.getKey())),
                         e.getValue()[0],
                         e.getValue()[1]
                 ))
@@ -100,23 +106,20 @@ public class PomodoroAnalysisServiceImpl implements PomodoroAnalysisService {
     }
 
     @Override
-    public List<PomodoroAnalysisResponseDTO.Monthly> getMonthly(Long userId) {
-        log.info("뽀모도로 월간 분석 요청 - 사용자: {}", userId);
-        LocalDate today = LocalDate.now();
-        YearMonth current = YearMonth.from(today);
+    public List<PomodoroAnalysisResponseDTO.Monthly> getMonthly(Long userId, LocalDate from, LocalDate to) {
+        log.info("뽀모도로 월간 분석 요청 - 사용자: {}, 기간: {} ~ {}", userId, from, to);
         
-        // 이번 달 포함 전월 12개
-        YearMonth from = current.minusMonths(11);
-        YearMonth to = current;
+        YearMonth fromMonth = YearMonth.from(from);
+        YearMonth toMonth = YearMonth.from(to);
         
-        // 1) 12개월 버킷 0 채우기
+        // 월별 버킷 0 채우기
         Map<YearMonth, int[]> bucket = new LinkedHashMap<>();
-        for (YearMonth ym = from; !ym.isAfter(to); ym = ym.plusMonths(1)) {
+        for (YearMonth ym = fromMonth; !ym.isAfter(toMonth); ym = ym.plusMonths(1)) {
             bucket.put(ym, new int[]{0, 0});
         }
         
-        // 2) 실제 데이터 조회 및 월별로 집계
-        List<Object[]> rows = pomodoroAnalysisRepository.countMonthly(userId, from.atDay(1), to.atEndOfMonth());
+        // 실제 데이터 조회 및 월별로 집계
+        List<Object[]> rows = pomodoroAnalysisRepository.countMonthly(userId, from, to);
         for (Object[] row : rows) {
             String ymStr = row[0].toString(); // "YYYY-MM"
             int completed = ((Number) row[1]).intValue();
@@ -138,24 +141,20 @@ public class PomodoroAnalysisServiceImpl implements PomodoroAnalysisService {
     }
 
     @Override
-    public List<PomodoroAnalysisResponseDTO.Yearly> getYearly(Long userId) {
-        log.info("뽀모도로 연간 분석 요청 - 사용자: {}", userId);
-        LocalDate today = LocalDate.now();
-        int currentYear = today.getYear();
+    public List<PomodoroAnalysisResponseDTO.Yearly> getYearly(Long userId, LocalDate from, LocalDate to) {
+        log.info("뽀모도로 연간 분석 요청 - 사용자: {}, 기간: {} ~ {}", userId, from, to);
         
-        // 이번 년도 포함 전년 10개
-        int fromYear = currentYear - 9;
-        int toYear = currentYear;
+        int fromYear = from.getYear();
+        int toYear = to.getYear();
         
-        // 1) 10개년 버킷 0 채우기
+        // 연도별 버킷 0 채우기
         Map<Integer, int[]> bucket = new LinkedHashMap<>();
         for (int y = fromYear; y <= toYear; y++) {
             bucket.put(y, new int[]{0, 0});
         }
         
-        // 2) 실제 데이터 조회 및 년별로 집계
-        List<Object[]> rows = pomodoroAnalysisRepository.countYearly(userId, 
-            LocalDate.of(fromYear, 1, 1), LocalDate.of(toYear, 12, 31));
+        // 실제 데이터 조회 및 년별로 집계
+        List<Object[]> rows = pomodoroAnalysisRepository.countYearly(userId, from, to);
         for (Object[] row : rows) {
             int year = ((Number) row[0]).intValue();
             int completed = ((Number) row[1]).intValue();
@@ -190,28 +189,5 @@ public class PomodoroAnalysisServiceImpl implements PomodoroAnalysisService {
     // 연간 라벨 포맷: "YYYY년"
     private String formatYearlyLabel(int year) {
         return year + "년";
-    }
-    
-    // YEARWEEK를 주차 번호로 변환 (1~5)
-    private int getWeekNumberFromYearWeek(int yearWeek, YearMonth currentMonth) {
-        // YEARWEEK는 YYYYWW 형태 (예: 202401)
-        int year = yearWeek / 100;
-        int week = yearWeek % 100;
-        
-        // 이번 달의 주차 계산
-        if (year == currentMonth.getYear()) {
-            // 1주차: 1-7일, 2주차: 8-14일, 3주차: 15-21일, 4주차: 22-28일, 5주차: 29일~
-            LocalDate firstDay = currentMonth.atDay(1);
-            int dayOfWeek = firstDay.getDayOfWeek().getValue();
-            int firstWeekStart = 1 + (7 - dayOfWeek + 1) % 7;
-            
-            if (week == 1) return 1;
-            else if (week == 2) return 2;
-            else if (week == 3) return 3;
-            else if (week == 4) return 4;
-            else if (week == 5) return 5;
-        }
-        
-        return 1; // 기본값
     }
 }

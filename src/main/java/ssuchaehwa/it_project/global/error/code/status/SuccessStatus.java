@@ -26,7 +26,9 @@ public enum SuccessStatus implements BaseCode {
 
 
     // 뽀모도로
-    POMODORO_COMPLETED(HttpStatus.CREATED, "POMODORO_201", "뽀모도로가 성공적으로 완료되었습니다."),
+    POMODORO_STARTED(HttpStatus.CREATED, "POMODORO_201", "뽀모도로가 성공적으로 시작되었습니다."),
+    POMODORO_COMPLETED(HttpStatus.OK, "POMODORO_202", "뽀모도로가 성공적으로 완료되었습니다."),
+    POMODORO_CANCELED(HttpStatus.OK, "POMODORO_203", "뽀모도로가 성공적으로 취소되었습니다."),
     POMODORO_ANALYSIS_SUCCESS(HttpStatus.OK, "POMODORO_200", "뽀모도로 분석을 완료했습니다."),
 
     // token
