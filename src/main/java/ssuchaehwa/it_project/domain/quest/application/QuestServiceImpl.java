@@ -254,8 +254,29 @@ public class QuestServiceImpl implements QuestService {
                 .orElseThrow(() -> new UserException(ErrorStatus.NO_SUCH_USER));
 
         List<Quest> quests = questRepository.findAllByUserId(user.getId());
+        LocalDate today = LocalDate.now(ZoneId.of("Asia/Seoul"));
 
-        return QuestConverter.toQuestListResponse(quests);
+        // 각 퀘스트의 현재 기간 상태를 QuestOccurrence에서 조회하여 반영
+        return quests.stream().map(quest -> {
+            // 현재 기간 period_key 계산
+            LocalDate periodKey = questAnalysisService.currentPeriodKeyFromAnchor(
+                quest.getQuestType().name(), 
+                quest.getStartDate() != null ? quest.getStartDate() : today, 
+                today
+            );
+            
+            // QuestOccurrence에서 실제 상태 조회
+            Optional<QuestOccurrence> occurrence = questOccurrenceRepository
+                .findByTemplateIdAndPeriodKey(quest.getId(), periodKey);
+            
+            // 실제 완료 상태 결정
+            CompletionStatus actualStatus = CompletionStatus.INCOMPLETE;
+            if (occurrence.isPresent() && "COMPLETED".equalsIgnoreCase(occurrence.get().getStatus())) {
+                actualStatus = CompletionStatus.COMPLETED;
+            }
+            
+            return QuestConverter.toQuestListResponseWithStatus(quest, actualStatus);
+        }).collect(java.util.stream.Collectors.toList());
     }
 
     // 메인 화면 조회
@@ -328,7 +349,9 @@ public class QuestServiceImpl implements QuestService {
         List<QuestResponseDTO.DailyOngoingQuest> dailyOngoingQuests = quests.stream()
                 .filter(q -> {
                     LocalDate pk = questAnalysisService.currentPeriodKeyFromAnchor(q.getQuestType().name(), q.getStartDate() != null ? q.getStartDate() : today, today);
-                    return questOccurrenceRepository.findByTemplateIdAndPeriodKey(q.getId(), pk).isPresent();
+                    Optional<QuestOccurrence> occurrence = questOccurrenceRepository.findByTemplateIdAndPeriodKey(q.getId(), pk);
+                    // 존재하고 완료되지 않은 퀘스트만 필터링
+                    return occurrence.isPresent() && !"COMPLETED".equalsIgnoreCase(occurrence.get().getStatus());
                 })
                 .map(q -> QuestResponseDTO.DailyOngoingQuest.builder()
                         .title(q.getTitle())
@@ -365,6 +388,8 @@ public class QuestServiceImpl implements QuestService {
                 .filter(q -> q.getUser().getId().equals(user.getId()))
                 .toList();
 
+        System.out.println("필터링된 quests 수: " + quests.size());
+
         // 요청 상태 파싱 (문자열 → Enum)
         CompletionStatus targetStatus = CompletionStatus.valueOf(request.getCompletionStatus().toUpperCase());
 
@@ -372,32 +397,47 @@ public class QuestServiceImpl implements QuestService {
         LocalDate today = LocalDate.now(ZoneId.of("Asia/Seoul"));
 
         for (Quest quest : quests) {
+            System.out.println("Processing quest ID: " + quest.getId());
+            
             // 템플릿의 주기(일/주/월/연)에 맞는 period_key 계산 (앵커 기반)
             LocalDate periodKey = questAnalysisService.currentPeriodKeyFromAnchor(quest.getQuestType().name(), quest.getStartDate() != null ? quest.getStartDate() : today, today);
+            System.out.println("계산된 periodKey: " + periodKey);
 
             // (template_id, period_key)로 occurrence 조회(or 생성)
             Optional<QuestOccurrence> existing = questOccurrenceRepository.findByTemplateIdAndPeriodKey(quest.getId(), periodKey);
-            QuestOccurrence occ = existing.orElseGet(() -> QuestOccurrence.builder()
-                    .templateId(quest.getId())
-                    .userId(user.getId())
-                    .questType(quest.getQuestType().name())
-                    .periodKey(periodKey)
-                    .status("INCOMPLETE")
-                    .expectedStartTime(quest.getStartTime() == null ? null : quest.getStartTime().toString())
-                    .expectedEndTime(quest.getEndTime() == null ? null : quest.getEndTime().toString())
-                    .title(quest.getTitle())
-                    .build());
+            QuestOccurrence occ = existing.orElseGet(() -> {
+                System.out.println("새로운 QuestOccurrence 생성");
+                return QuestOccurrence.builder()
+                        .templateId(quest.getId())
+                        .userId(user.getId())
+                        .questType(quest.getQuestType().name())
+                        .periodKey(periodKey)
+                        .status("INCOMPLETE")
+                        .expectedStartTime(quest.getStartTime() == null ? null : quest.getStartTime().toString())
+                        .expectedEndTime(quest.getEndTime() == null ? null : quest.getEndTime().toString())
+                        .title(quest.getTitle())
+                        .build();
+            });
 
-            // 상태 업데이트 (Occurrence 기준)
+            System.out.println("기존 occurrence ID: " + occ.getId());
+            System.out.println("기존 status: " + occ.getStatus());
+
+            // 상태 업데이트 (명시적 업데이트 쿼리 사용)
+            LocalDateTime completedTime = null;
+            String newStatus;
+            
             if (targetStatus == CompletionStatus.COMPLETED) {
-                occ.setStatus("COMPLETED");
-                occ.setCompletedAt(LocalDateTime.now(ZoneId.of("Asia/Seoul")));
+                newStatus = "COMPLETED";
+                completedTime = LocalDateTime.now(ZoneId.of("Asia/Seoul"));
+                System.out.println("상태를 COMPLETED로 변경");
             } else {
-                occ.setStatus("INCOMPLETE");
-                occ.setCompletedAt(null);
+                newStatus = "INCOMPLETE";
+                System.out.println("상태를 INCOMPLETE로 변경");
             }
 
-            questOccurrenceRepository.save(occ);
+            // 명시적 업데이트 쿼리 실행
+            int updatedRows = questOccurrenceRepository.updateStatusByTemplateIdAndPeriodKey(
+                    quest.getId(), periodKey, newStatus, completedTime);
         }
 
         // NOTE: 응답은 기존 포맷을 유지하되, 템플릿 상태는 표시용일 수 있음
@@ -524,6 +564,26 @@ public class QuestServiceImpl implements QuestService {
         // 퀘스트 소유자 확인
         if (!quest.getUser().getId().equals(userId)) {
             throw new QuestException(ErrorStatus.QUEST_ACCESS_DENIED);
+        }
+
+        // 완료된 QuestOccurrence 조회하여 경험치/골드 회수
+        List<QuestOccurrence> completedOccurrences = questOccurrenceRepository.findAllByTemplateId(quest.getId())
+                .stream()
+                .filter(occ -> "COMPLETED".equalsIgnoreCase(occ.getStatus()))
+                .toList();
+        
+        // 완료된 횟수만큼 경험치/골드 차감
+        if (!completedOccurrences.isEmpty()) {
+            User user = quest.getUser();
+            int completedCount = completedOccurrences.size();
+            int expToDeduct = quest.getExpReward() * completedCount;
+            int goldToDeduct = quest.getGoldReward() * completedCount;
+            
+            // 사용자의 현재 경험치/골드에서 차감 (0 미만으로는 가지 않도록)
+            user.setExp(Math.max(0, user.getExp() - expToDeduct));
+            user.setGold(Math.max(0, user.getGold() - goldToDeduct));
+            
+            userRepository.save(user);
         }
 
         // 연관된 해시태그 관계 삭제

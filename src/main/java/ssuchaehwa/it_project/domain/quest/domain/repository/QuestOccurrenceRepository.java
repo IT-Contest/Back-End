@@ -63,4 +63,14 @@ public interface QuestOccurrenceRepository extends JpaRepository<QuestOccurrence
 
     @Transactional(readOnly = true)
     List<QuestOccurrence> findAllByTemplateId(Long templateId);
+
+    @Modifying(clearAutomatically = true)
+    @Transactional
+    @Query("UPDATE QuestOccurrence q SET q.status = :status, q.completedAt = :completedAt WHERE q.templateId = :templateId AND q.periodKey = :periodKey")
+    int updateStatusByTemplateIdAndPeriodKey(
+            @Param("templateId") Long templateId,
+            @Param("periodKey") LocalDate periodKey,
+            @Param("status") String status,
+            @Param("completedAt") java.time.LocalDateTime completedAt
+    );
 }

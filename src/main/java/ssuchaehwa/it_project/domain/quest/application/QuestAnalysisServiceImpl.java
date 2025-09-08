@@ -45,7 +45,10 @@ public class QuestAnalysisServiceImpl implements QuestAnalysisService {
             }
             int completed = ((Number) row[1]).intValue();
             int total     = ((Number) row[2]).intValue();
-            bucket.put(day, new int[]{completed, total});
+            // 버킷에 이미 존재하는 날짜만 업데이트하여 범위 유지
+            if (bucket.containsKey(day)) {
+                bucket.put(day, new int[]{completed, total});
+            }
         }
 
         // 3) DTO 변환(라벨은 yyyy-MM-dd 그대로 반환; 프론트에서 포맷 가능)
