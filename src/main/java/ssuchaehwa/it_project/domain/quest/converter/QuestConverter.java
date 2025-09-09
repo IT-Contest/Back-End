@@ -1,5 +1,6 @@
 package ssuchaehwa.it_project.domain.quest.converter;
 
+import ssuchaehwa.it_project.domain.model.enums.CompletionStatus;
 import ssuchaehwa.it_project.domain.model.enums.QuestType;
 import ssuchaehwa.it_project.domain.quest.domain.entity.Party;
 import ssuchaehwa.it_project.domain.quest.domain.entity.PartyUser;
@@ -86,6 +87,31 @@ public class QuestConverter {
                         .dueDate(quest.getDueDate())
                         .build())
                 .toList();
+    }
+
+    // 퀘스트 목록 조회 (실제 완료 상태 반영)
+    public static QuestResponseDTO.QuestListResponse toQuestListResponseWithStatus(Quest quest, CompletionStatus actualStatus) {
+        return QuestResponseDTO.QuestListResponse.builder()
+                .questId(quest.getId())
+                .title(quest.getTitle())
+                .expReward(quest.getExpReward())
+                .goldReward(quest.getGoldReward())
+                .priority(quest.getPriority())
+                .hashtags(
+                        quest.getHashtagQuests().stream()
+                                .map(hq -> hq.getHashtag().getName())
+                                .toList()
+                )
+                .partyName(
+                        quest.getParty() != null ? quest.getParty().getTitle() : null
+                )
+                .questType(quest.getQuestType())
+                .completionStatus(actualStatus) // 실제 완료 상태 사용
+                .startTime(quest.getStartTime())
+                .endTime(quest.getEndTime())
+                .startDate(quest.getStartDate())
+                .dueDate(quest.getDueDate())
+                .build();
     }
 
     // 메인 페이지 조회
