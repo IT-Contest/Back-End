@@ -580,8 +580,8 @@ public class QuestServiceImpl implements QuestService {
             int goldToDeduct = quest.getGoldReward() * completedCount;
             
             // 사용자의 현재 경험치/골드에서 차감 (0 미만으로는 가지 않도록)
-            user.setExp(Math.max(0, user.getExp() - expToDeduct));
-            user.setGold(Math.max(0, user.getGold() - goldToDeduct));
+            user.deductExp(expToDeduct);
+            user.deductGold(goldToDeduct);
             
             userRepository.save(user);
         }

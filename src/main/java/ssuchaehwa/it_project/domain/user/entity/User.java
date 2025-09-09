@@ -52,4 +52,14 @@ public class User extends BaseTimeEntity {
     public void addGold(int amount) {
         this.gold += amount;
     }
+
+    // 경험치 차감 (0 미만으로 가지 않도록)
+    public void deductExp(int amount) {
+        this.exp = Math.max(0, this.exp - amount);
+    }
+
+    // 골드 차감 (0 미만으로 가지 않도록)
+    public void deductGold(int amount) {
+        this.gold = Math.max(0, this.gold - amount);
+    }
 }
