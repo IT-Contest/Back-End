@@ -73,4 +73,8 @@ public interface QuestOccurrenceRepository extends JpaRepository<QuestOccurrence
             @Param("status") String status,
             @Param("completedAt") java.time.LocalDateTime completedAt
     );
+
+    @Modifying
+    @Query("DELETE FROM QuestOccurrence qo WHERE qo.userId = :userId")
+    void deleteByUserId(@Param("userId") Long userId);
 }
