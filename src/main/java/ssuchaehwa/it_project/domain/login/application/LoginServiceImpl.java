@@ -1,5 +1,6 @@
 package ssuchaehwa.it_project.domain.login.application;
 
+import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.redis.core.RedisTemplate;
 
@@ -9,10 +10,12 @@ import java.util.concurrent.TimeUnit;
 
 import org.springframework.lang.Nullable;
 import org.springframework.stereotype.Service;
+import ssuchaehwa.it_project.domain.analysis.domain.repository.CoachingRecordRepository;
 import ssuchaehwa.it_project.domain.login.dto.AuthResponseDto;
 import ssuchaehwa.it_project.domain.model.enums.FriendStatus;
+import ssuchaehwa.it_project.domain.pomodoro.domain.repository.PomodoroRepository;
 import ssuchaehwa.it_project.domain.quest.domain.entity.InvitedFriend;
-import ssuchaehwa.it_project.domain.quest.domain.repository.InvitedFriendRepository;
+import ssuchaehwa.it_project.domain.quest.domain.repository.*;
 import ssuchaehwa.it_project.domain.user.entity.User;
 import ssuchaehwa.it_project.domain.user.repository.UserRepository;
 import ssuchaehwa.it_project.global.config.security.jwt.JwtUtil;
@@ -29,6 +32,14 @@ public class LoginServiceImpl implements LoginService {
     private final JwtUtil jwtUtil;
     private final RedisTemplate<String, String> redisTemplate;
     private final InvitedFriendRepository invitedFriendRepository;
+    private final CoachingRecordRepository coachingRecordRepository;
+    private final PomodoroRepository pomodoroRepository;
+    private final PartyUserRepository partyUserRepository;
+    private final PartyRepository partyRepository;
+    private final QuestRepository questRepository;
+    private final QuestOccurrenceRepository questOccurrenceRepository;
+
+
 
     // 웹용
     @Override
@@ -264,26 +275,29 @@ public class LoginServiceImpl implements LoginService {
     }
 
     // 회원탈퇴
+    @Transactional
     @Override
     public void withdraw(String accessToken) {
-        String userIdStr;
-        try {
-            userIdStr = jwtUtil.validateAndGetUserId(accessToken);
-        } catch (Exception e) {
-            throw new GeneralException(ErrorStatus.INVALID_ACCESS_TOKEN);
-        }
-
+        String userIdStr = jwtUtil.validateAndGetUserId(accessToken);
         Long userId = Long.parseLong(userIdStr);
-        Optional<User> userOptional = userRepository.findById(userId);
 
-        if (userOptional.isEmpty()) {
-            throw new GeneralException(ErrorStatus.NO_SUCH_USER);
-        }
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new GeneralException(ErrorStatus.NO_SUCH_USER));
 
-        // 1. 유저 DB 삭제
-        userRepository.deleteById(userId);
+        // 자식 엔티티 삭제
+        coachingRecordRepository.deleteByUser(user);
+        pomodoroRepository.deleteByUser(user);
+        invitedFriendRepository.deleteByFromUserOrToUser(user, user);
+        partyUserRepository.deleteByUser(user);
+        partyRepository.deleteByUser(user);
+        questRepository.deleteByUser(user);
+        questOccurrenceRepository.deleteByUserId(userId);
 
-        // 2. refreshToken 삭제
+        // 유저 삭제
+        userRepository.delete(user);
+
+        // refreshToken 삭제
         redisTemplate.delete("refresh:userId:" + userId);
     }
+
 }
