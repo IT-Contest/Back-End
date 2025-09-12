@@ -140,12 +140,16 @@ public class QuestConverter {
     }
 
     // 퀘스트 완료 상태 변경
-    public static List<QuestResponseDTO.QuestStatusChangeResponse> toQuestStatusChangeResponse(List<Quest> quests) {
+    public static List<QuestResponseDTO.QuestStatusChangeResponse> toQuestStatusChangeResponse(
+            List<Quest> quests, 
+            java.util.Map<Long, Boolean> firstCompletionMap,
+            CompletionStatus targetStatus) {
         return quests.stream()
                 .map(q -> QuestResponseDTO.QuestStatusChangeResponse.builder()
                         .questId(q.getId())
                         .title(q.getTitle())
-                        .completionStatus(q.getCompletionStatus())
+                        .completionStatus(targetStatus)
+                        .isFirstCompletion(firstCompletionMap.getOrDefault(q.getId(), false))
                         .build())
                 .toList();
     }

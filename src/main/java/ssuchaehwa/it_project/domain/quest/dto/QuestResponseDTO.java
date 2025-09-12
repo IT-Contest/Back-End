@@ -152,6 +152,13 @@ public class QuestResponseDTO {
         private Long questId;
         private String title;
         private CompletionStatus completionStatus;
+        @com.fasterxml.jackson.annotation.JsonProperty("isFirstCompletion")
+        private boolean isFirstCompletion; // 실제 보상 지급 여부
+        
+        // 명시적 getter 추가 (JSON 직렬화 보장)
+        public boolean getIsFirstCompletion() {
+            return isFirstCompletion;
+        }
     }
 
     // 파티 초대 리스트
