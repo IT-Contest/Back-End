@@ -14,15 +14,14 @@ import ssuchaehwa.it_project.domain.quest.domain.entity.QuestOccurrence;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
-import java.time.temporal.ChronoUnit;
 import java.util.Optional;
-import java.util.Map;
+
 import ssuchaehwa.it_project.domain.quest.dto.QuestRequestDTO;
 import ssuchaehwa.it_project.domain.quest.dto.QuestResponseDTO;
 import ssuchaehwa.it_project.domain.quest.exception.QuestException;
-import ssuchaehwa.it_project.domain.user.entity.User;
+import ssuchaehwa.it_project.domain.user.domain.entity.User;
 import ssuchaehwa.it_project.domain.user.exception.UserException;
-import ssuchaehwa.it_project.domain.user.repository.UserRepository;
+import ssuchaehwa.it_project.domain.user.domain.repository.UserRepository;
 import ssuchaehwa.it_project.global.error.code.status.ErrorStatus;
 import org.springframework.util.ReflectionUtils;
 

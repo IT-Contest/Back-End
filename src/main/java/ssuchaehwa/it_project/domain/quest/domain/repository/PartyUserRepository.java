@@ -3,7 +3,7 @@ package ssuchaehwa.it_project.domain.quest.domain.repository;
 import org.springframework.data.jpa.repository.JpaRepository;
 import ssuchaehwa.it_project.domain.model.enums.InvitationStatus;
 import ssuchaehwa.it_project.domain.quest.domain.entity.PartyUser;
-import ssuchaehwa.it_project.domain.user.entity.User;
+import ssuchaehwa.it_project.domain.user.domain.entity.User;
 
 import java.util.List;
 import java.util.Optional;

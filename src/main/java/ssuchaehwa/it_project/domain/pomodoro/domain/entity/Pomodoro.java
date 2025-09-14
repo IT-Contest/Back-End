@@ -3,7 +3,7 @@ package ssuchaehwa.it_project.domain.pomodoro.domain.entity;
 import jakarta.persistence.*;
 import lombok.*;
 import ssuchaehwa.it_project.domain.model.entity.BaseTimeEntity;
-import ssuchaehwa.it_project.domain.user.entity.User;
+import ssuchaehwa.it_project.domain.user.domain.entity.User;
 import ssuchaehwa.it_project.domain.pomodoro.exception.PomodoroException;
 import ssuchaehwa.it_project.global.error.code.status.ErrorStatus;
 

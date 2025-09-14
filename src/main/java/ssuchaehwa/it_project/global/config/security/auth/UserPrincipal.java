@@ -2,7 +2,7 @@ package ssuchaehwa.it_project.global.config.security.auth;
 
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
-import ssuchaehwa.it_project.domain.user.entity.User;
+import ssuchaehwa.it_project.domain.user.domain.entity.User;
 
 import java.util.Collection;
 import java.util.Collections;

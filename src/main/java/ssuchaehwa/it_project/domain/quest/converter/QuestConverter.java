@@ -1,13 +1,12 @@
 package ssuchaehwa.it_project.domain.quest.converter;
 
 import ssuchaehwa.it_project.domain.model.enums.CompletionStatus;
-import ssuchaehwa.it_project.domain.model.enums.QuestType;
 import ssuchaehwa.it_project.domain.quest.domain.entity.Party;
 import ssuchaehwa.it_project.domain.quest.domain.entity.PartyUser;
 import ssuchaehwa.it_project.domain.quest.domain.entity.Quest;
 import ssuchaehwa.it_project.domain.quest.dto.QuestResponseDTO;
 import ssuchaehwa.it_project.domain.quest.dto.AnalysisResponseDTO;
-import ssuchaehwa.it_project.domain.user.entity.User;
+import ssuchaehwa.it_project.domain.user.domain.entity.User;
 import ssuchaehwa.it_project.global.common.response.BaseResponse;
 import ssuchaehwa.it_project.global.error.code.status.SuccessStatus;
 

@@ -1,4 +1,4 @@
-package ssuchaehwa.it_project.domain.user.entity;
+package ssuchaehwa.it_project.domain.user.domain.entity;
 
 import jakarta.persistence.*;
 import lombok.*;
