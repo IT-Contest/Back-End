@@ -35,7 +35,13 @@ public enum SuccessStatus implements BaseCode {
     TOKEN_REISSUE_SUCCESS(HttpStatus.OK, "TOKEN_200", "토큰 재발급 성공"),
 
     // user
-    MAIN_PAGE_VIEW_SUCCESS(HttpStatus.OK, "USER_200", "메인 페이지 조회를 완료했습니다.");
+    MAIN_PAGE_VIEW_SUCCESS(HttpStatus.OK, "USER_200", "메인 페이지 조회를 완료했습니다."),
+
+    // term
+    TERM_FETCH_SUCCESS(HttpStatus.OK, "TERM_200", "약관 목록 조회 성공"),
+    TERM_AGREE_SUCCESS(HttpStatus.OK, "TERM_200", "약관 동의 성공"),
+    TERM_CHECK_SUCCESS(HttpStatus.OK, "TERM_200", "필수 약관 동의 여부 확인 성공"),
+    TERMS_CREATE_SUCCESS(HttpStatus.CREATED, "TERM_201", "약관 생성 완료");
 
     private final HttpStatus httpStatus;
     private final String code;

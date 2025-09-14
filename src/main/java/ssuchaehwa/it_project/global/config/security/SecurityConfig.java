@@ -32,7 +32,8 @@ public class SecurityConfig {
                         "/swagger-ui.html",              // Swagger HTML (optional)
                         "/v3/api-docs/**",               // OpenAPI docs
                         "/webjars/**",                    // Swagger 리소스
-                        "/quests/**" // quest api
+                        "/quests/**",
+                       "/users/**"
                        // "/pomodoro/**"
                 ).permitAll()
                     .requestMatchers("/pomodoro/**").authenticated()

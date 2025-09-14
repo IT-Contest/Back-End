@@ -2,7 +2,6 @@ package ssuchaehwa.it_project.domain.quest.application;
 
 import ssuchaehwa.it_project.domain.quest.dto.QuestRequestDTO;
 import ssuchaehwa.it_project.domain.quest.dto.QuestResponseDTO;
-import ssuchaehwa.it_project.domain.user.entity.User;
 
 import java.util.List;
 

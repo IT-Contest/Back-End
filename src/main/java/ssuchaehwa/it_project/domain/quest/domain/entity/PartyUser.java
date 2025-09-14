@@ -4,7 +4,7 @@ import jakarta.persistence.*;
 import lombok.*;
 import ssuchaehwa.it_project.domain.model.entity.BaseTimeEntity;
 import ssuchaehwa.it_project.domain.model.enums.InvitationStatus;
-import ssuchaehwa.it_project.domain.user.entity.User;
+import ssuchaehwa.it_project.domain.user.domain.entity.User;
 
 @Entity
 @Getter

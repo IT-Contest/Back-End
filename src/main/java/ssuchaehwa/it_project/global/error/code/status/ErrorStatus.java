@@ -31,8 +31,11 @@ public enum ErrorStatus implements BaseErrorCode{
 
     // pomodoro
     NO_SUCH_POMODORO(HttpStatus.BAD_REQUEST, "POMODORO_4001", "해당 뽀모도로가 존재하지 않습니다."),
-    POMODORO_ALREADY_PROCESSED(HttpStatus.BAD_REQUEST, "POMODORO_4002", "이미 처리된 뽀모도로입니다.");
+    POMODORO_ALREADY_PROCESSED(HttpStatus.BAD_REQUEST, "POMODORO_4002", "이미 처리된 뽀모도로입니다."),
 
+    // term
+    TERMS_REQUIRED_NOT_AGREED(HttpStatus.BAD_REQUEST, "TERM_4001", "필수 약관에 동의하지 않았습니다."),
+    TERM_NOT_FOUND(HttpStatus.NOT_FOUND, "TERM_4002", "존재하지 않는 약관입니다.");
 
     private final HttpStatus httpStatus;
     private final String code;

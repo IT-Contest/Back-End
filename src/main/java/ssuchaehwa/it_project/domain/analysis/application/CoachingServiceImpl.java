@@ -13,13 +13,12 @@ import ssuchaehwa.it_project.domain.analysis.exception.CoachingException;
 import ssuchaehwa.it_project.domain.analysis.converter.CoachingConverter;
 import ssuchaehwa.it_project.domain.quest.domain.repository.QuestRepository;
 import ssuchaehwa.it_project.domain.pomodoro.domain.repository.PomodoroRepository;
-import ssuchaehwa.it_project.domain.user.entity.User;
-import ssuchaehwa.it_project.domain.user.repository.UserRepository;
+import ssuchaehwa.it_project.domain.user.domain.entity.User;
+import ssuchaehwa.it_project.domain.user.domain.repository.UserRepository;
 import ssuchaehwa.it_project.global.error.code.status.ErrorStatus;
 import ssuchaehwa.it_project.domain.analysis.dto.CoachingRecordDTO;
 
 import java.time.LocalDate;
-import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.Map;

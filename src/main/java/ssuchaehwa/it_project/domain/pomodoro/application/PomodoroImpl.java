@@ -8,8 +8,8 @@ import ssuchaehwa.it_project.domain.pomodoro.domain.entity.PomodoroStatus;
 import ssuchaehwa.it_project.domain.pomodoro.domain.repository.PomodoroRepository;
 import ssuchaehwa.it_project.domain.pomodoro.dto.PomodoroResponseDTO;
 import ssuchaehwa.it_project.domain.pomodoro.exception.PomodoroException;
-import ssuchaehwa.it_project.domain.user.entity.User;
-import ssuchaehwa.it_project.domain.user.repository.UserRepository;
+import ssuchaehwa.it_project.domain.user.domain.entity.User;
+import ssuchaehwa.it_project.domain.user.domain.repository.UserRepository;
 import ssuchaehwa.it_project.global.error.code.status.ErrorStatus;
 import ssuchaehwa.it_project.domain.pomodoro.converter.PomodoroConverter;
 

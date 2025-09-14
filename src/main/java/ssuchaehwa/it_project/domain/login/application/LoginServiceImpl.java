@@ -16,8 +16,9 @@ import ssuchaehwa.it_project.domain.model.enums.FriendStatus;
 import ssuchaehwa.it_project.domain.pomodoro.domain.repository.PomodoroRepository;
 import ssuchaehwa.it_project.domain.quest.domain.entity.InvitedFriend;
 import ssuchaehwa.it_project.domain.quest.domain.repository.*;
-import ssuchaehwa.it_project.domain.user.entity.User;
-import ssuchaehwa.it_project.domain.user.repository.UserRepository;
+import ssuchaehwa.it_project.domain.user.domain.entity.User;
+import ssuchaehwa.it_project.domain.user.domain.repository.UserRepository;
+import ssuchaehwa.it_project.domain.user.domain.repository.UserTermRepository;
 import ssuchaehwa.it_project.global.config.security.jwt.JwtUtil;
 import ssuchaehwa.it_project.domain.login.domain.KakaoOAuthClient;
 import ssuchaehwa.it_project.global.error.code.status.ErrorStatus;
@@ -38,7 +39,7 @@ public class LoginServiceImpl implements LoginService {
     private final PartyRepository partyRepository;
     private final QuestRepository questRepository;
     private final QuestOccurrenceRepository questOccurrenceRepository;
-
+    private final UserTermRepository userTermRepository;
 
 
     // 웹용
@@ -292,6 +293,7 @@ public class LoginServiceImpl implements LoginService {
         partyRepository.deleteByUser(user);
         questRepository.deleteByUser(user);
         questOccurrenceRepository.deleteByUserId(userId);
+        userTermRepository.deleteByUser(user);
 
         // 유저 삭제
         userRepository.delete(user);

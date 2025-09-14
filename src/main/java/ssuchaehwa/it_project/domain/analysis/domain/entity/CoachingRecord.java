@@ -5,7 +5,7 @@ import lombok.*;
 import org.hibernate.annotations.DynamicInsert;
 import org.hibernate.annotations.DynamicUpdate;
 import ssuchaehwa.it_project.domain.model.entity.BaseTimeEntity;
-import ssuchaehwa.it_project.domain.user.entity.User;
+import ssuchaehwa.it_project.domain.user.domain.entity.User;
 
 import java.time.LocalDate;
 

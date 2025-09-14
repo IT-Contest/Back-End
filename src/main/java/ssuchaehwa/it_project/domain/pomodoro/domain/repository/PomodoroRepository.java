@@ -4,7 +4,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import ssuchaehwa.it_project.domain.pomodoro.domain.entity.Pomodoro;
-import ssuchaehwa.it_project.domain.user.entity.User;
+import ssuchaehwa.it_project.domain.user.domain.entity.User;
 
 import java.time.LocalDateTime;
 import java.util.List;
