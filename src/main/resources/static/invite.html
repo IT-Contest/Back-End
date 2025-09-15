@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <title>퀘스트플래너 초대</title>
+    <script>
+        window.onload = function() {
+            const code = new URLSearchParams(window.location.search).get("code");
+
+            // 1) 앱 열기 시도
+            window.location.href = "questplanner://invite?code=" + code;
+
+            // 2) fallback 타이머 시작
+            const fallback = setTimeout(() => {
+                window.location.href = "https://play.google.com/store/apps/details?id=com.ssucheahwa.questplanner";
+            }, 2000);
+
+            // 3) 👉 앱이 정상적으로 열리면 브라우저가 백그라운드로 가므로 fallback 취소
+            document.addEventListener("visibilitychange", () => {
+                if (document.hidden) {
+                    clearTimeout(fallback);
+                }
+            });
+        };
+    </script>
+</head>
+<body>
+<p>퀘스트플래너 앱을 여는 중입니다...</p>
+</body>
+</html>

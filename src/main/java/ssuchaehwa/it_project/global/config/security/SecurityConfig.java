@@ -33,7 +33,9 @@ public class SecurityConfig {
                         "/v3/api-docs/**",               // OpenAPI docs
                         "/webjars/**",                    // Swagger 리소스
                         "/quests/**",
-                       "/users/**"
+                        "/users/**",
+                        "/terms/**",
+                        "/invite.html"
                        // "/pomodoro/**"
                 ).permitAll()
                     .requestMatchers("/pomodoro/**").authenticated()
