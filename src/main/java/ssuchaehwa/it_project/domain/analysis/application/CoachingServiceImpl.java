@@ -33,6 +33,7 @@ public class CoachingServiceImpl implements CoachingService {
     private final ChatGPTService chatGPTService;
     private final UserRepository userRepository;
     private final QuestRepository questRepository;
+    private final ssuchaehwa.it_project.domain.quest.domain.repository.QuestOccurrenceRepository questOccurrenceRepository;
     private final PomodoroRepository pomodoroRepository;
 
     @Override
@@ -94,36 +95,26 @@ public class CoachingServiceImpl implements CoachingService {
         LocalDate from = calculateFromDate(analysisType, today);
         LocalDate to = today;
         
-        log.info("=== 분석 데이터 수집 시작 ===");
-        log.info("사용자 ID: {}, 분석 타입: {}, 분석 대상: {}", userId, analysisType, questOrPomodoro);
-        log.info("분석 기간: {} ~ {}", from, to);
 
         List<AnalysisDataDTO.QuestDataDTO> quests = null;
         List<AnalysisDataDTO.PomodoroDataDTO> pomodoros = null;
 
-        if ("QUEST".equals(questOrPomodoro)) {
+        if ("QUEST".equalsIgnoreCase(questOrPomodoro)) {
             quests = collectQuestData(userId, from, to);
-            log.info("퀘스트 데이터 수집 완료: {}개", quests != null ? quests.size() : 0);
-        } else if ("POMODORO".equals(questOrPomodoro)) {
+        } else if ("POMODORO".equalsIgnoreCase(questOrPomodoro)) {
             pomodoros = collectPomodoroData(userId, from, to);
-            log.info("뽀모도로 데이터 수집 완료: {}개", pomodoros != null ? pomodoros.size() : 0);
         }
 
         String analysisPeriod = from.format(DateTimeFormatter.ofPattern("yyyy.MM.dd")) + 
                                " ~ " + to.format(DateTimeFormatter.ofPattern("yyyy.MM.dd"));
 
-        AnalysisDataDTO result = AnalysisDataDTO.builder()
+        return AnalysisDataDTO.builder()
                 .analysisType(analysisType)
                 .questOrPomodoro(questOrPomodoro)
                 .quests(quests)
                 .pomodoros(pomodoros)
                 .analysisPeriod(analysisPeriod)
                 .build();
-        
-        log.info("=== 분석 데이터 수집 완료 ===");
-        log.info("최종 결과: {}", result);
-        
-        return result;
     }
 
     // 분석 기간 계산
@@ -137,39 +128,32 @@ public class CoachingServiceImpl implements CoachingService {
         }
     }
 
-    // 퀘스트 데이터 수집
+    // 퀘스트 데이터 수집 - QuestOccurrence 기반으로 실제 완료 상태 반영
     private List<AnalysisDataDTO.QuestDataDTO> collectQuestData(Long userId, LocalDate from, LocalDate to) {
         try {
-            log.info("퀘스트 데이터 수집 - 사용자: {}, 기간: {} ~ {}", userId, from, to);
+            // QuestOccurrence에서 실제 완료 상태 데이터 조회
+            List<ssuchaehwa.it_project.domain.quest.domain.entity.QuestOccurrence> occurrences = 
+                questOccurrenceRepository.findAllByUserIdAndPeriodKeyBetweenOrderByPeriodKeyAsc(userId, from, to);
             
-            // 실제 QuestRepository를 통해 데이터 조회
-            List<ssuchaehwa.it_project.domain.quest.domain.entity.Quest> quests = questRepository.findAllByUserId(userId);
-            log.info("조회된 퀘스트 개수: {}", quests.size());
-            
-            List<AnalysisDataDTO.QuestDataDTO> result = quests.stream()
-                    .map(quest -> {
-                        AnalysisDataDTO.QuestDataDTO dto = AnalysisDataDTO.QuestDataDTO.builder()
-                                .questId(quest.getId())
-                                .title(quest.getTitle())
-                                .priority(quest.getPriority())
-                                .startTime(quest.getStartTime() != null ? quest.getStartTime().format(DateTimeFormatter.ofPattern("HH:mm")) : "00:00")
-                                .endTime(quest.getEndTime() != null ? quest.getEndTime().format(DateTimeFormatter.ofPattern("HH:mm")) : "00:00")
-                                .startDate(quest.getStartDate() != null ? quest.getStartDate().toString() : from.toString())
-                                .dueDate(quest.getDueDate() != null ? quest.getDueDate().toString() : to.toString())
-                                .completionStatus(quest.getCompletionStatus().toString())
-                                .questType(quest.getQuestType().toString())
+            return occurrences.stream()
+                    .map(occurrence -> {
+                        // 템플릿 정보는 Quest에서 가져오되, 완료 상태는 QuestOccurrence에서 가져옴
+                        ssuchaehwa.it_project.domain.quest.domain.entity.Quest questTemplate = 
+                            questRepository.findById(occurrence.getTemplateId()).orElse(null);
+                        
+                        return AnalysisDataDTO.QuestDataDTO.builder()
+                                .questId(occurrence.getTemplateId())
+                                .title(occurrence.getTitle()) // QuestOccurrence의 title 사용
+                                .priority(questTemplate != null ? questTemplate.getPriority() : 1)
+                                .startTime(occurrence.getExpectedStartTime() != null ? occurrence.getExpectedStartTime() : "00:00")
+                                .endTime(occurrence.getExpectedEndTime() != null ? occurrence.getExpectedEndTime() : "00:00")
+                                .startDate(occurrence.getPeriodKey().toString()) // period_key를 시작일로 사용
+                                .dueDate(occurrence.getPeriodKey().toString()) // period_key를 마감일로 사용
+                                .completionStatus(occurrence.getStatus()) // QuestOccurrence의 실제 완료 상태 사용
+                                .questType(occurrence.getQuestType())
                                 .build();
-                        
-                        log.info("퀘스트 데이터 변환: ID={}, 제목={}, 우선순위={}, 시작시간={}, 종료시간={}, 시작일={}, 마감일={}, 완료상태={}, 타입={}", 
-                                dto.getQuestId(), dto.getTitle(), dto.getPriority(), dto.getStartTime(), dto.getEndTime(), 
-                                dto.getStartDate(), dto.getDueDate(), dto.getCompletionStatus(), dto.getQuestType());
-                        
-                        return dto;
                     })
                     .collect(Collectors.toList());
-            
-            log.info("최종 퀘스트 DTO 개수: {}", result.size());
-            return result;
                     
         } catch (Exception e) {
             log.error("퀘스트 데이터 수집 중 오류", e);
@@ -180,17 +164,14 @@ public class CoachingServiceImpl implements CoachingService {
     // 뽀모도로 데이터 수집
     private List<AnalysisDataDTO.PomodoroDataDTO> collectPomodoroData(Long userId, LocalDate from, LocalDate to) {
         try {
-            log.info("뽀모도로 데이터 수집 - 사용자: {}, 기간: {} ~ {}", userId, from, to);
-            
             // 실제 PomodoroRepository를 통해 데이터 조회
             List<ssuchaehwa.it_project.domain.pomodoro.domain.entity.Pomodoro> pomodoros = pomodoroRepository.findAllByUser_IdAndStartTimeBetween(userId, from.atStartOfDay(), to.atTime(23, 59, 59));
-            log.info("조회된 뽀모도로 개수: {}", pomodoros.size());
             
             // 일자별로 그룹화하여 dailyCount 계산
             Map<LocalDate, List<ssuchaehwa.it_project.domain.pomodoro.domain.entity.Pomodoro>> groupedByDate = pomodoros.stream()
                     .collect(Collectors.groupingBy(p -> p.getStartTime().toLocalDate()));
             
-            List<AnalysisDataDTO.PomodoroDataDTO> result = groupedByDate.entrySet().stream()
+            return groupedByDate.entrySet().stream()
                     .map(entry -> {
                         LocalDate date = entry.getKey();
                         List<ssuchaehwa.it_project.domain.pomodoro.domain.entity.Pomodoro> dailyPomodoros = entry.getValue();
@@ -205,21 +186,13 @@ public class CoachingServiceImpl implements CoachingService {
                                 })
                                 .sum();
                         
-                        AnalysisDataDTO.PomodoroDataDTO dto = AnalysisDataDTO.PomodoroDataDTO.builder()
+                        return AnalysisDataDTO.PomodoroDataDTO.builder()
                                 .performanceDate(date.toString())
                                 .durationMinutes((int) totalMinutes)
                                 .dailyCount(dailyPomodoros.size())
                                 .build();
-                        
-                        log.info("뽀모도로 데이터 변환: 수행일자={}, 총시간={}분, 일일횟수={}", 
-                                dto.getPerformanceDate(), dto.getDurationMinutes(), dto.getDailyCount());
-                        
-                        return dto;
                     })
                     .collect(Collectors.toList());
-            
-            log.info("최종 뽀모도로 DTO 개수: {}", result.size());
-            return result;
                     
         } catch (Exception e) {
             log.error("뽀모도로 데이터 수집 중 오류", e);
