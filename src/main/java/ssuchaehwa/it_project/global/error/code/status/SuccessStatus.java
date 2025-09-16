@@ -36,6 +36,8 @@ public enum SuccessStatus implements BaseCode {
 
     // user
     MAIN_PAGE_VIEW_SUCCESS(HttpStatus.OK, "USER_200", "메인 페이지 조회를 완료했습니다."),
+    FRIEND_ADDED(HttpStatus.CREATED, "FRIEND_201", "친구 추가가 완료되었습니다."),
+
 
     // term
     TERM_FETCH_SUCCESS(HttpStatus.OK, "TERM_200", "약관 목록 조회 성공"),

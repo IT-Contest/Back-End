@@ -11,10 +11,16 @@ public interface QuestService {
     QuestResponseDTO.QuestCreateResponse createQuest(QuestRequestDTO.QuestCreateRequest request, Long userId);
 
     // 파티
-    QuestResponseDTO.PartyCreateResponse createParty(QuestRequestDTO.PartyCreateRequest request, Long questId);
+    QuestResponseDTO.PartyCreateResponse createParty(Long userId, QuestRequestDTO.PartyCreateRequest request, Long questId);
 
-    // 친구 초대
-//    QuestResponseDTO.FriendInviteResponse friendInvite(QuestRequestDTO.FriendInviteRequest request, Long questId);
+    // 친구 초대 링크 발급
+    QuestResponseDTO.FriendInviteResponse friendInvite(Long fromUserId);
+
+    // 친구 초대 수락
+    void acceptFriendInvite(String token, Long toUserId);
+
+    // 친구 초대 거절
+    void rejectFriendInvite(String token, Long toUserId);
 
     // 친구 조회
     List<QuestResponseDTO.FriendListResponse> getFriends(Long userId);

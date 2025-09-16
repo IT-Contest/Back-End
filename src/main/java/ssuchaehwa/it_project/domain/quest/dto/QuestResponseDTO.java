@@ -45,7 +45,6 @@ public class QuestResponseDTO {
         private LocalDate dueDate;
     }
 
-
     // 친구 초대
     @Builder
     @Getter
@@ -53,8 +52,7 @@ public class QuestResponseDTO {
     @NoArgsConstructor
     public static class FriendInviteResponse {
 
-        private Long questId;
-        private List<String> friendNicknames;
+        private String inviteLink;
     }
 
     // 친구 조회
