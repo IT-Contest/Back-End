@@ -8,7 +8,10 @@ import ssuchaehwa.it_project.domain.model.enums.QuestType;
 import ssuchaehwa.it_project.domain.user.domain.entity.User;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.LocalTime;
+import java.util.ArrayList;
+import java.util.List;
 
 @Entity
 @Getter
@@ -60,4 +63,26 @@ public class Party extends BaseTimeEntity {
     @OneToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "quest_id", unique = true)
     private Quest quest;
+
+    @OneToMany(mappedBy = "party", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<PartyUser> partyUsers = new ArrayList<>();
+
+    @Column(nullable = false)
+    private LocalDateTime expiresAt;
+
+    public void update(String content, int priority, QuestType questType, CompletionStatus completionStatus,
+                       LocalDate startDate, LocalDate dueDate, LocalTime startTime, LocalTime endTime) {
+        this.title = content;
+        this.priority = priority;
+        this.questType = questType;
+        this.completionStatus = completionStatus;
+        this.startDate = startDate;
+        this.dueDate = dueDate;
+        this.startTime = startTime;
+        this.endTime = endTime;
+    }
+
+    public void changeCompletionStatus(CompletionStatus newStatus) {
+        this.completionStatus = newStatus;
+    }
 }

@@ -9,6 +9,7 @@ import ssuchaehwa.it_project.domain.model.enums.InvitationStatus;
 import ssuchaehwa.it_project.domain.model.enums.QuestType;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.util.List;
 
@@ -44,6 +45,66 @@ public class QuestResponseDTO {
         private LocalDate startDate;
         private LocalDate dueDate;
     }
+
+    // 파티 수정
+    @Builder
+    @Getter
+    @AllArgsConstructor
+    @NoArgsConstructor
+    public static class PartyUpdateResponse {
+        private Long partyId;
+        private String content;
+        private QuestType questType;
+        private CompletionStatus completionStatus;
+        private LocalTime startTime;
+        private LocalTime endTime;
+        private LocalDate startDate;
+        private LocalDate dueDate;
+        private String message;
+    }
+
+    // 파티 삭제
+    @Builder
+    @Getter
+    @AllArgsConstructor
+    @NoArgsConstructor
+    public static class PartyDeleteResponse {
+        private Long partyId;
+        private boolean deleted;
+        private String message;
+    }
+
+    // 파티 초대
+    @Builder
+    @Getter
+    @AllArgsConstructor
+    @NoArgsConstructor
+    public static class PartyInviteResponse {
+        private Long partyId;
+        private Inviter inviter;                // 초대한 사람
+        private List<InvitedFriend> invitedFriends;  // 초대된 사람들
+
+        @Builder
+        @Getter
+        @AllArgsConstructor
+        @NoArgsConstructor
+        public static class Inviter {
+            private Long userId;
+            private String nickname;
+            private String profileImageUrl;
+        }
+
+        @Builder
+        @Getter
+        @AllArgsConstructor
+        @NoArgsConstructor
+        public static class InvitedFriend {
+            private Long userId;
+            private String nickname;
+            private String profileImageUrl;
+        }
+    }
+
 
     // 친구 초대
     @Builder
@@ -170,6 +231,25 @@ public class QuestResponseDTO {
         private String partyName;
         private String questName;
         private int expReward;
+    }
+
+    // 파티조회
+    @Getter
+    @Builder
+    public static class PartyListResponse {
+        private Long partyId;                 // 파티 ID
+        private String title;                 // 파티 제목
+        private CompletionStatus status;      // 파티 상태 (INCOMPLETE, IN_PROGRESS, COMPLETED)
+        private LocalDateTime expiresAt;      // 만료 시간
+        private List<MemberInfo> members;     // 파티 멤버 목록
+    }
+
+    @Getter
+    @Builder
+    public static class MemberInfo {
+        private Long userId;         // 유저 ID
+        private String nickname;     // 닉네임
+        private String profileImage; // 프로필 이미지 URL
     }
 
     // 파티 수락 / 거절

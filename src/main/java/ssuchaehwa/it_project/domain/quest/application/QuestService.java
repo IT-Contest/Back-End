@@ -1,5 +1,6 @@
 package ssuchaehwa.it_project.domain.quest.application;
 
+import ssuchaehwa.it_project.domain.quest.domain.entity.Party;
 import ssuchaehwa.it_project.domain.quest.dto.QuestRequestDTO;
 import ssuchaehwa.it_project.domain.quest.dto.QuestResponseDTO;
 
@@ -7,11 +8,8 @@ import java.util.List;
 
 public interface QuestService {
 
-    // 퀘스트
+    // 퀘스트 생성
     QuestResponseDTO.QuestCreateResponse createQuest(QuestRequestDTO.QuestCreateRequest request, Long userId);
-
-    // 파티
-    QuestResponseDTO.PartyCreateResponse createParty(Long userId, QuestRequestDTO.PartyCreateRequest request, Long questId);
 
     // 친구 초대 링크 발급
     QuestResponseDTO.FriendInviteResponse friendInvite(Long fromUserId);
@@ -33,6 +31,21 @@ public interface QuestService {
 
     // 퀘스트 완료 / 취소
     List<QuestResponseDTO.QuestStatusChangeResponse> changeQuestStatus(QuestRequestDTO.QuestStatusChangeRequest request, Long userId);
+
+    // 파티 생성
+    QuestResponseDTO.PartyCreateResponse createParty(Long userId, QuestRequestDTO.PartyCreateRequest request);
+
+    // 파티 초대
+    QuestResponseDTO.PartyInviteResponse inviteFriends(Long userId, Long partyId, List<Long> invitedIds);
+
+    // 파티 조회
+    List<QuestResponseDTO.PartyListResponse> getMyParties(Long userId);
+
+    // 파티 수정
+    QuestResponseDTO.PartyUpdateResponse updateParty(Long userId, Long partyId, QuestRequestDTO.PartyUpdateRequest request);
+
+    // 파티 삭제
+    QuestResponseDTO.PartyDeleteResponse deleteParty(Long userId, Long partyId);
 
     // 파티 초대 리스트 조회
     List<QuestResponseDTO.PartyInvitationListResponse> getInvitedPartyList(Long userId);

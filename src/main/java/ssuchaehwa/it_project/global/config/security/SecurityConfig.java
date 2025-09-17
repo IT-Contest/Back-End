@@ -35,7 +35,8 @@ public class SecurityConfig {
                         "/quests/**",
                         "/users/**",
                         "/terms/**",
-                        "/invite.html"
+                        "/invite.html",
+                        "/party/**"
                        // "/pomodoro/**"
                 ).permitAll()
                     .requestMatchers("/pomodoro/**").authenticated()

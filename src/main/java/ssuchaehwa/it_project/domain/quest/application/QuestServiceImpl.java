@@ -117,82 +117,6 @@ public class QuestServiceImpl implements QuestService {
         return QuestConverter.toQuestCreateResponse(quest);
     }
 
-    // 파티 생성
-    @Transactional
-    @Override
-    public QuestResponseDTO.PartyCreateResponse createParty(Long userId,QuestRequestDTO.PartyCreateRequest request, Long questId) {
-
-        User user = userRepository.findById(userId)
-                .orElseThrow(() -> new UserException(ErrorStatus.NO_SUCH_USER));
-
-        Quest quest = questRepository.findById(questId)
-                .orElseThrow(() -> new QuestException(ErrorStatus.NO_SUCH_QUEST));
-
-        Party party = Party.builder()
-                .user(user)
-                .quest(quest)
-                .title(request.getContent())
-                .priority(request.getPriority())
-                .questType(request.getQuestType())
-                .completionStatus(request.getCompletionStatus())
-                .startDate(request.getStartDate())
-                .dueDate(request.getDueDate())
-                .startTime(request.getStartTime())
-                .endTime(request.getEndTime())
-                .build();
-
-        partyRepository.save(party);
-
-        // 친구 초대
-        List<Long> invitedIds = request.getInvitedFriendIds();
-
-        if (invitedIds != null && !invitedIds.isEmpty()) {
-            List<PartyUser> invitedUsers = invitedIds.stream()
-                    .map(invitedId  -> {
-                        User invited = userRepository.findById(invitedId)
-                                .orElseThrow(() -> new UserException(ErrorStatus.NO_SUCH_USER));
-
-                        return PartyUser.builder()
-                                .party(party)
-                                .user(invited)
-                                .invitationStatus(InvitationStatus.PENDING)
-                                .build();
-                    }).toList();
-
-            partyUserRepository.saveAll(invitedUsers);
-        }
-
-        List<String> requestHashtag = request.getHashtags();
-
-        // DB에 존재하는 해시태그 조회
-        List<Hashtag> existingHashtags = hashtagRepository.findAllByNameIn(requestHashtag);
-        Set<String> existingTagNames = existingHashtags.stream()
-                .map(Hashtag::getName)
-                .collect(Collectors.toSet());
-
-        // 없는 해시태그 추출
-        List<Hashtag> newHashtags = requestHashtag.stream()
-                .filter(tag -> !existingTagNames.contains(tag))
-                .map(tag -> Hashtag.builder().name(tag).build())
-                .toList();
-
-        hashtagRepository.saveAll(newHashtags);
-
-        List<Hashtag> allHashtags = new ArrayList<>();
-        allHashtags.addAll(existingHashtags);
-        allHashtags.addAll(newHashtags);
-
-        List<HashtagQuest> hashtagQuests = allHashtags.stream()
-                .map(tag -> HashtagQuest.builder()
-                        .hashtag(tag)
-                        .quest(quest)
-                        .build())
-                .toList();
-        hashtagQuestRepository.saveAll(hashtagQuests);
-
-        return QuestConverter.toPartyCreateResponse(party);
-    }
-
     // 친구 초대(친구 추가)
     @Transactional
     @Override
@@ -214,7 +138,7 @@ public class QuestServiceImpl implements QuestService {
         invitedFriendRepository.save(invitedFriend);
 
         // 링크 생성
-        String link = "https://ssuchaehwa.duckdns.org/invite.html?code=" + token;
+        String link = "http://192.168.45.148:8080/invite.html?code=" + token;
 
         return QuestResponseDTO.FriendInviteResponse.builder()
                 .inviteLink(link)
@@ -509,6 +433,207 @@ public class QuestServiceImpl implements QuestService {
         return QuestConverter.toQuestStatusChangeResponse(quests, firstCompletionMap, targetStatus);
     }
 
+    // 파티 생성
+    @Transactional
+    @Override
+    public QuestResponseDTO.PartyCreateResponse createParty(Long userId,QuestRequestDTO.PartyCreateRequest request) {
+
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new UserException(ErrorStatus.NO_SUCH_USER));
+
+        Quest quest = questRepository.findByUserIdAndTitle(userId, request.getQuestTitle())
+                .orElseThrow(() -> new QuestException(ErrorStatus.NO_SUCH_QUEST));
+
+        Party party = Party.builder()
+                .user(user)
+                .quest(quest)
+                .title(request.getContent())
+                .priority(request.getPriority())
+                .questType(request.getQuestType())
+                .completionStatus(request.getCompletionStatus())
+                .startDate(request.getStartDate())
+                .dueDate(request.getDueDate())
+                .startTime(request.getStartTime())
+                .endTime(request.getEndTime())
+                .expiresAt(LocalDateTime.now().plusMinutes(15))
+                .build();
+
+        partyRepository.save(party);
+
+        List<String> requestHashtag = request.getHashtags();
+
+        // DB에 존재하는 해시태그 조회
+        List<Hashtag> existingHashtags = hashtagRepository.findAllByNameIn(requestHashtag);
+        Set<String> existingTagNames = existingHashtags.stream()
+                .map(Hashtag::getName)
+                .collect(Collectors.toSet());
+
+        // 없는 해시태그 추출
+        List<Hashtag> newHashtags = requestHashtag.stream()
+                .filter(tag -> !existingTagNames.contains(tag))
+                .map(tag -> Hashtag.builder().name(tag).build())
+                .toList();
+
+        hashtagRepository.saveAll(newHashtags);
+
+        List<Hashtag> allHashtags = new ArrayList<>();
+        allHashtags.addAll(existingHashtags);
+        allHashtags.addAll(newHashtags);
+
+        List<HashtagQuest> hashtagQuests = allHashtags.stream()
+                .map(tag -> HashtagQuest.builder()
+                        .hashtag(tag)
+                        .quest(quest)
+                        .build())
+                .toList();
+        hashtagQuestRepository.saveAll(hashtagQuests);
+
+        return QuestConverter.toPartyCreateResponse(party);
+    }
+
+    // 파티 초대
+    @Transactional
+    @Override
+    public QuestResponseDTO.PartyInviteResponse inviteFriends(Long userId, Long partyId, List<Long> invitedIds) {
+
+        Party party = partyRepository.findById(partyId)
+                .orElseThrow(() -> new QuestException(ErrorStatus.NO_SUCH_PARTY));
+
+        User inviter = userRepository.findById(userId)
+                .orElseThrow(() -> new UserException(ErrorStatus.NO_SUCH_USER));
+
+        if (invitedIds == null || invitedIds.isEmpty()) {
+            return QuestConverter.toPartyInviteResponse(party, inviter, Collections.emptyList());
+        }
+
+        List<User> invitedUsers = invitedIds.stream()
+                .map(invitedId -> userRepository.findById(invitedId)
+                        .orElseThrow(() -> new UserException(ErrorStatus.NO_SUCH_USER)))
+                .toList();
+
+        List<PartyUser> partyUsers = invitedUsers.stream()
+                .map(user -> PartyUser.builder()
+                        .party(party)
+                        .user(user)
+                        .invitationStatus(InvitationStatus.PENDING)
+                        .expiresAt(LocalDateTime.now().plusMinutes(10))
+                        .build())
+                .toList();
+
+        partyUserRepository.saveAll(partyUsers);
+
+        return QuestConverter.toPartyInviteResponse(party, inviter, invitedUsers);
+    }
+
+    // 파티 조회
+    @Transactional(readOnly = true)
+    @Override
+    public List<QuestResponseDTO.PartyListResponse> getMyParties(Long userId) {
+
+        // 내가 만든 파티
+        List<Party> created = partyRepository.findAllByUserId(userId);
+
+        // 내가 초대받아 속한 파티
+        List<Party> joined = partyRepository.findAllByMemberUserId(userId);
+
+        // 합치고 중복 제거
+        List<Party> all = new ArrayList<>();
+        all.addAll(created);
+        all.addAll(joined);
+
+        List<Party> distinct = all.stream()
+                .distinct()
+                .toList();
+
+        return distinct.stream()
+                .map(QuestConverter::toPartyListResponse) // DTO 변환
+                .toList();
+    }
+
+
+    // 파티 수정
+    @Transactional
+    @Override
+    public QuestResponseDTO.PartyUpdateResponse updateParty(Long userId, Long partyId, QuestRequestDTO.PartyUpdateRequest request) {
+
+        Party party = partyRepository.findById(partyId)
+                .orElseThrow(() -> new QuestException(ErrorStatus.NO_SUCH_PARTY));
+
+        if (!party.getUser().getId().equals(userId)) {
+            throw new QuestException(ErrorStatus.PARTY_ACCESS_DENIED);
+        }
+
+        try {
+            party.update(
+                    request.getContent(),
+                    request.getPriority(),
+                    request.getQuestType(),
+                    request.getCompletionStatus(),
+                    request.getStartDate(),
+                    request.getDueDate(),
+                    request.getStartTime(),
+                    request.getEndTime()
+            );
+
+            // 해시태그 처리 로직 재사용
+            List<String> requestHashtag = request.getHashtags();
+            if (requestHashtag != null) {
+                List<Hashtag> existingHashtags = hashtagRepository.findAllByNameIn(requestHashtag);
+                Set<String> existingTagNames = existingHashtags.stream()
+                        .map(Hashtag::getName)
+                        .collect(Collectors.toSet());
+
+                List<Hashtag> newHashtags = requestHashtag.stream()
+                        .filter(tag -> !existingTagNames.contains(tag))
+                        .map(tag -> Hashtag.builder().name(tag).build())
+                        .toList();
+
+                hashtagRepository.saveAll(newHashtags);
+
+                List<Hashtag> allHashtags = new ArrayList<>();
+                allHashtags.addAll(existingHashtags);
+                allHashtags.addAll(newHashtags);
+
+                // 기존 해시태그 관계 삭제 후 다시 저장
+                hashtagQuestRepository.deleteByQuest(party.getQuest());
+
+                List<HashtagQuest> hashtagQuests = allHashtags.stream()
+                        .map(tag -> HashtagQuest.builder()
+                                .hashtag(tag)
+                                .quest(party.getQuest())
+                                .build())
+                        .toList();
+
+                hashtagQuestRepository.saveAll(hashtagQuests);
+            }
+
+            return QuestConverter.toPartyUpdateResponse(party);
+        } catch (Exception e) {
+            throw new QuestException(ErrorStatus.PARTY_UPDATE_FAILED);
+        }
+    }
+
+    // 파티 삭제
+    @Transactional
+    @Override
+    public QuestResponseDTO.PartyDeleteResponse deleteParty(Long userId, Long partyId) {
+
+        Party party = partyRepository.findById(partyId)
+                .orElseThrow(() -> new QuestException(ErrorStatus.NO_SUCH_PARTY));
+
+        if (!party.getUser().getId().equals(userId)) {
+            throw new QuestException(ErrorStatus.PARTY_ACCESS_DENIED);
+        }
+
+        try {
+            partyUserRepository.deleteByParty(party);
+            partyRepository.delete(party);
+            return QuestConverter.toPartyDeleteResponse(partyId);
+        } catch (Exception e) {
+            throw new QuestException(ErrorStatus.PARTY_DELETE_FAILED);
+        }
+    }
+
     // 파티 초대 리스트 조회
     @Transactional(readOnly = true)
     @Override
@@ -522,19 +647,45 @@ public class QuestServiceImpl implements QuestService {
     // 파티 수락 / 거절
     @Transactional
     @Override
-    public QuestResponseDTO.PartyInvitationResponse respondToInvitation(Long userId, QuestRequestDTO.PartyInvitationResponseRequest request) {
+    public QuestResponseDTO.PartyInvitationResponse respondToInvitation(
+            Long userId, QuestRequestDTO.PartyInvitationResponseRequest request) {
 
         PartyUser partyUser = partyUserRepository.findByUserIdAndPartyId(userId, request.getPartyId())
                 .orElseThrow(() -> new QuestException(ErrorStatus.NO_PARTY_INVITATION));
 
-        // 💡 비즈니스 로직을 서비스 내부에서 수행
+        // 초대 상태 변경
         setInvitationStatus(partyUser, request.getResponseStatus());
+        partyUserRepository.save(partyUser);
 
         Party party = partyUser.getParty();
+        List<PartyUser> partyUsers = party.getPartyUsers();
+
+        boolean allAccepted = partyUsers.stream().allMatch(pu -> pu.getInvitationStatus() == InvitationStatus.ACCEPTED);
+        boolean anyAccepted = partyUsers.stream().anyMatch(pu -> pu.getInvitationStatus() == InvitationStatus.ACCEPTED);
+        boolean allResponded = partyUsers.stream().allMatch(pu ->
+                pu.getInvitationStatus() == InvitationStatus.ACCEPTED ||
+                        pu.getInvitationStatus() == InvitationStatus.DECLINED);
+
+        // 모두 수락 → 바로 IN_PROGRESS
+        if (allAccepted) {
+            party.changeCompletionStatus(CompletionStatus.IN_PROGRESS);
+            partyRepository.save(party);
+        }
+        // 1명 이상 수락 + 나머지 전부 거절 → 바로 IN_PROGRESS
+        else if (anyAccepted && allResponded) {
+            party.changeCompletionStatus(CompletionStatus.IN_PROGRESS);
+            partyRepository.save(party);
+        }
+        // 모두 거절 → 삭제 (만료 대기 없이 즉시)
+        else if (!anyAccepted && allResponded) {
+            partyUserRepository.deleteByParty(party);
+            partyRepository.delete(party);
+        }
+        // 일부 수락 + 일부 대기 → 아직 대기 (만료시간까지 기다림)
+        //    ⇒ 따로 상태 변경/삭제 없음
 
         return QuestConverter.toPartyInvitationResponse(party, partyUser);
     }
-
 
     // 완료 상태 변경 메서드
     private void setCompletionStatusReflectively(Quest quest, CompletionStatus newStatus) {

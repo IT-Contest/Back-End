@@ -21,13 +21,19 @@ public enum ErrorStatus implements BaseErrorCode{
     NO_SUCH_QUEST(HttpStatus.BAD_REQUEST, "QUEST_4001", "해당 퀘스트가 존재하지 않습니다."),
     QUEST_STATUS_UPDATE_FAILED(HttpStatus.INTERNAL_SERVER_ERROR, "QUEST_4002", "퀘스트의 상태를 변경할 수 없습니다."),
     NO_PARTY_INVITATION(HttpStatus.BAD_REQUEST, "QUEST_4003", "초대 받은 파티가 존재하지 않습니다."),
-    QUEST_NOT_FOUND(HttpStatus.NOT_FOUND, "QUEST_404", "해당 퀘스트를 찾을 수 없습니다."),
-    QUEST_ACCESS_DENIED(HttpStatus.FORBIDDEN, "QUEST_403", "퀘스트에 대한 접근 권한이 없습니다."),
+    QUEST_NOT_FOUND(HttpStatus.NOT_FOUND, "QUEST_4004", "해당 퀘스트를 찾을 수 없습니다."),
+    QUEST_ACCESS_DENIED(HttpStatus.FORBIDDEN, "QUEST_4005", "퀘스트에 대한 접근 권한이 없습니다."),
+    NO_SUCH_PARTY(HttpStatus.BAD_REQUEST, "PARTY_4001", "존재하지 않는 파티입니다."),
+    PARTY_UPDATE_FAILED(HttpStatus.INTERNAL_SERVER_ERROR, "PARTY_4002", "파티를 수정할 수 없습니다."),
+    PARTY_DELETE_FAILED(HttpStatus.INTERNAL_SERVER_ERROR, "PARTY_4003", "파티를 삭제할 수 없습니다."),
+    PARTY_ACCESS_DENIED(HttpStatus.FORBIDDEN, "PARTY_4004", "해당 파티에 접근할 권한이 없습니다."),
+
+
 
     // token
-    INVALID_REFRESH_TOKEN(HttpStatus.UNAUTHORIZED, "TOKEN_401", "유효하지 않거나 만료된 refreshToken입니다."),
-    INVALID_ACCESS_TOKEN(HttpStatus.UNAUTHORIZED, "TOKEN_402", "유효하지 않거나 잘못된 accessToken입니다."),
-    REFRESH_TOKEN_NOT_FOUND(HttpStatus.NOT_FOUND, "TOKEN_404", "Redis에 해당 userId의 refreshToken이 존재하지 않습니다."),
+    INVALID_REFRESH_TOKEN(HttpStatus.UNAUTHORIZED, "TOKEN_4001", "유효하지 않거나 만료된 refreshToken입니다."),
+    INVALID_ACCESS_TOKEN(HttpStatus.UNAUTHORIZED, "TOKEN_4002", "유효하지 않거나 잘못된 accessToken입니다."),
+    REFRESH_TOKEN_NOT_FOUND(HttpStatus.NOT_FOUND, "TOKEN_4003", "Redis에 해당 userId의 refreshToken이 존재하지 않습니다."),
     // token 밑이나 user 밑에 추가하면 깔끔합니다
     INVALID_INVITE(HttpStatus.BAD_REQUEST, "INVITE_4001", "유효하지 않은 친구 초대입니다."),
     INVALID_INVITE_STATUS(HttpStatus.BAD_REQUEST, "INVITE_4002", "유효하지 않은 친구 초대 상태입니다."),
