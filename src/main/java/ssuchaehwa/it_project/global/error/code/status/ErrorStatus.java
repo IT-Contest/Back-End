@@ -28,6 +28,10 @@ public enum ErrorStatus implements BaseErrorCode{
     INVALID_REFRESH_TOKEN(HttpStatus.UNAUTHORIZED, "TOKEN_401", "유효하지 않거나 만료된 refreshToken입니다."),
     INVALID_ACCESS_TOKEN(HttpStatus.UNAUTHORIZED, "TOKEN_402", "유효하지 않거나 잘못된 accessToken입니다."),
     REFRESH_TOKEN_NOT_FOUND(HttpStatus.NOT_FOUND, "TOKEN_404", "Redis에 해당 userId의 refreshToken이 존재하지 않습니다."),
+    // token 밑이나 user 밑에 추가하면 깔끔합니다
+    INVALID_INVITE(HttpStatus.BAD_REQUEST, "INVITE_4001", "유효하지 않은 친구 초대입니다."),
+    INVALID_INVITE_STATUS(HttpStatus.BAD_REQUEST, "INVITE_4002", "유효하지 않은 친구 초대 상태입니다."),
+
 
     // pomodoro
     NO_SUCH_POMODORO(HttpStatus.BAD_REQUEST, "POMODORO_4001", "해당 뽀모도로가 존재하지 않습니다."),

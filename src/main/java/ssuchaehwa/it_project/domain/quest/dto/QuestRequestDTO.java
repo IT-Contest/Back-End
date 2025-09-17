@@ -41,7 +41,7 @@ public class QuestRequestDTO {
     @NoArgsConstructor
     public static class FriendInviteRequest {
 
-        private List<Long> invitedFriendIds;
+        private Long toUserId;
     }
 
 

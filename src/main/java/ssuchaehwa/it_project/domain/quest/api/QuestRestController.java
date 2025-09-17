@@ -53,27 +53,77 @@ public class QuestRestController {
     })
     public BaseResponse<QuestResponseDTO.PartyCreateResponse> createParty(
             @PathVariable("quest-id") Long questId,
-            @RequestBody @Valid QuestRequestDTO.PartyCreateRequest partyCreateRequest
+            @RequestBody @Valid QuestRequestDTO.PartyCreateRequest partyCreateRequest,
+            @AuthenticationPrincipal UserPrincipal principal
     ) {
-        QuestResponseDTO.PartyCreateResponse result = questService.createParty(partyCreateRequest, questId);
+        QuestResponseDTO.PartyCreateResponse result = questService.createParty(principal.getId(), partyCreateRequest, questId);
 
         return BaseResponse.onSuccess(SuccessStatus.PARTY_CREATED, result);
     }
 
-//    // 친구 초대 API
-//    @PostMapping(value = "/{quest-id}/invite")
-//    @Operation(summary = "친구를 초대하는 API", description = "request body에 friendInviteRequest 형식의 데이터와, path로 questId를 넘겨주세요.")
-//    @ApiResponses({
-//            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "INVITE_FRIEND_201", description = "CREATED, 친구 초대를 완료했습니다.")
-//    })
-//    public BaseResponse<QuestResponseDTO.FriendInviteResponse> createFriendInvite(
-//            @PathVariable("quest-id") Long questId,
-//            @RequestBody @Valid QuestRequestDTO.FriendInviteRequest friendInviteRequest
-//    ) {
-//        QuestResponseDTO.FriendInviteResponse result = questService.friendInvite(friendInviteRequest, questId);
-//
-//        return BaseResponse.onSuccess(SuccessStatus.INVITE_FRIEND_CREATED, result);
-//    }
+    // 친구 초대 링크 발급
+    @PostMapping("/invite")
+    @Operation(summary = "친구 초대 링크 발급 API", description = "친구 초대용 링크를 생성합니다.")
+    @ApiResponses({
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(
+                    responseCode = "INVITE_FRIEND_201",
+                    description = "CREATED, 친구 초대를 완료했습니다."
+            )
+    })
+    public BaseResponse<QuestResponseDTO.FriendInviteResponse> createFriendInvite(
+            @AuthenticationPrincipal UserPrincipal principal
+    ) {
+        QuestResponseDTO.FriendInviteResponse result =
+                questService.friendInvite(principal.getId());
+
+        return BaseResponse.onSuccess(SuccessStatus.INVITE_FRIEND_CREATED, result);
+    }
+
+    // 친구 초대 수락
+    @PostMapping("/invite/accept")
+    @Operation(summary = "친구 초대 수락 API", description = "토큰을 받아 로그인한 사용자와 친구를 맺습니다.")
+    @ApiResponses({
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(
+                    responseCode = "FRIEND_201",
+                    description = "CREATED, 친구 추가를 완료했습니다."
+            ),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(
+                    responseCode = "INVITE_4001",
+                    description = "잘못되었거나 만료된 초대입니다."
+            ),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(
+                    responseCode = "INVITE_4002",
+                    description = "이미 처리된 초대입니다."
+            )
+    })
+    public BaseResponse<String> acceptFriendInvite(
+            @RequestParam("token") String token,
+            @AuthenticationPrincipal UserPrincipal principal
+    ) {
+        questService.acceptFriendInvite(token, principal.getId());
+        return BaseResponse.onSuccess(SuccessStatus.FRIEND_ADDED, "친구 추가 완료");
+    }
+
+    // 친구 초대 거절
+    @PostMapping("/invite/reject")
+    @Operation(summary = "친구 초대 거절 API", description = "토큰을 받아 로그인한 사용자가 초대를 거절합니다.")
+    @ApiResponses({
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(
+                    responseCode = "INVITE_201",
+                    description = "CREATED, 친구 초대를 거절했습니다."
+            ),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(
+                    responseCode = "INVITE_4001",
+                    description = "잘못되었거나 만료된 초대입니다."
+            )
+    })
+    public BaseResponse<String> rejectFriendInvite(
+            @RequestParam("token") String token,
+            @AuthenticationPrincipal UserPrincipal principal
+    ) {
+        questService.rejectFriendInvite(token, principal.getId());
+        return BaseResponse.onSuccess(SuccessStatus.INVITE_FRIEND_CREATED, "친구 초대 거절 완료");
+    }
 
     // 친구 조회 API
     @GetMapping("/friend-list")

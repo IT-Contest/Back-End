@@ -4,6 +4,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import ssuchaehwa.it_project.domain.model.enums.CompletionStatus;
+import ssuchaehwa.it_project.domain.model.enums.FriendStatus;
 import ssuchaehwa.it_project.domain.model.enums.InvitationStatus;
 import ssuchaehwa.it_project.domain.model.enums.QuestType;
 import ssuchaehwa.it_project.domain.quest.converter.QuestConverter;
@@ -14,7 +15,7 @@ import ssuchaehwa.it_project.domain.quest.domain.entity.QuestOccurrence;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
-import java.util.Optional;
+import java.util.*;
 
 import ssuchaehwa.it_project.domain.quest.dto.QuestRequestDTO;
 import ssuchaehwa.it_project.domain.quest.dto.QuestResponseDTO;
@@ -26,9 +27,6 @@ import ssuchaehwa.it_project.global.error.code.status.ErrorStatus;
 import org.springframework.util.ReflectionUtils;
 
 import java.lang.reflect.Field;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Set;
 import java.util.stream.Collectors;
 
 @Service
@@ -122,9 +120,9 @@ public class QuestServiceImpl implements QuestService {
     // 파티 생성
     @Transactional
     @Override
-    public QuestResponseDTO.PartyCreateResponse createParty(QuestRequestDTO.PartyCreateRequest request, Long questId) {
+    public QuestResponseDTO.PartyCreateResponse createParty(Long userId,QuestRequestDTO.PartyCreateRequest request, Long questId) {
 
-        User user = userRepository.findById(2L)
+        User user = userRepository.findById(userId)
                 .orElseThrow(() -> new UserException(ErrorStatus.NO_SUCH_USER));
 
         Quest quest = questRepository.findById(questId)
@@ -150,8 +148,8 @@ public class QuestServiceImpl implements QuestService {
 
         if (invitedIds != null && !invitedIds.isEmpty()) {
             List<PartyUser> invitedUsers = invitedIds.stream()
-                    .map(userId -> {
-                        User invited = userRepository.findById(userId)
+                    .map(invitedId  -> {
+                        User invited = userRepository.findById(invitedId)
                                 .orElseThrow(() -> new UserException(ErrorStatus.NO_SUCH_USER));
 
                         return PartyUser.builder()
@@ -196,38 +194,88 @@ public class QuestServiceImpl implements QuestService {
     }
 
     // 친구 초대(친구 추가)
-//    @Transactional
-//    @Override
-//    public QuestResponseDTO.FriendInviteResponse friendInvite(QuestRequestDTO.FriendInviteRequest request, Long questId) {
-//
-//        Quest quest = questRepository.findById(questId)
-//                .orElseThrow(() -> new QuestException(ErrorStatus.NO_SUCH_QUEST));
-//
-//        // 초대한 친구 추가
-//        List<Long> invitedFriendIds = request.getInvitedFriendIds();
-//
-//        List<String> nicknameList = new ArrayList<>();
-//
-//        if (invitedFriendIds != null && !invitedFriendIds.isEmpty()) {
-//            List<User> invitedFriends = userRepository.findAllById(invitedFriendIds);
-//
-//            List<InvitedFriend> invitedFriendEntities = invitedFriends.stream()
-//                    .map(friend -> InvitedFriend.builder()
-//                            .quest(quest)
-//                            .user(friend)
-//                            .build())
-//                    .toList();
-//
-//            // 친구 닉네임
-//            nicknameList = invitedFriends.stream()
-//                    .map(User::getNickname)
-//                    .toList();
-//
-//            invitedFriendRepository.saveAll(invitedFriendEntities);
-//        }
-//
-//        return QuestConverter.toFriendInviteResponse(nicknameList, questId);
-//    }
+    @Transactional
+    @Override
+    public QuestResponseDTO.FriendInviteResponse friendInvite(Long fromUserId) {
+
+        User fromUser = userRepository.findById(fromUserId)
+                .orElseThrow(() -> new QuestException(ErrorStatus.NO_SUCH_USER));
+
+        // 초대 토큰 생성
+        String token = UUID.randomUUID().toString();
+
+        InvitedFriend invitedFriend = InvitedFriend.builder()
+                .fromUser(fromUser)
+                .token(token)
+                .status(FriendStatus.PENDING)
+                .expiresAt(LocalDateTime.now().plusMinutes(10))
+                .build();
+
+        invitedFriendRepository.save(invitedFriend);
+
+        // 링크 생성
+        String link = "https://ssuchaehwa.duckdns.org/invite.html?code=" + token;
+
+        return QuestResponseDTO.FriendInviteResponse.builder()
+                .inviteLink(link)
+                .build();
+    }
+
+    // 친구 초대 수락
+    @Transactional
+    @Override
+    public void acceptFriendInvite(String token, Long toUserId) {
+        InvitedFriend invite = invitedFriendRepository.findByToken(token)
+                .orElseThrow(() -> new QuestException(ErrorStatus.INVALID_INVITE));
+
+        User toUser = userRepository.findById(toUserId)
+                .orElseThrow(() -> new UserException(ErrorStatus.NO_SUCH_USER));
+
+        // 이미 수락된 관계가 있는지 체크
+        boolean alreadyAccepted = invitedFriendRepository
+                .existsByFromUserAndToUserAndStatus(invite.getFromUser(), toUser, FriendStatus.ACCEPTED);
+
+        if (alreadyAccepted) {
+            throw new QuestException(ErrorStatus.INVALID_INVITE_STATUS);
+        }
+
+        // 새로운 ACCEPTED 레코드 추가 (단톡방 공유 가능, 재수락 가능)
+        InvitedFriend accepted = InvitedFriend.builder()
+                .fromUser(invite.getFromUser())
+                .toUser(toUser)
+                .status(FriendStatus.ACCEPTED)
+                .token(invite.getToken())
+                .expiresAt(LocalDateTime.now().plusYears(100))
+                .build();
+
+        invitedFriendRepository.save(accepted);
+    }
+
+    // 친구 초대 거절
+    @Transactional
+    @Override
+    public void rejectFriendInvite(String token, Long toUserId) {
+        InvitedFriend invite = invitedFriendRepository.findByToken(token)
+                .orElseThrow(() -> new QuestException(ErrorStatus.INVALID_INVITE));
+
+        User toUser = userRepository.findById(toUserId)
+                .orElseThrow(() -> new UserException(ErrorStatus.NO_SUCH_USER));
+
+        // 이미 응답한 기록이 있는지 체크
+        boolean alreadyResponded = invitedFriendRepository
+                .existsByFromUserAndToUser(invite.getFromUser(), toUser);
+
+        if (!alreadyResponded) {
+            InvitedFriend rejected = InvitedFriend.builder()
+                    .fromUser(invite.getFromUser())
+                    .toUser(toUser)
+                    .token(invite.getToken())
+                    .status(FriendStatus.REJECTED)
+                    .expiresAt(LocalDateTime.now().plusDays(1))
+                    .build();
+            invitedFriendRepository.save(rejected);
+        }
+    }
 
     // 친구 조회
     @Transactional(readOnly = true)
@@ -505,8 +553,8 @@ public class QuestServiceImpl implements QuestService {
         ReflectionUtils.setField(field, partyUser, newStatus);
     }
 
-    @Override
     @Transactional
+    @Override
     public QuestResponseDTO.QuestUpdateResponse updateQuest(Long questId, QuestRequestDTO.QuestUpdateRequest request, Long userId) {
         // 퀘스트 존재 여부 및 권한 확인
         Quest quest = questRepository.findById(questId)
@@ -571,8 +619,8 @@ public class QuestServiceImpl implements QuestService {
         return QuestConverter.toQuestUpdateResponse(updatedQuest);
     }
 
-    @Override
     @Transactional
+    @Override
     public QuestResponseDTO.QuestDeleteResponse deleteQuest(Long questId, Long userId) {
         // 퀘스트 존재 여부 및 권한 확인
         Quest quest = questRepository.findById(questId)

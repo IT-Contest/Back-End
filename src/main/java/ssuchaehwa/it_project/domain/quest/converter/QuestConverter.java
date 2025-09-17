@@ -40,12 +40,6 @@ public class QuestConverter {
     }
 
     // 친구 초대
-    public static QuestResponseDTO.FriendInviteResponse toFriendInviteResponse(List<String> nickNames, Long questId) {
-        return QuestResponseDTO.FriendInviteResponse.builder()
-                .questId(questId)
-                .friendNicknames(nickNames)
-                .build();
-    }
 
     // 친구 조회
     public static List<QuestResponseDTO.FriendListResponse> toFriendListResponse(List<User> friends) {
