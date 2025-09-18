@@ -7,6 +7,7 @@ import ssuchaehwa.it_project.domain.quest.domain.entity.Quest;
 import ssuchaehwa.it_project.domain.user.domain.entity.User;
 
 import java.util.List;
+import java.util.Optional;
 
 public interface QuestRepository extends JpaRepository<Quest, Long> {
 
@@ -14,4 +15,6 @@ public interface QuestRepository extends JpaRepository<Quest, Long> {
     List<Quest> findAllByUserId(@Param("userId") Long userId);
 
     void deleteByUser(User user);
+
+    Optional<Quest> findByUserIdAndTitle(Long userId, String title);
 }

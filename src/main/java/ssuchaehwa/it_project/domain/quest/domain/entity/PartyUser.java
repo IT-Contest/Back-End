@@ -6,6 +6,8 @@ import ssuchaehwa.it_project.domain.model.entity.BaseTimeEntity;
 import ssuchaehwa.it_project.domain.model.enums.InvitationStatus;
 import ssuchaehwa.it_project.domain.user.domain.entity.User;
 
+import java.time.LocalDateTime;
+
 @Entity
 @Getter
 @AllArgsConstructor
@@ -27,4 +29,7 @@ public class PartyUser extends BaseTimeEntity {
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private InvitationStatus invitationStatus;
+
+    @Column(nullable = false)
+    private LocalDateTime expiresAt;
 }

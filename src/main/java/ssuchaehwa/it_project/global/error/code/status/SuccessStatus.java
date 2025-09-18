@@ -18,11 +18,16 @@ public enum SuccessStatus implements BaseCode {
     QUEST_DELETED(HttpStatus.OK, "QUEST_203", "퀘스트가 성공적으로 삭제되었습니다."),
 
     PARTY_CREATED(HttpStatus.CREATED, "PARTY_201", "파티가 성공적으로 생성되었습니다."),
+    PARTY_UPDATED(HttpStatus.OK, "PARTY_200", "파티가 성공적으로 수정되었습니다."),
+    PARTY_DELETED(HttpStatus.NO_CONTENT, "PARTY_204", "파티가 성공적으로 삭제되었습니다."),
+    INVITE_PARTY_LIST_VIEW_SUCCESS(HttpStatus.OK, "PARTY_200", "초대 받은 파티 리스트 조회를 완료했습니다."),
+    INVITE_PARTY_STATUS_CHANGE(HttpStatus.CREATED, "PARTY_201", "초대 받은 파티에 대한 응답을 완료했습니다."),
+    PARTY_LIST_VIEW_SUCCESS(HttpStatus.OK, "PARTY_200", "파티 리스트 조회를 완료했습니다."),
+
+
     INVITE_FRIEND_CREATED(HttpStatus.CREATED, "INVITE_FRIEND_201", "친구 초대를 완료했습니다."),
     FRIEND_VIEW_SUCCESS(HttpStatus.OK, "FRIEND_200", "친구 리스트 조회를 완료했습니다."),
     QUEST_STATUS_CHANGE(HttpStatus.CREATED, "QUEST_201", "퀘스트의 상태가 성공적으로 변경되었습니다."),
-    INVITE_PARTY_LIST_VIEW_SUCCESS(HttpStatus.OK, "PARTY_200", "초대 받은 파티 리스트 조회를 완료했습니다."),
-    INVITE_PARTY_STATUS_CHANGE(HttpStatus.CREATED, "PARTY_201", "초대 받은 파티에 대한 응답을 완료했습니다."),
 
 
     // 뽀모도로
