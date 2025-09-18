@@ -163,6 +163,7 @@ public class QuestResponseDTO {
 
         private String nickname;
         private int exp;
+        private double expPercent;
         private int gold;
         private int level;
         private String profileImageUrl;

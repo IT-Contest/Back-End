@@ -1,6 +1,7 @@
 package ssuchaehwa.it_project.domain.pomodoro.application;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import ssuchaehwa.it_project.domain.pomodoro.domain.entity.Pomodoro;
@@ -16,6 +17,7 @@ import ssuchaehwa.it_project.domain.pomodoro.converter.PomodoroConverter;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class PomodoroImpl implements PomodoroService {
@@ -52,8 +54,15 @@ public class PomodoroImpl implements PomodoroService {
         // 상태 변경 및 보상 로직
         session.complete();
         
-        user.addExp(session.getRewardExp());
-        user.addGold(session.getRewardGold());
+        // 레벨업 체크를 위해 이전 레벨 저장
+        int oldLevel = user.getLevel();
+        user.addExpAndUpdateLevel(session.getRewardExp());
+        user.addGoldAndUpdateLevel(session.getRewardGold());
+        int newLevel = user.getLevel();
+        
+        if (newLevel > oldLevel) {
+            log.info("🎉 뽀모도로 완료로 레벨업! {} -> {} (exp: {})", oldLevel, newLevel, user.getExp());
+        }
 
         return PomodoroConverter.toCompleteResponse(session);
     }
