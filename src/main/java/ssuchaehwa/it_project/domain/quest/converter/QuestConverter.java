@@ -105,10 +105,14 @@ public class QuestConverter {
             List<QuestResponseDTO.FriendList> friendLists,
             List<QuestResponseDTO.DailyOngoingQuest> dailyOngoingQuests
     ) {
+        // 경험치 바 진행률 계산
+        double expPercent = calculateExpPercent(user.getExp(), user.getLevel());
+        
         return QuestResponseDTO.MainPageResponse.builder()
                 .nickname(user.getNickname())
                 .level(user.getLevel())
                 .exp(user.getExp())
+                .expPercent(expPercent)
                 .gold(user.getGold())
                 .profileImageUrl(user.getProfileImageUrl())
                 .dailyCount(dailyCount)
@@ -118,6 +122,37 @@ public class QuestConverter {
                 .friends(friendLists)
                 .dailyOngoingQuests(dailyOngoingQuests)
                 .build();
+    }
+
+    // 경험치 바 진행률 계산 메서드
+    private static double calculateExpPercent(int currentExp, int currentLevel) {
+        int[] levelThresholds = {
+            0, 100, 110, 140, 190, 260, 350, 460, 590, 740, 910,
+            1100, 1310, 1540, 1790, 2060, 2350, 2660, 2990, 3340, 3710,
+            4100, 4510, 4940, 5390, 5860, 6350, 6860, 7390, 7940, 8510,
+            9100, 9710, 10340, 10990, 11660, 12350, 13060, 13790, 14540, 15310,
+            16100, 16910, 17740, 18590, 19460, 20350, 21260, 22190, 23140, 24110,
+            25100, 26110, 27140, 28190, 29260, 30350, 31460, 32590, 33740, 34910,
+            36100, 37310, 38540, 39790, 41060, 42350, 43660, 44990, 46340, 47710,
+            49100, 50510, 51940, 53390, 54860, 56350, 57860, 59390, 60940, 62510,
+            64100, 65710, 67340, 68990, 70660, 72350, 74060, 75790, 77540, 79310,
+            81100, 82910, 84740, 86590, 88460, 90350, 92260, 94190, 96140, 98110
+        };
+        
+        // 최대 레벨(100)인 경우 100% 반환
+        if (currentLevel >= levelThresholds.length - 1) {
+            return 100.0;
+        }
+        
+        int currentLevelExp = levelThresholds[currentLevel];
+        int nextLevelExp = levelThresholds[currentLevel + 1];
+        
+        // 현재 레벨에서의 진행도 계산
+        int expInCurrentLevel = currentExp - currentLevelExp;
+        int expNeededForNextLevel = nextLevelExp - currentLevelExp;
+        
+        // 진행률 계산 (0~100%)
+        return Math.min(100.0, Math.max(0.0, (double) expInCurrentLevel / expNeededForNextLevel * 100.0));
     }
 
     // 퀘스트 완료 상태 변경

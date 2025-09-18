@@ -1,6 +1,7 @@
 package ssuchaehwa.it_project.domain.quest.application;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import ssuchaehwa.it_project.domain.model.enums.CompletionStatus;
@@ -29,6 +30,7 @@ import org.springframework.util.ReflectionUtils;
 import java.lang.reflect.Field;
 import java.util.stream.Collectors;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class QuestServiceImpl implements QuestService {
@@ -255,9 +257,17 @@ public class QuestServiceImpl implements QuestService {
     @Override
     public QuestResponseDTO.MainPageResponse getMainPage(Long userId) {
 
-        // 임시로 1로 테스트
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new UserException(ErrorStatus.NO_SUCH_USER));
+        
+        // 레벨이 경험치와 맞지 않으면 업데이트
+        int calculatedLevel = User.calculateLevelFromExp(user.getExp());
+        if (user.getLevel() != calculatedLevel) {
+            user.updateLevel();
+            userRepository.save(user);
+            log.info("🔧 메인페이지 조회 시 레벨 보정: exp={}, 기존 레벨={}, 수정된 레벨={}", 
+                    user.getExp(), user.getLevel(), calculatedLevel);
+        }
 
         List<Quest> quests = questRepository.findAllByUserId(user.getId());
 
@@ -348,9 +358,13 @@ public class QuestServiceImpl implements QuestService {
     @Transactional
     @Override
     public List<QuestResponseDTO.QuestStatusChangeResponse> changeQuestStatus(QuestRequestDTO.QuestStatusChangeRequest request, Long userId) {
+        
+        log.info("🔥 changeQuestStatus 시작: userId={}, questIds={}", userId, request.getQuestIds());
 
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new UserException(ErrorStatus.NO_SUCH_USER));
+        
+        log.info("📊 현재 사용자 상태: exp={}, gold={}", user.getExp(), user.getGold());
 
         List<Long> questIds = request.getQuestIds();
 
@@ -369,15 +383,20 @@ public class QuestServiceImpl implements QuestService {
         java.util.Map<Long, Boolean> firstCompletionMap = new java.util.HashMap<>();
 
         for (Quest quest : quests) {
+            log.info("🔍 퀘스트 처리 시작: questId={}, title={}", quest.getId(), quest.getTitle());
+            
             // 템플릿의 주기(일/주/월/연)에 맞는 period_key 계산 (앵커 기반)
             LocalDate periodKey = questAnalysisService.currentPeriodKeyFromAnchor(
                 quest.getQuestType().name(), 
                 quest.getStartDate() != null ? quest.getStartDate() : today, 
                 today
             );
+            
+            log.info("📅 계산된 periodKey: {}", periodKey);
 
             // (template_id, period_key)로 occurrence 조회(or 생성)
             Optional<QuestOccurrence> existing = questOccurrenceRepository.findByTemplateIdAndPeriodKey(quest.getId(), periodKey);
+            log.info("🔎 기존 occurrence 조회 결과: {}", existing.isPresent() ? "존재함" : "없음");
             
             boolean wasIncomplete = true; // 기본값: 새로 생성되거나 INCOMPLETE 상태
             boolean hasEverBeenCompleted = false; // 해당 날짜에 이미 한 번이라도 완료된 적이 있는지
@@ -410,16 +429,49 @@ public class QuestServiceImpl implements QuestService {
             if (targetStatus == CompletionStatus.COMPLETED) {
                 // 해당 날짜에 처음으로 완료될 때만 보상 지급
                 if (!hasEverBeenCompleted) {
+                    // 클라이언트가 보낸 보상값이 있으면 사용하고, 없으면 Quest 엔티티의 값 사용
+                    int expToGive = (request.getExpReward() != null) ? request.getExpReward() : quest.getExpReward();
+                    int goldToGive = (request.getGoldReward() != null) ? request.getGoldReward() : quest.getGoldReward();
+                    
+                    log.info("💰 보상 지급 시작: questId={}, expReward={}, goldReward={} (클라이언트값: {}, {})", 
+                            quest.getId(), expToGive, goldToGive, request.getExpReward(), request.getGoldReward());
+                    
+                    int beforeExp = user.getExp();
+                    int beforeGold = user.getGold();
+                    
                     isFirstCompletion = true;
-                    // 사용자에게 보상 지급
-                    user.addExp(quest.getExpReward());
-                    user.addGold(quest.getGoldReward());
-                    userRepository.save(user);
+                    // 사용자에게 보상 지급 및 레벨 자동 계산
+                    int oldLevel = user.getLevel();
+                    user.addExpAndUpdateLevel(expToGive);
+                    user.addGoldAndUpdateLevel(goldToGive);
+                    int newLevel = user.getLevel();
+                    
+                    if (newLevel > oldLevel) {
+                        log.info("🎉 레벨업! {} -> {} (exp: {})", oldLevel, newLevel, user.getExp());
+                    }
+                    
+                    log.info("📈 보상 지급 후: exp {} -> {}, gold {} -> {} (실제 지급: exp+{}, gold+{})", 
+                            beforeExp, user.getExp(), beforeGold, user.getGold(), expToGive, goldToGive);
+                    
+                    // 명시적으로 더티 체킹을 위한 필드 접근
+                    log.info("🔍 더티 체킹 확인 - 현재 User 객체 상태: id={}, exp={}, gold={}", 
+                            user.getId(), user.getExp(), user.getGold());
+                    
+                    User savedUser = userRepository.save(user);
+                    log.info("✅ 저장된 사용자: exp={}, gold={}", savedUser.getExp(), savedUser.getGold());
+                    
+                    // 즉시 flush하여 DB에 반영
+                    userRepository.flush();
+                    log.info("🔄 플러시 완료");
+                } else {
+                    log.info("⚠️ 이미 완료된 퀘스트: questId={}", quest.getId());
                 }
                 
+                log.info("🔄 QuestOccurrence 상태 업데이트 시작: questId={}, periodKey={}", quest.getId(), periodKey);
                 questOccurrenceRepository.updateStatusByTemplateIdAndPeriodKey(
                     quest.getId(), periodKey, "COMPLETED", LocalDateTime.now(ZoneId.of("Asia/Seoul"))
                 );
+                log.info("✅ QuestOccurrence 상태 업데이트 완료");
             } else {
                 // INCOMPLETE로 변경 (completed_at은 유지)
                 questOccurrenceRepository.updateStatusOnlyByTemplateIdAndPeriodKey(
@@ -427,10 +479,21 @@ public class QuestServiceImpl implements QuestService {
                 );
             }
             
+            log.info("🗂️ firstCompletionMap에 저장: questId={}, isFirstCompletion={}", quest.getId(), isFirstCompletion);
             firstCompletionMap.put(quest.getId(), isFirstCompletion);
+            log.info("✨ 퀘스트 처리 완료: questId={}", quest.getId());
         }
 
-        return QuestConverter.toQuestStatusChangeResponse(quests, firstCompletionMap, targetStatus);
+        log.info("🎯 메서드 완료 직전 - 최종 사용자 상태: exp={}, gold={}", user.getExp(), user.getGold());
+        
+        try {
+            List<QuestResponseDTO.QuestStatusChangeResponse> result = QuestConverter.toQuestStatusChangeResponse(quests, firstCompletionMap, targetStatus);
+            log.info("🏁 changeQuestStatus 완료");
+            return result;
+        } catch (Exception e) {
+            log.error("❌ changeQuestStatus 실행 중 예외 발생", e);
+            throw e;
+        }
     }
 
     // 파티 생성
