@@ -215,6 +215,9 @@ public class QuestConverter {
         return QuestResponseDTO.PartyListResponse.builder()
                 .partyId(party.getId())
                 .title(party.getTitle())
+                .questTitle(
+                        party.getQuest() != null ? party.getQuest().getTitle() : null
+                )
                 .status(party.getCompletionStatus())
                 .startDate(party.getStartDate())
                 .dueDate(party.getDueDate())
