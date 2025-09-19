@@ -238,6 +238,8 @@ public class QuestResponseDTO {
     @Getter
     @Builder
     public static class PartyListResponse {
+
+        private String questTitle;
         private Long partyId;                 // 파티 ID
         private String title;                 // 파티 제목
         private CompletionStatus status;      // 파티 상태 (INCOMPLETE, IN_PROGRESS, COMPLETED)
