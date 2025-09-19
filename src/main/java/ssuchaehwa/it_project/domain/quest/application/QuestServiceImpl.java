@@ -140,7 +140,7 @@ public class QuestServiceImpl implements QuestService {
         invitedFriendRepository.save(invitedFriend);
 
         // 링크 생성
-        String link = "http://10.21.35.27:8080/invite.html?code=" + token;
+        String link = "http://ssuchaehwa.duckdns.org/invite.html?code=" + token;
 
         return QuestResponseDTO.FriendInviteResponse.builder()
                 .inviteLink(link)
