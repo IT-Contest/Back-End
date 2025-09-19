@@ -62,8 +62,8 @@ public class QuestServiceImpl implements QuestService {
                 .dueDate(request.getDueDate())
                 .startTime(request.getStartTime())
                 .endTime(request.getEndTime())
-                .expReward(3000)
-                .goldReward(1250)
+                .expReward(10)
+                .goldReward(10)
                 .build();
 
         questRepository.save(quest);
@@ -456,6 +456,8 @@ public class QuestServiceImpl implements QuestService {
                 .startTime(request.getStartTime())
                 .endTime(request.getEndTime())
                 .expiresAt(LocalDateTime.now().plusMinutes(15))
+                .expReward(10)
+                .goldReward(10)
                 .build();
 
         partyRepository.save(party);
