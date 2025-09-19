@@ -23,6 +23,7 @@ public enum SuccessStatus implements BaseCode {
     INVITE_PARTY_LIST_VIEW_SUCCESS(HttpStatus.OK, "PARTY_200", "초대 받은 파티 리스트 조회를 완료했습니다."),
     INVITE_PARTY_STATUS_CHANGE(HttpStatus.CREATED, "PARTY_201", "초대 받은 파티에 대한 응답을 완료했습니다."),
     PARTY_LIST_VIEW_SUCCESS(HttpStatus.OK, "PARTY_200", "파티 리스트 조회를 완료했습니다."),
+    PARTY_STATUS_CHANGE(HttpStatus.CREATED, "PARTY_201", "파티 퀘스트 상태가 변경되었습니다."),
 
 
     INVITE_FRIEND_CREATED(HttpStatus.CREATED, "INVITE_FRIEND_201", "친구 초대를 완료했습니다."),
