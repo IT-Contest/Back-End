@@ -20,6 +20,8 @@ public interface PartyRepository extends JpaRepository<Party, Long> {
     List<Party> findAllByUserId(Long userId);
 
     // 내가 속한 파티
-    @Query("SELECT pu.party FROM PartyUser pu WHERE pu.user.id = :userId")
-    List<Party> findAllByMemberUserId(@Param("userId") Long userId);
+    // PartyRepository.java
+    @Query("SELECT pu.party FROM PartyUser pu WHERE pu.user.id = :userId AND pu.invitationStatus = 'ACCEPTED'")
+    List<Party> findAllByMemberUserId(Long userId);
+
 }

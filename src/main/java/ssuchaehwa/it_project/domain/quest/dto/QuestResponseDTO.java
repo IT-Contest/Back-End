@@ -233,7 +233,7 @@ public class QuestResponseDTO {
         private int expReward;
     }
 
-    // 파티조회
+    // 파티 조회
     @Getter
     @Builder
     public static class PartyListResponse {
@@ -241,6 +241,7 @@ public class QuestResponseDTO {
         private String title;                 // 파티 제목
         private CompletionStatus status;      // 파티 상태 (INCOMPLETE, IN_PROGRESS, COMPLETED)
         private LocalDateTime expiresAt;      // 만료 시간
+        private InvitationStatus invitationStatus; // 수락 여부 상태
         private List<MemberInfo> members;     // 파티 멤버 목록
     }
 
