@@ -95,6 +95,8 @@ public class QuestRequestDTO {
 
         private List<Long> questIds;
         private String completionStatus;
+        private Integer expReward;   // 클라이언트에서 보낸 보상값
+        private Integer goldReward;  // 클라이언트에서 보낸 보상값
     }
 
     // 파티 수락 / 거절
