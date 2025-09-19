@@ -240,6 +240,13 @@ public class QuestResponseDTO {
         private Long partyId;                 // 파티 ID
         private String title;                 // 파티 제목
         private CompletionStatus status;      // 파티 상태 (INCOMPLETE, IN_PROGRESS, COMPLETED)
+        private LocalDate startDate;          // 시작 날짜 추가
+        private LocalDate dueDate;            // 마감 날짜 추가
+        private LocalTime startTime;          // 시작 시간 추가
+        private LocalTime endTime;            // 종료 시간 추가
+        private int priority;                 // 우선순위 추가
+        private QuestType questType;          // 일일/주간/월간/연간 구분
+        private List<String> hashtags;        // 카테고리(태그)
         private LocalDateTime expiresAt;      // 만료 시간
         private InvitationStatus invitationStatus; // 수락 여부 상태
         private List<MemberInfo> members;     // 파티 멤버 목록

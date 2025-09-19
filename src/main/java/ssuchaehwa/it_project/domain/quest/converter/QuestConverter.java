@@ -1,6 +1,7 @@
 package ssuchaehwa.it_project.domain.quest.converter;
 
 import ssuchaehwa.it_project.domain.model.enums.CompletionStatus;
+import ssuchaehwa.it_project.domain.quest.domain.entity.Hashtag;
 import ssuchaehwa.it_project.domain.quest.domain.entity.Party;
 import ssuchaehwa.it_project.domain.quest.domain.entity.PartyUser;
 import ssuchaehwa.it_project.domain.quest.domain.entity.Quest;
@@ -180,16 +181,20 @@ public class QuestConverter {
                 .partyId(party.getId())
                 .title(party.getTitle())
                 .status(party.getCompletionStatus())
-                .expiresAt(party.getExpiresAt())
-                .members(
-                        party.getPartyUsers().stream()
-                                .map(pu -> QuestResponseDTO.MemberInfo.builder()
-                                        .userId(pu.getUser().getId())
-                                        .nickname(pu.getUser().getNickname())
-                                        .profileImage(pu.getUser().getProfileImageUrl())
-                                        .build())
+                .startDate(party.getStartDate())
+                .dueDate(party.getDueDate())
+                .startTime(party.getStartTime())
+                .endTime(party.getEndTime())
+                .priority(party.getPriority())
+                .questType(party.getQuestType())
+                .hashtags(
+                        party.getQuest() != null
+                                ? party.getQuest().getHashtagQuests().stream()
+                                .map(hq -> hq.getHashtag().getName())
                                 .toList()
+                                : List.of()
                 )
+                .expiresAt(party.getExpiresAt())
                 .build();
     }
 
