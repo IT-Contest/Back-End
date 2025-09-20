@@ -28,6 +28,9 @@ public class QuestResponseDTO {
         private LocalTime endTime;
         private LocalDate startDate;
         private LocalDate dueDate;
+        private int userExp;        // 현재 총 경험치
+        private int userLevel;      // 현재 레벨
+        private int rewardExp;      // 받은 보상 경험치
     }
 
     // 파티 생성
@@ -44,6 +47,9 @@ public class QuestResponseDTO {
         private LocalTime endTime;
         private LocalDate startDate;
         private LocalDate dueDate;
+        private int userExp;        // 현재 총 경험치
+        private int userLevel;      // 현재 레벨
+        private int rewardExp;      // 받은 보상 경험치
     }
 
     // 파티 수정
@@ -114,6 +120,18 @@ public class QuestResponseDTO {
     public static class FriendInviteResponse {
 
         private String inviteLink;
+    }
+
+    // 친구 초대 수락 응답
+    @Builder
+    @Getter
+    @AllArgsConstructor
+    @NoArgsConstructor
+    public static class FriendInviteAcceptResponse {
+        private int userExp;        // 현재 총 경험치
+        private int userLevel;      // 현재 레벨
+        private int rewardExp;      // 받은 보상 경험치
+        private String message;     // 성공 메시지
     }
 
     // 친구 조회

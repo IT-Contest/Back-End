@@ -1,6 +1,7 @@
 package ssuchaehwa.it_project.domain.user.application;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import ssuchaehwa.it_project.domain.user.domain.entity.Term;
@@ -16,6 +17,7 @@ import ssuchaehwa.it_project.global.error.code.status.ErrorStatus;
 
 import java.util.List;
 
+@Slf4j
 @Service
 @Transactional(readOnly = true)
 @RequiredArgsConstructor
@@ -116,6 +118,41 @@ public class UserServiceImpl implements UserService {
                 saved.getUrl(),
                 saved.isRequired()
         );
+    }
+    
+    // 온보딩 완료
+    @Transactional
+    @Override
+    public UserResponseDTO.OnboardingCompleteResponse completeOnboarding(Long userId) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new UserException(ErrorStatus.NO_SUCH_USER));
+        
+        // 이미 온보딩이 완료된 사용자인지 확인
+        if (user.isOnboardingCompleted()) {
+            throw new UserException(ErrorStatus.ALREADY_COMPLETED_ONBOARDING);
+        }
+        
+        // 온보딩 완료 처리
+        user.completeOnboarding();
+        
+        // 온보딩 완료 보상 지급 (100exp)
+        int oldLevel = user.getLevel();
+        user.addExpAndUpdateLevel(100);
+        int newLevel = user.getLevel();
+        
+        if (newLevel > oldLevel) {
+            log.info("🎉 온보딩 완료로 레벨업! {} -> {} (exp: {})", oldLevel, newLevel, user.getExp());
+        }
+        
+        userRepository.save(user);
+        
+        return UserResponseDTO.OnboardingCompleteResponse.builder()
+                .userId(user.getId())
+                .exp(user.getExp())
+                .level(user.getLevel())
+                .onboardingCompleted(user.isOnboardingCompleted())
+                .rewardExp(100)
+                .build();
     }
 
 }

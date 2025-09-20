@@ -195,4 +195,9 @@ public class User extends BaseTimeEntity {
     public void updateLevel() {
         this.level = calculateLevelFromExp(this.exp);
     }
+    
+    // 온보딩 완료 메서드
+    public void completeOnboarding() {
+        this.onboardingCompleted = true;
+    }
 }

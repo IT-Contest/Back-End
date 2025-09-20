@@ -3,6 +3,7 @@ package ssuchaehwa.it_project.domain.pomodoro.converter;
 import ssuchaehwa.it_project.domain.pomodoro.domain.entity.Pomodoro;
 import ssuchaehwa.it_project.domain.pomodoro.dto.PomodoroResponseDTO;
 import ssuchaehwa.it_project.domain.pomodoro.dto.PomodoroAnalysisResponseDTO;
+import ssuchaehwa.it_project.domain.user.domain.entity.User;
 import ssuchaehwa.it_project.global.common.response.BaseResponse;
 import ssuchaehwa.it_project.global.error.code.status.SuccessStatus;
 
@@ -17,6 +18,19 @@ public class PomodoroConverter {
                 .earnedGold(pomodoro.getRewardGold())
                 .startTime(pomodoro.getStartTime())
                 .endTime(pomodoro.getEndTime())
+                .build();
+    }
+
+    // 뽀모도로 완료 응답 변환 (사용자 정보 포함)
+    public static PomodoroResponseDTO.PomodoroCompleteResponse toCompleteResponse(Pomodoro pomodoro, User user) {
+        return PomodoroResponseDTO.PomodoroCompleteResponse.builder()
+                .earnedExp(pomodoro.getRewardExp())
+                .earnedGold(pomodoro.getRewardGold())
+                .startTime(pomodoro.getStartTime())
+                .endTime(pomodoro.getEndTime())
+                .userExp(user.getExp())
+                .userLevel(user.getLevel())
+                .rewardExp(pomodoro.getRewardExp())
                 .build();
     }
 

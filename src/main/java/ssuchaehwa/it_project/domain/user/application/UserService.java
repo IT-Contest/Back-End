@@ -19,4 +19,7 @@ public interface UserService {
 
     // 약관 생성
     UserResponseDTO.TermResponse createTerm(UserRequestDTO.TermCreateRequest request);
+    
+    // 온보딩 완료
+    UserResponseDTO.OnboardingCompleteResponse completeOnboarding(Long userId);
 }
