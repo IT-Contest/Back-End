@@ -51,6 +51,7 @@ public class QuestServiceImpl implements QuestService {
     @Override
     public QuestResponseDTO.QuestCreateResponse createQuest(QuestRequestDTO.QuestCreateRequest request, Long userId) {
 
+        // 일단 1번 유저로 테스트
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new UserException(ErrorStatus.NO_SUCH_USER));
 
