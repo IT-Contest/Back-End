@@ -1,5 +1,8 @@
 package ssuchaehwa.it_project.domain.quest.application;
 
+import com.google.firebase.messaging.FirebaseMessaging;
+import com.google.firebase.messaging.Message;
+import com.google.firebase.messaging.Notification;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -45,6 +48,7 @@ public class QuestServiceImpl implements QuestService {
     private final HashtagQuestRepository hashtagQuestRepository;
     private final QuestOccurrenceRepository questOccurrenceRepository;
     private final QuestAnalysisService questAnalysisService;
+    private final FirebaseMessaging firebaseMessaging;
 
     // 퀘스트 생성
     @Transactional
@@ -691,6 +695,31 @@ public class QuestServiceImpl implements QuestService {
             userRepository.save(inviter);
         }
 
+        // ✅ 여기서 푸시 알림 발송
+        invitedUsers.forEach(user -> {
+            String fcmToken = user.getFcmToken(); // User 엔티티에 fcmToken 필드 있다고 가정
+            if (fcmToken != null && !fcmToken.isBlank()) {
+                Message message = Message.builder()
+                        .setToken(fcmToken)
+                        .putData("type", "PARTY_INVITE")
+                        .putData("partyId", party.getId().toString())
+                        .putData("inviter", inviter.getNickname())
+                        .putData("questTitle", party.getTitle())
+                        .setNotification(Notification.builder()
+                                .setTitle("파티 초대 알림")
+                                .setBody(inviter.getNickname() + " 님이 '" + party.getTitle() + "' 파티에 초대했어요!")
+                                .build())
+                        .build();
+
+                try {
+                    String response = firebaseMessaging.send(message);
+                    log.info("✅ FCM 전송 성공: {}", response);
+                } catch (Exception e) {
+                    log.error("❌ FCM 전송 실패: {}", e.getMessage(), e);
+                }
+            }
+        });
+
         return QuestConverter.toPartyInviteResponse(party, inviter, invitedUsers);
     }
 
@@ -989,7 +1018,7 @@ public class QuestServiceImpl implements QuestService {
         invitedFriendRepository.save(invitedFriend);
 
         // 링크 생성
-        String link = "http://192.168.45.148:8080/invite.html?code=" + token;
+        String link = "https://ssuchaehwa.duckdns.org/invite.html?code=" + token;
 
         return QuestResponseDTO.FriendInviteResponse.builder()
                 .inviteLink(link)
