@@ -19,7 +19,7 @@ public class FireBaseConfig {
         try {
             String filePath = System.getenv("FIREBASE_CONFIG_PATH");
             if (filePath == null) {
-                filePath = "/home/ec2-user/config/firebase-service-account.json"; // 기본 경로
+                filePath = "/home/ubuntu/config/firebase-service-account.json"; // 기본 경로
             }
 
             FileInputStream serviceAccount = new FileInputStream(filePath);
