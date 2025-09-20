@@ -27,6 +27,21 @@ public class QuestConverter {
                 .build();
     }
 
+    // 퀘스트 생성 (EXP 정보 포함)
+    public static QuestResponseDTO.QuestCreateResponse toQuestCreateResponse(Quest quest, User user, int rewardExp) {
+        return QuestResponseDTO.QuestCreateResponse.builder()
+                .content(quest.getTitle())
+                .questType(quest.getQuestType())
+                .startDate(quest.getStartDate())
+                .dueDate(quest.getDueDate())
+                .startTime(quest.getStartTime())
+                .endTime(quest.getEndTime())
+                .userExp(user.getExp())
+                .userLevel(user.getLevel())
+                .rewardExp(rewardExp)
+                .build();
+    }
+
     // 친구 초대
 
     // 친구 조회
@@ -180,6 +195,22 @@ public class QuestConverter {
                 .dueDate(party.getDueDate())
                 .startTime(party.getStartTime())
                 .endTime(party.getEndTime())
+                .build();
+    }
+
+    // 파티 생성 (EXP 정보 포함)
+    public static QuestResponseDTO.PartyCreateResponse toPartyCreateResponse(Party party, User user, int rewardExp) {
+        return QuestResponseDTO.PartyCreateResponse.builder()
+                .questId(party.getQuest().getId())
+                .content(party.getTitle())
+                .questType(party.getQuestType())
+                .startDate(party.getStartDate())
+                .dueDate(party.getDueDate())
+                .startTime(party.getStartTime())
+                .endTime(party.getEndTime())
+                .userExp(user.getExp())
+                .userLevel(user.getLevel())
+                .rewardExp(rewardExp)
                 .build();
     }
 

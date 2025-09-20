@@ -58,7 +58,7 @@ public class Pomodoro extends BaseTimeEntity {
         }
         this.status = PomodoroStatus.COMPLETED;
         this.endTime = LocalDateTime.now(ZoneId.of("Asia/Seoul"));
-        this.rewardExp = 10;
+        this.rewardExp = 5;
         this.rewardGold = 5;
     }
 

@@ -49,7 +49,10 @@ public enum SuccessStatus implements BaseCode {
     TERM_FETCH_SUCCESS(HttpStatus.OK, "TERM_200", "약관 목록 조회 성공"),
     TERM_AGREE_SUCCESS(HttpStatus.OK, "TERM_200", "약관 동의 성공"),
     TERM_CHECK_SUCCESS(HttpStatus.OK, "TERM_200", "필수 약관 동의 여부 확인 성공"),
-    TERMS_CREATE_SUCCESS(HttpStatus.CREATED, "TERM_201", "약관 생성 완료");
+    TERMS_CREATE_SUCCESS(HttpStatus.CREATED, "TERM_201", "약관 생성 완료"),
+    
+    // onboarding
+    ONBOARDING_COMPLETE_SUCCESS(HttpStatus.OK, "ONBOARD_200", "온보딩 완료 및 보상 지급 성공");
 
     private final HttpStatus httpStatus;
     private final String code;

@@ -15,7 +15,7 @@ public interface QuestService {
     QuestResponseDTO.FriendInviteResponse friendInvite(Long fromUserId);
 
     // 친구 초대 수락
-    void acceptFriendInvite(String token, Long toUserId);
+    QuestResponseDTO.FriendInviteAcceptResponse acceptFriendInvite(String token, Long toUserId);
 
     // 친구 초대 거절
     void rejectFriendInvite(String token, Long toUserId);

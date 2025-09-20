@@ -65,7 +65,7 @@ public class PomodoroImpl implements PomodoroService {
             log.info("🎉 뽀모도로 완료로 레벨업! {} -> {} (exp: {})", oldLevel, newLevel, user.getExp());
         }
 
-        return PomodoroConverter.toCompleteResponse(session);
+        return PomodoroConverter.toCompleteResponse(session, user);
     }
 
     @Transactional
@@ -93,7 +93,7 @@ public class PomodoroImpl implements PomodoroService {
                 .startTime(startTime)
                 .endTime(endTime)
                 .status(PomodoroStatus.COMPLETED)
-                .rewardExp(10)  // 고정 보상
+                .rewardExp(5)   // 고정 보상
                 .rewardGold(5)  // 고정 보상
                 .build();
 
@@ -109,6 +109,6 @@ public class PomodoroImpl implements PomodoroService {
             log.info("🎉 뽀모도로 완료로 레벨업! {} -> {} (exp: {})", oldLevel, newLevel, user.getExp());
         }
 
-        return PomodoroConverter.toCompleteResponse(savedSession);
+        return PomodoroConverter.toCompleteResponse(savedSession, user);
     }
 }

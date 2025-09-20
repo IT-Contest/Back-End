@@ -112,12 +112,12 @@ public class QuestRestController {
                     description = "이미 처리된 초대입니다."
             )
     })
-    public BaseResponse<String> acceptFriendInvite(
+    public BaseResponse<QuestResponseDTO.FriendInviteAcceptResponse> acceptFriendInvite(
             @RequestParam("token") String token,
             @AuthenticationPrincipal UserPrincipal principal
     ) {
-        questService.acceptFriendInvite(token, principal.getId());
-        return BaseResponse.onSuccess(SuccessStatus.FRIEND_ADDED, "친구 추가 완료");
+        QuestResponseDTO.FriendInviteAcceptResponse response = questService.acceptFriendInvite(token, principal.getId());
+        return BaseResponse.onSuccess(SuccessStatus.FRIEND_ADDED, response);
     }
 
     // 친구 초대 거절
