@@ -74,6 +74,16 @@ public class QuestServiceImpl implements QuestService {
                 .build();
 
         questRepository.save(quest);
+        
+        // 퀘스트 생성 보상 지급 (10exp)
+        int oldLevel = user.getLevel();
+        user.addExpAndUpdateLevel(10);
+        int newLevel = user.getLevel();
+        
+        if (newLevel > oldLevel) {
+            log.info("🎉 퀘스트 생성으로 레벨업! {} -> {} (exp: {})", oldLevel, newLevel, user.getExp());
+        }
+        userRepository.save(user);
 
         // 현재 기간 occurrence를 즉시 생성 (메인 진입 전에도 DB에서 확인 가능하도록)
         LocalDate _today = LocalDate.now(ZoneId.of("Asia/Seoul"));
@@ -131,7 +141,7 @@ public class QuestServiceImpl implements QuestService {
                 .toList();
         hashtagQuestRepository.saveAll(hashtagQuests);
 
-        return QuestConverter.toQuestCreateResponse(quest);
+        return QuestConverter.toQuestCreateResponse(quest, user, 10);
     }
 
     // 퀘스트 수정
@@ -573,6 +583,16 @@ public class QuestServiceImpl implements QuestService {
                 .build();
 
         partyRepository.save(party);
+        
+        // 파티 생성 보상 지급 (10exp)
+        int oldLevel = user.getLevel();
+        user.addExpAndUpdateLevel(10);
+        int newLevel = user.getLevel();
+        
+        if (newLevel > oldLevel) {
+            log.info("🎉 파티 생성으로 레벨업! {} -> {} (exp: {})", oldLevel, newLevel, user.getExp());
+        }
+        userRepository.save(user);
 
         LocalDate today = LocalDate.now(ZoneId.of("Asia/Seoul"));
         LocalDate pk = questAnalysisService.currentPeriodKeyFromAnchor(
@@ -625,7 +645,7 @@ public class QuestServiceImpl implements QuestService {
                 .toList();
         hashtagQuestRepository.saveAll(hashtagQuests);
 
-        return QuestConverter.toPartyCreateResponse(party);
+        return QuestConverter.toPartyCreateResponse(party, user, 10);
     }
 
     // 파티 초대
@@ -658,6 +678,22 @@ public class QuestServiceImpl implements QuestService {
                 .toList();
 
         partyUserRepository.saveAll(partyUsers);
+        
+        // 파티 멤버 초대 보상 지급 (친구 1명당 5exp)
+        if (!invitedUsers.isEmpty()) {
+            int invitedCount = invitedUsers.size();
+            int rewardExp = invitedCount * 5;
+            
+            int oldLevel = inviter.getLevel();
+            inviter.addExpAndUpdateLevel(rewardExp);
+            int newLevel = inviter.getLevel();
+            
+            if (newLevel > oldLevel) {
+                log.info("🎉 파티 멤버 초대로 레벨업! {} -> {} (exp: {}, 초대인원: {}명)", 
+                        oldLevel, newLevel, inviter.getExp(), invitedCount);
+            }
+            userRepository.save(inviter);
+        }
 
         // ✅ 여기서 푸시 알림 발송
         invitedUsers.forEach(user -> {
@@ -992,7 +1028,7 @@ public class QuestServiceImpl implements QuestService {
     // 친구 초대 수락
     @Transactional
     @Override
-    public void acceptFriendInvite(String token, Long toUserId) {
+    public QuestResponseDTO.FriendInviteAcceptResponse acceptFriendInvite(String token, Long toUserId) {
         InvitedFriend invite = invitedFriendRepository.findByToken(token)
                 .orElseThrow(() -> new QuestException(ErrorStatus.INVALID_INVITE));
 
@@ -1017,6 +1053,37 @@ public class QuestServiceImpl implements QuestService {
                 .build();
 
         invitedFriendRepository.save(accepted);
+        
+        // 친구 초대 수락 보상 지급 (각각 5exp씩)
+        // 초대한 사람에게 보상
+        User fromUser = invite.getFromUser();
+        int oldLevelFrom = fromUser.getLevel();
+        fromUser.addExpAndUpdateLevel(5);
+        int newLevelFrom = fromUser.getLevel();
+        
+        if (newLevelFrom > oldLevelFrom) {
+            log.info("🎉 친구 초대 수락으로 레벨업! (초대자) {} -> {} (exp: {})", 
+                    oldLevelFrom, newLevelFrom, fromUser.getExp());
+        }
+        userRepository.save(fromUser);
+        
+        // 수락한 사람에게도 보상
+        int oldLevelTo = toUser.getLevel();
+        toUser.addExpAndUpdateLevel(5);
+        int newLevelTo = toUser.getLevel();
+        
+        if (newLevelTo > oldLevelTo) {
+            log.info("🎉 친구 초대 수락으로 레벨업! (수락자) {} -> {} (exp: {})", 
+                    oldLevelTo, newLevelTo, toUser.getExp());
+        }
+        userRepository.save(toUser);
+
+        return QuestResponseDTO.FriendInviteAcceptResponse.builder()
+                .userExp(toUser.getExp())
+                .userLevel(toUser.getLevel())
+                .rewardExp(5)
+                .message("친구 초대를 수락했습니다. 5 EXP를 획득했습니다!")
+                .build();
     }
 
     // 친구 초대 거절

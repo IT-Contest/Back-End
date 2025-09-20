@@ -16,6 +16,7 @@ public enum ErrorStatus implements BaseErrorCode{
 
     // user
     NO_SUCH_USER(HttpStatus.BAD_REQUEST, "USER_4001", "유저가 존재하지 않습니다."),
+    ALREADY_COMPLETED_ONBOARDING(HttpStatus.BAD_REQUEST, "USER_4002", "이미 온보딩이 완료된 사용자입니다."),
 
     // quest
     NO_SUCH_QUEST(HttpStatus.BAD_REQUEST, "QUEST_4001", "해당 퀘스트가 존재하지 않습니다."),

@@ -23,4 +23,7 @@ public interface UserService {
     // 푸시 토큰
     void updateFcmToken(Long userId, String token);
 
+
+    // 온보딩 완료
+    UserResponseDTO.OnboardingCompleteResponse completeOnboarding(Long userId);
 }

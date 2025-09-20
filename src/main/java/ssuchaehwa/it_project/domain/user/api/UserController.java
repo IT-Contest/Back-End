@@ -91,4 +91,16 @@ public class UserController {
         return BaseResponse.onSuccess(SuccessStatus.USER_UPDATE_SUCCESS, null);
     }
 
+    @PostMapping("/onboarding/complete")
+    @Operation(summary = "온보딩 완료", description = "사용자의 온보딩을 완료하고 보상을 지급합니다.")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "온보딩 완료 성공"),
+    })
+    public BaseResponse<UserResponseDTO.OnboardingCompleteResponse> completeOnboarding(
+            @AuthenticationPrincipal UserPrincipal principal) {
+        return BaseResponse.onSuccess(
+                SuccessStatus.ONBOARDING_COMPLETE_SUCCESS,
+                userService.completeOnboarding(principal.getId()));
+    }
+
 }
