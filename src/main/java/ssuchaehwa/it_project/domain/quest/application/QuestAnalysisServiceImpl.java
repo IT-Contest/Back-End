@@ -241,11 +241,17 @@ public class QuestAnalysisServiceImpl implements QuestAnalysisService {
     public void ensureCurrentOccurrences(List<QuestOccurrence> occurrences, Long userId, LocalDate today) {
         for (QuestOccurrence occ : occurrences) {
             LocalDate pk = currentPeriodKeyFromAnchor(occ.getQuestType(), occ.getPeriodKey(), today);
-            boolean exists = questOccurrenceRepository.existsByTemplateIdAndPeriodKey(occ.getTemplateId(), pk);
+
+            // questSource까지 조건에 포함
+            boolean exists = questOccurrenceRepository.existsByTemplateIdAndPeriodKeyAndQuestSource(
+                    occ.getTemplateId(), pk, occ.getQuestSource()
+            );
+
             if (!exists) {
                 QuestOccurrence newOcc = QuestOccurrence.builder()
                         .templateId(occ.getTemplateId())
                         .userId(userId)
+                        .questSource(occ.getQuestSource()) // ✅ 반드시 복사!
                         .questType(occ.getQuestType())
                         .periodKey(pk)
                         .status("INCOMPLETE")
@@ -253,8 +259,10 @@ public class QuestAnalysisServiceImpl implements QuestAnalysisService {
                         .expectedEndTime(occ.getExpectedEndTime())
                         .title(occ.getTitle())
                         .build();
+
                 questOccurrenceRepository.save(newOcc);
             }
         }
     }
+
 }

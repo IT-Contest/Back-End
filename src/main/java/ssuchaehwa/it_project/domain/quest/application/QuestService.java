@@ -53,6 +53,10 @@ public interface QuestService {
     // 파티 수락 / 거절
     QuestResponseDTO.PartyInvitationResponse respondToInvitation(Long userId, QuestRequestDTO.PartyInvitationResponseRequest request);
 
+    // 파티 완료 / 취소
+    List<QuestResponseDTO.PartyStatusChangeResponse> changePartyStatus(
+            QuestRequestDTO.PartyStatusChangeRequest request, Long userId);
+
     // 퀘스트 수정
     QuestResponseDTO.QuestUpdateResponse updateQuest(Long questId, QuestRequestDTO.QuestUpdateRequest request, Long userId);
 

@@ -228,10 +228,15 @@ public class QuestResponseDTO {
     @AllArgsConstructor
     public static class PartyInvitationListResponse {
 
-        private String nickname;
-        private String partyName;
-        private String questName;
-        private int expReward;
+        private Long partyId;                 // ✅ 파티 ID
+        private String partyName;             // 파티 이름
+        private String questName;             // 퀘스트 이름
+        private String inviterNickname;       // 초대한 사람 닉네임
+        private String inviterProfileUrl;     // 초대한 사람 프로필 이미지
+        private InvitationStatus invitationStatus; // ✅ PENDING / DECLINED / ACCEPTED
+        private int expReward;                // 보상
+        private LocalDate startDate;
+        private LocalDate dueDate;
     }
 
     // 파티 조회
@@ -273,6 +278,24 @@ public class QuestResponseDTO {
         private Long partyId;
         private String partyName;
         private InvitationStatus invitationStatus;
+    }
+
+    // 파티 완료 / 취소 처리
+    @Builder
+    @Getter
+    @NoArgsConstructor
+    @AllArgsConstructor
+    public static class PartyStatusChangeResponse {
+        private Long partyId;
+        private String title;
+        private CompletionStatus completionStatus;
+        @com.fasterxml.jackson.annotation.JsonProperty("isFirstCompletion")
+        private boolean isFirstCompletion;
+
+        // 명시적 getter (JSON 직렬화)
+        public boolean getIsFirstCompletion() {
+            return isFirstCompletion;
+        }
     }
 
     // 퀘스트 수정 응답 DTO

@@ -197,6 +197,26 @@ public class QuestRestController {
         return BaseResponse.onSuccess(SuccessStatus.QUEST_STATUS_CHANGE, result);
     }
 
+    // 파티 퀘스트 완료 상태 변경 API
+    @PatchMapping("/party/change")
+    @Operation(summary = "파티 퀘스트 완료 상태 변경 API",
+            description = "유저의 파티 퀘스트 상태를 변경합니다. 파티 ID 리스트와 상태(COMPLETED/INCOMPLETE)를 request body로 전달하세요.")
+    @ApiResponses({
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(
+                    responseCode = "PARTY_201",
+                    description = "CREATED, 파티 퀘스트의 상태 변경이 완료되었습니다."
+            )
+    })
+    public BaseResponse<List<QuestResponseDTO.PartyStatusChangeResponse>> updatePartyStatus(
+            @AuthenticationPrincipal UserPrincipal principal,
+            @RequestBody @Valid QuestRequestDTO.PartyStatusChangeRequest partyStatusChangeRequest
+    ) {
+        List<QuestResponseDTO.PartyStatusChangeResponse> result =
+                questService.changePartyStatus(partyStatusChangeRequest, principal.getId());
+
+        return BaseResponse.onSuccess(SuccessStatus.PARTY_STATUS_CHANGE, result);
+    }
+
     // 파티 생성 API
     @PostMapping(value = "/party/create")
     @Operation(summary = "파티를 추가하는 API", description = "request body에 partyCreateRequest 형식의 데이터와, path로 questId를 넘겨주세요.")

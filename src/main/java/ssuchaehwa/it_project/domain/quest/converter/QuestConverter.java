@@ -237,19 +237,25 @@ public class QuestConverter {
     }
 
     // 파티 초대 리스트
-    public static List<QuestResponseDTO.PartyInvitationListResponse> toInvitedPartyListResponse(List<PartyUser> invitations) {
-        return invitations.stream().map(pu -> {
-            Party party = pu.getParty();
-            Quest quest = party.getQuest();
-            User host = party.getUser();
+    public static List<QuestResponseDTO.PartyInvitationListResponse> toInvitedPartyListResponse(List<PartyUser> partyUsers) {
+        return partyUsers.stream()
+                .map(partyUser -> {
+                    Party party = partyUser.getParty();
+                    User inviter = party.getUser(); // 파티 만든 사람
 
-            return QuestResponseDTO.PartyInvitationListResponse.builder()
-                    .nickname(host.getNickname())
-                    .partyName(party.getTitle())
-                    .questName(quest.getTitle())
-                    .expReward(party.getExpReward())
-                    .build();
-        }).toList();
+                    return QuestResponseDTO.PartyInvitationListResponse.builder()
+                            .partyId(party.getId())
+                            .partyName(party.getTitle())
+                            .questName(party.getQuest() != null ? party.getQuest().getTitle() : null)
+                            .inviterNickname(inviter.getNickname())
+                            .inviterProfileUrl(inviter.getProfileImageUrl())
+                            .invitationStatus(partyUser.getInvitationStatus())
+                            .expReward(party.getExpReward())
+                            .startDate(party.getStartDate())
+                            .dueDate(party.getDueDate())
+                            .build();
+                })
+                .toList();
     }
 
     // 파티 수정 응답 변환
@@ -283,6 +289,22 @@ public class QuestConverter {
                 .partyName(party.getTitle())
                 .invitationStatus(partyUser.getInvitationStatus())
                 .build();
+    }
+
+    // 파티 완료 / 취소
+    public static List<QuestResponseDTO.PartyStatusChangeResponse> toPartyStatusChangeResponse(
+            List<Party> parties,
+            java.util.Map<Long, Boolean> firstCompletionMap,
+            CompletionStatus targetStatus) {
+
+        return parties.stream()
+                .map(p -> QuestResponseDTO.PartyStatusChangeResponse.builder()
+                        .partyId(p.getId())
+                        .title(p.getTitle())
+                        .completionStatus(targetStatus)
+                        .isFirstCompletion(firstCompletionMap.getOrDefault(p.getId(), false))
+                        .build())
+                .toList();
     }
 
     // 퀘스트 수정 응답 변환

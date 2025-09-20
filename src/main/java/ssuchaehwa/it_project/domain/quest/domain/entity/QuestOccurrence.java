@@ -2,13 +2,17 @@ package ssuchaehwa.it_project.domain.quest.domain.entity;
 
 import jakarta.persistence.*;
 import lombok.*;
+import ssuchaehwa.it_project.domain.quest.domain.enums.QuestSource;
+
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "quest_occurrence",
        uniqueConstraints = {
-           @UniqueConstraint(name = "uq_template_period", columnNames = {"template_id", "period_key"})
+           @UniqueConstraint(
+                   name = "uq_template_period",
+                   columnNames = {"template_id", "period_key", "quest_source"})
        },
        indexes = {
            @Index(name = "idx_user_period", columnList = "user_id, period_key"),
@@ -53,6 +57,10 @@ public class QuestOccurrence {
 
     @Column(name = "expected_end_time")
     private String expectedEndTime;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "quest_source", nullable = false, length = 10)
+    private QuestSource questSource;
 
     @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;
