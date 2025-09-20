@@ -25,6 +25,8 @@ public class User extends BaseTimeEntity {
 
     private String nickname;
 
+    private String fcmToken;
+
     private int level;
 
     private int exp;
@@ -194,5 +196,10 @@ public class User extends BaseTimeEntity {
     // 현재 레벨 업데이트 메서드
     public void updateLevel() {
         this.level = calculateLevelFromExp(this.exp);
+    }
+
+    // 토큰 값 변경
+    public void updateFcmToken(String newToken) {
+        this.fcmToken = newToken;
     }
 }

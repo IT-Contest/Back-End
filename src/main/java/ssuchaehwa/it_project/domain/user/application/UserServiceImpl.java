@@ -118,4 +118,14 @@ public class UserServiceImpl implements UserService {
         );
     }
 
+    // 푸시 토큰
+    @Override
+    @Transactional
+    public void updateFcmToken(Long userId, String token) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new UserException(ErrorStatus.NO_SUCH_USER));
+
+        user.updateFcmToken(token);
+        userRepository.save(user);
+    }
 }

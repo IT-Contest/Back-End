@@ -4,6 +4,7 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
@@ -19,6 +20,7 @@ import java.util.List;
 @RestController
 @Validated
 @RequiredArgsConstructor
+@Slf4j
 @RequestMapping("/users")
 public class UserController {
 
@@ -72,6 +74,21 @@ public class UserController {
         return BaseResponse.onSuccess(
                 SuccessStatus.TERMS_CREATE_SUCCESS,
                 userService.createTerm(request));
+    }
+
+    // push token
+    @PostMapping("/fcm-token")
+    @Operation(summary = "FCM 토큰 저장", description = "로그인한 사용자의 FCM 토큰을 갱신합니다.")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "FCM 토큰 저장 성공"),
+    })
+    public BaseResponse<    Void> updateFcmToken(
+            @AuthenticationPrincipal UserPrincipal principal,
+            @RequestBody UserRequestDTO.FcmTokenRequest request
+    ) {
+        userService.updateFcmToken(principal.getId(), request.getToken());
+        log.info("✅ FCM 토큰 저장 요청: userId={}, token={}", principal.getId(), request.getToken());
+        return BaseResponse.onSuccess(SuccessStatus.USER_UPDATE_SUCCESS, null);
     }
 
 }

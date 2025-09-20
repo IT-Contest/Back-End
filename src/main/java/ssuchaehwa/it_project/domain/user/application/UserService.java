@@ -19,4 +19,8 @@ public interface UserService {
 
     // 약관 생성
     UserResponseDTO.TermResponse createTerm(UserRequestDTO.TermCreateRequest request);
+
+    // 푸시 토큰
+    void updateFcmToken(Long userId, String token);
+
 }
