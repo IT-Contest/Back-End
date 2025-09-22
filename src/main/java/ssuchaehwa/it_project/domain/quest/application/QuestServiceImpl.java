@@ -343,20 +343,25 @@ public class QuestServiceImpl implements QuestService {
 
         // 퀘스트 유형 별 카운트
         int dailyCount = (int) quests.stream()
-                .filter(q -> q.getQuestType() == QuestType.DAILY)
+                .filter(q -> q.getQuestType() == QuestType.DAILY
+                        && q.getCompletionStatus() != CompletionStatus.COMPLETED)
                 .count();
 
         int weeklyCount = (int) quests.stream()
-                .filter(q -> q.getQuestType() == QuestType.WEEKLY)
+                .filter(q -> q.getQuestType() == QuestType.WEEKLY
+                        && q.getCompletionStatus() != CompletionStatus.COMPLETED)
                 .count();
 
         int monthlyCount = (int) quests.stream()
-                .filter(q -> q.getQuestType() == QuestType.MONTHLY)
+                .filter(q -> q.getQuestType() == QuestType.MONTHLY
+                        && q.getCompletionStatus() != CompletionStatus.COMPLETED)
                 .count();
 
         int yearlyCount = (int) quests.stream()
-                .filter(q -> q.getQuestType() == QuestType.YEARLY)
+                .filter(q -> q.getQuestType() == QuestType.YEARLY
+                        && q.getCompletionStatus() != CompletionStatus.COMPLETED)
                 .count();
+
 
         // 친구 관계에서 ACCEPTED만 추출
         List<InvitedFriend> allFriends = invitedFriendRepository.findAcceptedFriends(userId);
