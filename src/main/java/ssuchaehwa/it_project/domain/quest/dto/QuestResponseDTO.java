@@ -40,8 +40,8 @@ public class QuestResponseDTO {
     @NoArgsConstructor
     public static class PartyCreateResponse {
 
-        private Long questId;
-        private String content;
+        private String partyTitle;
+        private String questName;
         private QuestType questType;
         private LocalTime startTime;
         private LocalTime endTime;
@@ -59,7 +59,8 @@ public class QuestResponseDTO {
     @NoArgsConstructor
     public static class PartyUpdateResponse {
         private Long partyId;
-        private String content;
+        private String partyTitle;
+        private String questName;
         private QuestType questType;
         private CompletionStatus completionStatus;
         private LocalTime startTime;
@@ -262,9 +263,9 @@ public class QuestResponseDTO {
     @Builder
     public static class PartyListResponse {
 
-        private String questTitle;
         private Long partyId;                 // 파티 ID
-        private String title;                 // 파티 제목
+        private String partyTitle;
+        private String questName;
         private CompletionStatus status;      // 파티 상태 (INCOMPLETE, IN_PROGRESS, COMPLETED)
         private LocalDate startDate;          // 시작 날짜 추가
         private LocalDate dueDate;            // 마감 날짜 추가
