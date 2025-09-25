@@ -40,6 +40,7 @@ public class QuestResponseDTO {
     @NoArgsConstructor
     public static class PartyCreateResponse {
 
+        private Long partyId;
         private String partyTitle;
         private String questName;
         private QuestType questType;

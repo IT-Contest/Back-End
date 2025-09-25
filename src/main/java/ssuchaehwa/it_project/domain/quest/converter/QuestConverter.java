@@ -182,6 +182,7 @@ public class QuestConverter {
     // 파티 생성 (EXP 정보 포함)
     public static QuestResponseDTO.PartyCreateResponse toPartyCreateResponse(Party party, User user, int rewardExp) {
         return QuestResponseDTO.PartyCreateResponse.builder()
+                .partyId(party.getId())
                 .partyTitle(party.getPartyTitle())
                 .questName(party.getQuestName())
                 .questType(party.getQuestType())
@@ -242,7 +243,6 @@ public class QuestConverter {
                                 .toList()
                                 : List.of()
                 )
-                .expiresAt(party.getExpiresAt())
                 .build();
     }
 

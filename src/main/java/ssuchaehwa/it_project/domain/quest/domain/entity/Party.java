@@ -67,9 +67,6 @@ public class Party extends BaseTimeEntity {
     @OneToMany(mappedBy = "party", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<PartyUser> partyUsers = new ArrayList<>();
 
-    @Column(nullable = false)
-    private LocalDateTime expiresAt;
-
     @OneToMany(mappedBy = "party", fetch = FetchType.LAZY, cascade = CascadeType.ALL)
     private List<HashtagParty> hashtagParties = new ArrayList<>();
 
