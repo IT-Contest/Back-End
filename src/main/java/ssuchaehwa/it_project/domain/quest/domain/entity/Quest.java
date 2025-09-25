@@ -63,9 +63,6 @@ public class Quest extends BaseTimeEntity {
     @JoinColumn(name = "user_id", nullable = false)
     private User user;
 
-    @OneToOne(mappedBy = "quest", fetch = FetchType.LAZY)
-    private Party party;
-
     @OneToMany(mappedBy = "quest", fetch = FetchType.LAZY, cascade = CascadeType.ALL)
     private List<HashtagQuest> hashtagQuests = new ArrayList<>();
 
@@ -80,5 +77,10 @@ public class Quest extends BaseTimeEntity {
         this.endTime = endTime;
         this.startDate = startDate;
         this.dueDate = dueDate;
+    }
+
+    // 상태 변경용 도메인 메서드
+    public void changeStatus(CompletionStatus newStatus) {
+        this.completionStatus = newStatus;
     }
 }

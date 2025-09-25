@@ -49,8 +49,8 @@ public class QuestRequestDTO {
     public static class PartyCreateRequest {
 
         @Column(length = 100)
-        private String content;
-        private String questTitle;
+        private String partyTitle;
+        private String questName;
         private int priority;
         private QuestType questType;
         private CompletionStatus completionStatus;
@@ -75,7 +75,9 @@ public class QuestRequestDTO {
     @AllArgsConstructor
     @NoArgsConstructor
     public static class PartyUpdateRequest {
-        private String content;
+
+        private String partyTitle;
+        private String questName;
         private int priority;
         private QuestType questType;
         private CompletionStatus completionStatus;

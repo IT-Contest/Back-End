@@ -49,6 +49,7 @@ public class QuestServiceImpl implements QuestService {
     private final QuestOccurrenceRepository questOccurrenceRepository;
     private final QuestAnalysisService questAnalysisService;
     private final FirebaseMessaging firebaseMessaging;
+    private final HashtagPartyRepository hashtagPartyRepository;
 
     // 퀘스트 생성
     @Transactional
@@ -343,20 +344,25 @@ public class QuestServiceImpl implements QuestService {
 
         // 퀘스트 유형 별 카운트
         int dailyCount = (int) quests.stream()
-                .filter(q -> q.getQuestType() == QuestType.DAILY)
+                .filter(q -> q.getQuestType() == QuestType.DAILY
+                        && q.getCompletionStatus() != CompletionStatus.COMPLETED)
                 .count();
 
         int weeklyCount = (int) quests.stream()
-                .filter(q -> q.getQuestType() == QuestType.WEEKLY)
+                .filter(q -> q.getQuestType() == QuestType.WEEKLY
+                        && q.getCompletionStatus() != CompletionStatus.COMPLETED)
                 .count();
 
         int monthlyCount = (int) quests.stream()
-                .filter(q -> q.getQuestType() == QuestType.MONTHLY)
+                .filter(q -> q.getQuestType() == QuestType.MONTHLY
+                        && q.getCompletionStatus() != CompletionStatus.COMPLETED)
                 .count();
 
         int yearlyCount = (int) quests.stream()
-                .filter(q -> q.getQuestType() == QuestType.YEARLY)
+                .filter(q -> q.getQuestType() == QuestType.YEARLY
+                        && q.getCompletionStatus() != CompletionStatus.COMPLETED)
                 .count();
+
 
         // 친구 관계에서 ACCEPTED만 추출
         List<InvitedFriend> allFriends = invitedFriendRepository.findAcceptedFriends(userId);
@@ -365,7 +371,6 @@ public class QuestServiceImpl implements QuestService {
         List<User> friendUsers = allFriends.stream()
                 .map(f -> f.getFromUser().getId().equals(userId) ? f.getToUser() : f.getFromUser())
                 .toList();
-
 
         // 친구의 필요한 정보만 추출
         List<QuestResponseDTO.FriendList> friendList = friendUsers.stream()
@@ -393,7 +398,6 @@ public class QuestServiceImpl implements QuestService {
                         .title(q.getTitle())
                         .exp(q.getExpReward())
                         .gold(q.getGoldReward())
-                        .partyName(q.getParty() != null ? q.getParty().getTitle() : null)
                         .build())
                 .toList();
 
@@ -558,18 +562,15 @@ public class QuestServiceImpl implements QuestService {
     // 파티 생성
     @Transactional
     @Override
-    public QuestResponseDTO.PartyCreateResponse createParty(Long userId,QuestRequestDTO.PartyCreateRequest request) {
+    public QuestResponseDTO.PartyCreateResponse createParty(Long userId, QuestRequestDTO.PartyCreateRequest request) {
 
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new UserException(ErrorStatus.NO_SUCH_USER));
 
-        Quest quest = questRepository.findByUserIdAndTitle(userId, request.getQuestTitle())
-                .orElseThrow(() -> new QuestException(ErrorStatus.NO_SUCH_QUEST));
-
         Party party = Party.builder()
                 .user(user)
-                .quest(quest)
-                .title(request.getContent())
+                .partyTitle(request.getPartyTitle())
+                .questName(request.getQuestName())
                 .priority(request.getPriority())
                 .questType(request.getQuestType())
                 .completionStatus(request.getCompletionStatus())
@@ -612,7 +613,7 @@ public class QuestServiceImpl implements QuestService {
                     .status("INCOMPLETE")
                     .expectedStartTime(party.getStartTime() == null ? null : party.getStartTime().toString())
                     .expectedEndTime(party.getEndTime() == null ? null : party.getEndTime().toString())
-                    .title(party.getTitle())
+                    .title(party.getQuestName())
                     .build();
             questOccurrenceRepository.save(occ);
         }
@@ -637,13 +638,13 @@ public class QuestServiceImpl implements QuestService {
         allHashtags.addAll(existingHashtags);
         allHashtags.addAll(newHashtags);
 
-        List<HashtagQuest> hashtagQuests = allHashtags.stream()
-                .map(tag -> HashtagQuest.builder()
+        List<HashtagParty> hashtagparty = allHashtags.stream()
+                .map(tag -> HashtagParty.builder()
                         .hashtag(tag)
-                        .quest(quest)
+                        .party(party)
                         .build())
                 .toList();
-        hashtagQuestRepository.saveAll(hashtagQuests);
+        hashtagPartyRepository.saveAll(hashtagparty);
 
         return QuestConverter.toPartyCreateResponse(party, user, 10);
     }
@@ -695,7 +696,7 @@ public class QuestServiceImpl implements QuestService {
             userRepository.save(inviter);
         }
 
-        // ✅ 여기서 푸시 알림 발송
+        // 여기서 푸시 알림 발송
         invitedUsers.forEach(user -> {
             String fcmToken = user.getFcmToken(); // User 엔티티에 fcmToken 필드 있다고 가정
             if (fcmToken != null && !fcmToken.isBlank()) {
@@ -704,10 +705,10 @@ public class QuestServiceImpl implements QuestService {
                         .putData("type", "PARTY_INVITE")
                         .putData("partyId", party.getId().toString())
                         .putData("inviter", inviter.getNickname())
-                        .putData("questTitle", party.getTitle())
+                        .putData("questTitle", party.getPartyTitle())
                         .setNotification(Notification.builder()
                                 .setTitle("파티 초대 알림")
-                                .setBody(inviter.getNickname() + " 님이 '" + party.getTitle() + "' 파티에 초대했어요!")
+                                .setBody(inviter.getNickname() + " 님이 '" + party.getPartyTitle() + "' 파티에 초대했어요!")
                                 .build())
                         .build();
 
@@ -757,7 +758,7 @@ public class QuestServiceImpl implements QuestService {
                         .questType(party.getQuestType().name())
                         .periodKey(periodKey)
                         .status("INCOMPLETE")
-                        .title(party.getTitle())
+                        .title(party.getQuestName())
                         .expectedStartTime(party.getStartTime() != null ? party.getStartTime().toString() : null)
                         .expectedEndTime(party.getEndTime() != null ? party.getEndTime().toString() : null)
                         .build();
@@ -823,7 +824,7 @@ public class QuestServiceImpl implements QuestService {
                         .questType(p.getQuestType().name())
                         .periodKey(pk)
                         .status("INCOMPLETE")
-                        .title(p.getTitle())
+                        .title(p.getQuestName())
                         .expectedStartTime(p.getStartTime() == null ? null : p.getStartTime().toString())
                         .expectedEndTime(p.getEndTime() == null ? null : p.getEndTime().toString())
                         .build();
@@ -850,7 +851,8 @@ public class QuestServiceImpl implements QuestService {
 
         try {
             party.update(
-                    request.getContent(),
+                    request.getPartyTitle(),
+                    request.getQuestName(),
                     request.getPriority(),
                     request.getQuestType(),
                     request.getCompletionStatus(),
@@ -880,16 +882,15 @@ public class QuestServiceImpl implements QuestService {
                 allHashtags.addAll(newHashtags);
 
                 // 기존 해시태그 관계 삭제 후 다시 저장
-                hashtagQuestRepository.deleteByQuest(party.getQuest());
+                hashtagPartyRepository.deleteByParty(party);
 
-                List<HashtagQuest> hashtagQuests = allHashtags.stream()
-                        .map(tag -> HashtagQuest.builder()
+                List<HashtagParty> hashtagParty = allHashtags.stream()
+                        .map(tag -> HashtagParty.builder()
                                 .hashtag(tag)
-                                .quest(party.getQuest())
+                                .party(party)
                                 .build())
                         .toList();
-
-                hashtagQuestRepository.saveAll(hashtagQuests);
+                hashtagPartyRepository.saveAll(hashtagParty);
             }
 
             LocalDate today = LocalDate.now(ZoneId.of("Asia/Seoul"));
@@ -901,7 +902,7 @@ public class QuestServiceImpl implements QuestService {
             questOccurrenceRepository.findByTemplateIdAndPeriodKeyAndQuestSource(party.getId(), pk, QuestSource.PARTY)
                     .ifPresent(occ -> {
                         if (!"COMPLETED".equalsIgnoreCase(occ.getStatus())) {
-                            occ.setTitle(party.getTitle());
+                            occ.setTitle(party.getQuestName());
                             occ.setExpectedStartTime(party.getStartTime() == null ? null : party.getStartTime().toString());
                             occ.setExpectedEndTime(party.getEndTime() == null ? null : party.getEndTime().toString());
                             questOccurrenceRepository.save(occ);
@@ -927,10 +928,16 @@ public class QuestServiceImpl implements QuestService {
         }
 
         try {
+            // 파티 관련 해시태그 매핑 삭제
+            hashtagPartyRepository.deleteByParty(party);
 
+            // 발생 기록 삭제
             questOccurrenceRepository.deleteAllByTemplateIdAndQuestSource(party.getId(), QuestSource.PARTY);
 
+            // 파티 참여자 삭제
             partyUserRepository.deleteByParty(party);
+
+            // 파티 자체 삭제
             partyRepository.delete(party);
             return QuestConverter.toPartyDeleteResponse(partyId);
         } catch (Exception e) {
