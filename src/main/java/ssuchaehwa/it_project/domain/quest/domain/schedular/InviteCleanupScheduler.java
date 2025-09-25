@@ -38,12 +38,6 @@ public class InviteCleanupScheduler {
         for (Party party : parties) {
             List<PartyUser> partyUsers = party.getPartyUsers();
 
-            // 🔹 초대장이 하나도 없는 고아 파티 → 삭제
-            if (partyUsers.isEmpty()) {
-                partyRepository.delete(party);
-                continue;
-            }
-
             boolean allAccepted = partyUsers.stream()
                     .allMatch(pu -> pu.getInvitationStatus() == InvitationStatus.ACCEPTED);
 
