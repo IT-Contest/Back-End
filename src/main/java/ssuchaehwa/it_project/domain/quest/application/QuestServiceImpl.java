@@ -56,7 +56,6 @@ public class QuestServiceImpl implements QuestService {
     @Override
     public QuestResponseDTO.QuestCreateResponse createQuest(QuestRequestDTO.QuestCreateRequest request, Long userId) {
 
-        // 일단 1번 유저로 테스트
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new UserException(ErrorStatus.NO_SUCH_USER));
 
@@ -75,16 +74,6 @@ public class QuestServiceImpl implements QuestService {
                 .build();
 
         questRepository.save(quest);
-        
-        // 퀘스트 생성 보상 지급 (10exp)
-        int oldLevel = user.getLevel();
-        user.addExpAndUpdateLevel(10);
-        int newLevel = user.getLevel();
-        
-        if (newLevel > oldLevel) {
-            log.info("🎉 퀘스트 생성으로 레벨업! {} -> {} (exp: {})", oldLevel, newLevel, user.getExp());
-        }
-        userRepository.save(user);
 
         // 현재 기간 occurrence를 즉시 생성 (메인 진입 전에도 DB에서 확인 가능하도록)
         LocalDate _today = LocalDate.now(ZoneId.of("Asia/Seoul"));
@@ -416,147 +405,89 @@ public class QuestServiceImpl implements QuestService {
     // 퀘스트 완료 / 취소
     @Transactional
     @Override
-    public List<QuestResponseDTO.QuestStatusChangeResponse> changeQuestStatus(QuestRequestDTO.QuestStatusChangeRequest request, Long userId) {
-        
-        log.info("🔥 changeQuestStatus 시작: userId={}, questIds={}", userId, request.getQuestIds());
+    public List<QuestResponseDTO.QuestStatusChangeResponse> changeQuestStatus(
+            QuestRequestDTO.QuestStatusChangeRequest request, Long userId) {
 
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new UserException(ErrorStatus.NO_SUCH_USER));
-        
-        log.info("📊 현재 사용자 상태: exp={}, gold={}", user.getExp(), user.getGold());
 
         List<Long> questIds = request.getQuestIds();
 
-        // 유저 소유의 퀘스트만 대상으로 선정
         List<Quest> quests = questRepository.findAllById(questIds).stream()
                 .filter(q -> q.getUser().getId().equals(user.getId()))
                 .toList();
 
-        // 요청 상태 파싱 (문자열 → Enum)
         CompletionStatus targetStatus = CompletionStatus.valueOf(request.getCompletionStatus().toUpperCase());
-
-        // 오늘 기준 period_key 계산용
         LocalDate today = LocalDate.now(ZoneId.of("Asia/Seoul"));
 
-        // 실제 보상 지급 여부를 추적하는 맵
-        java.util.Map<Long, Boolean> firstCompletionMap = new java.util.HashMap<>();
+        Map<Long, Boolean> firstCompletionMap = new HashMap<>();
 
         for (Quest quest : quests) {
-            log.info("🔍 퀘스트 처리 시작: questId={}, title={}", quest.getId(), quest.getTitle());
-            
-            // 템플릿의 주기(일/주/월/연)에 맞는 period_key 계산 (앵커 기반)
             LocalDate periodKey = questAnalysisService.currentPeriodKeyFromAnchor(
-                quest.getQuestType().name(), 
-                quest.getStartDate() != null ? quest.getStartDate() : today, 
-                today
+                    quest.getQuestType().name(),
+                    quest.getStartDate() != null ? quest.getStartDate() : today,
+                    today
             );
-            
-            log.info("📅 계산된 periodKey: {}", periodKey);
 
-            // (template_id, period_key)로 occurrence 조회(or 생성)
-            Optional<QuestOccurrence> existing = questOccurrenceRepository
-                    .findByTemplateIdAndPeriodKeyAndQuestSource(quest.getId(), periodKey, QuestSource.QUEST);
-            log.info("🔎 기존 occurrence 조회 결과: {}", existing.isPresent() ? "존재함" : "없음");
-            
-            boolean wasIncomplete = true; // 기본값: 새로 생성되거나 INCOMPLETE 상태
-            boolean hasEverBeenCompleted = false; // 해당 날짜에 이미 한 번이라도 완료된 적이 있는지
-            
-            if (existing.isPresent()) {
-                // 기존 occurrence가 있으면 실제 상태 및 완료 이력 확인
-                QuestOccurrence occ = existing.get();
-                String currentStatus = occ.getStatus();
-                wasIncomplete = "INCOMPLETE".equalsIgnoreCase(currentStatus);
-                hasEverBeenCompleted = (occ.getCompletedAt() != null); // completed_at이 있으면 한 번이라도 완료된 것
-            } else {
-                // 새로운 occurrence 생성 및 즉시 저장
-                QuestOccurrence newOcc = QuestOccurrence.builder()
-                        .templateId(quest.getId())
-                        .userId(user.getId())
-                        .questSource(QuestSource.QUEST)
-                        .questType(quest.getQuestType().name())
-                        .periodKey(periodKey)
-                        .status("INCOMPLETE")
-                        .expectedStartTime(quest.getStartTime() == null ? null : quest.getStartTime().toString())
-                        .expectedEndTime(quest.getEndTime() == null ? null : quest.getEndTime().toString())
-                        .title(quest.getTitle())
-                        .build();
-                questOccurrenceRepository.save(newOcc);
-                wasIncomplete = true; // 새로 생성된 것은 항상 INCOMPLETE
-                hasEverBeenCompleted = false; // 새로 생성된 것은 완료 이력 없음
-            }
-            boolean isFirstCompletion = false;
+            QuestOccurrence occ = questOccurrenceRepository
+                    .findByTemplateIdAndPeriodKeyAndQuestSource(quest.getId(), periodKey, QuestSource.QUEST)
+                    .orElseGet(() -> questOccurrenceRepository.save(
+                            QuestOccurrence.builder()
+                                    .templateId(quest.getId())
+                                    .userId(user.getId())
+                                    .questSource(QuestSource.QUEST)
+                                    .questType(quest.getQuestType().name())
+                                    .periodKey(periodKey)
+                                    .status("INCOMPLETE")
+                                    .expectedStartTime(quest.getStartTime() != null ? quest.getStartTime().toString() : null)
+                                    .expectedEndTime(quest.getEndTime() != null ? quest.getEndTime().toString() : null)
+                                    .title(quest.getTitle())
+                                    .build()
+                    ));
 
-            // 상태 업데이트
             if (targetStatus == CompletionStatus.COMPLETED) {
-                // 해당 날짜에 처음으로 완료될 때만 보상 지급
-                if (!hasEverBeenCompleted) {
-                    // 클라이언트가 보낸 보상값이 있으면 사용하고, 없으면 Quest 엔티티의 값 사용
-                    int expToGive = (request.getExpReward() != null) ? request.getExpReward() : quest.getExpReward();
-                    int goldToGive = (request.getGoldReward() != null) ? request.getGoldReward() : quest.getGoldReward();
-                    
-                    log.info("💰 보상 지급 시작: questId={}, expReward={}, goldReward={} (클라이언트값: {}, {})", 
-                            quest.getId(), expToGive, goldToGive, request.getExpReward(), request.getGoldReward());
-                    
-                    int beforeExp = user.getExp();
-                    int beforeGold = user.getGold();
-                    
-                    isFirstCompletion = true;
-                    // 사용자에게 보상 지급 및 레벨 자동 계산
-                    int oldLevel = user.getLevel();
-                    user.addExpAndUpdateLevel(expToGive);
-                    user.addGoldAndUpdateLevel(goldToGive);
-                    int newLevel = user.getLevel();
-                    
-                    if (newLevel > oldLevel) {
-                        log.info("🎉 레벨업! {} -> {} (exp: {})", oldLevel, newLevel, user.getExp());
-                    }
-                    
-                    log.info("📈 보상 지급 후: exp {} -> {}, gold {} -> {} (실제 지급: exp+{}, gold+{})", 
-                            beforeExp, user.getExp(), beforeGold, user.getGold(), expToGive, goldToGive);
-                    
-                    // 명시적으로 더티 체킹을 위한 필드 접근
-                    log.info("🔍 더티 체킹 확인 - 현재 User 객체 상태: id={}, exp={}, gold={}", 
-                            user.getId(), user.getExp(), user.getGold());
-                    
-                    User savedUser = userRepository.save(user);
-                    log.info("✅ 저장된 사용자: exp={}, gold={}", savedUser.getExp(), savedUser.getGold());
-                    
-                    // 즉시 flush하여 DB에 반영
-                    userRepository.flush();
-                    log.info("🔄 플러시 완료");
-                } else {
-                    log.info("⚠️ 이미 완료된 퀘스트: questId={}", quest.getId());
-                }
-                
-                log.info("🔄 QuestOccurrence 상태 업데이트 시작: questId={}, periodKey={}", quest.getId(), periodKey);
+                // 보상 지급
+                user.addExpAndUpdateLevel(quest.getExpReward());
+                user.addGoldAndUpdateLevel(quest.getGoldReward());
+                userRepository.save(user);
+
+                occ.setStatus("COMPLETED");
+                occ.setCompletedAt(LocalDateTime.now(ZoneId.of("Asia/Seoul")));
+                questOccurrenceRepository.save(occ);
+
+                // 엔티티 상태 반영
+                quest.changeCompletionStatus(CompletionStatus.COMPLETED);
+                questRepository.save(quest);
+
                 questOccurrenceRepository.updateStatusByTemplateIdAndPeriodKeyAndQuestSource(
                         quest.getId(), periodKey, QuestSource.QUEST,
                         "COMPLETED", LocalDateTime.now(ZoneId.of("Asia/Seoul"))
                 );
-                log.info("✅ QuestOccurrence 상태 업데이트 완료");
+
             } else {
-                // INCOMPLETE로 변경 (completed_at은 유지)
+                // 보상 회수
+                user.deductExp(quest.getExpReward());
+                user.deductGold(quest.getGoldReward());
+                user.updateLevel();
+                userRepository.save(user);
+
+                occ.setStatus("INCOMPLETE");
+                occ.setCompletedAt(null);
+                questOccurrenceRepository.save(occ);
+
+                // 엔티티 상태 반영
+                quest.changeCompletionStatus(CompletionStatus.INCOMPLETE);
+                questRepository.save(quest);
+
                 questOccurrenceRepository.updateStatusOnlyByTemplateIdAndPeriodKeyAndQuestSource(
-                        quest.getId(), periodKey, QuestSource.QUEST,
-                        "INCOMPLETE"
+                        quest.getId(), periodKey, QuestSource.QUEST, "INCOMPLETE"
                 );
             }
-            
-            log.info("🗂️ firstCompletionMap에 저장: questId={}, isFirstCompletion={}", quest.getId(), isFirstCompletion);
-            firstCompletionMap.put(quest.getId(), isFirstCompletion);
-            log.info("✨ 퀘스트 처리 완료: questId={}", quest.getId());
+
+            firstCompletionMap.put(quest.getId(), true);
         }
 
-        log.info("🎯 메서드 완료 직전 - 최종 사용자 상태: exp={}, gold={}", user.getExp(), user.getGold());
-        
-        try {
-            List<QuestResponseDTO.QuestStatusChangeResponse> result = QuestConverter.toQuestStatusChangeResponse(quests, firstCompletionMap, targetStatus);
-            log.info("🏁 changeQuestStatus 완료");
-            return result;
-        } catch (Exception e) {
-            log.error("❌ changeQuestStatus 실행 중 예외 발생", e);
-            throw e;
-        }
+        return QuestConverter.toQuestStatusChangeResponse(quests, firstCompletionMap, targetStatus);
     }
 
     // 파티 생성
@@ -583,16 +514,6 @@ public class QuestServiceImpl implements QuestService {
                 .build();
 
         partyRepository.save(party);
-        
-        // 파티 생성 보상 지급 (10exp)
-        int oldLevel = user.getLevel();
-        user.addExpAndUpdateLevel(10);
-        int newLevel = user.getLevel();
-        
-        if (newLevel > oldLevel) {
-            log.info("🎉 파티 생성으로 레벨업! {} -> {} (exp: {})", oldLevel, newLevel, user.getExp());
-        }
-        userRepository.save(user);
 
         LocalDate today = LocalDate.now(ZoneId.of("Asia/Seoul"));
         LocalDate pk = questAnalysisService.currentPeriodKeyFromAnchor(
@@ -745,46 +666,69 @@ public class QuestServiceImpl implements QuestService {
                     today
             );
 
-            Optional<QuestOccurrence> existing = questOccurrenceRepository
-                    .findByTemplateIdAndPeriodKeyAndQuestSource(
-                            party.getId(), periodKey, QuestSource.PARTY);
+            QuestOccurrence occ = questOccurrenceRepository
+                    .findByTemplateIdAndPeriodKeyAndQuestSource(party.getId(), periodKey, QuestSource.PARTY)
+                    .orElseGet(() -> questOccurrenceRepository.save(
+                            QuestOccurrence.builder()
+                                    .templateId(party.getId())
+                                    .userId(userId)
+                                    .questSource(QuestSource.PARTY)
+                                    .questType(party.getQuestType().name())
+                                    .periodKey(periodKey)
+                                    .status("INCOMPLETE")
+                                    .title(party.getQuestName())
+                                    .expectedStartTime(party.getStartTime() != null ? party.getStartTime().toString() : null)
+                                    .expectedEndTime(party.getEndTime() != null ? party.getEndTime().toString() : null)
+                                    .build()
+                    ));
 
-            QuestOccurrence occ = existing.orElseGet(() -> {
-                QuestOccurrence newOcc = QuestOccurrence.builder()
-                        .templateId(party.getId())
-                        .userId(userId)
-                        .questSource(QuestSource.PARTY)
-                        .questType(party.getQuestType().name())
-                        .periodKey(periodKey)
-                        .status("INCOMPLETE")
-                        .title(party.getQuestName())
-                        .expectedStartTime(party.getStartTime() != null ? party.getStartTime().toString() : null)
-                        .expectedEndTime(party.getEndTime() != null ? party.getEndTime().toString() : null)
-                        .build();
-                return questOccurrenceRepository.save(newOcc);
-            });
-
-            boolean firstCompletion = occ.getCompletedAt() == null;
             if (request.getCompletionStatus().equalsIgnoreCase("COMPLETED")) {
-                if (firstCompletion) {
-                    user.addExpAndUpdateLevel(party.getExpReward());
-                    user.addGoldAndUpdateLevel(party.getGoldReward());
-                    userRepository.save(user);
-                    occ.setCompletedAt(LocalDateTime.now(ZoneId.of("Asia/Seoul")));
-                }
+                // 보상 지급
+                user.addExpAndUpdateLevel(party.getExpReward());
+                user.addGoldAndUpdateLevel(party.getGoldReward());
+                userRepository.save(user);
+
                 occ.setStatus("COMPLETED");
+                occ.setCompletedAt(LocalDateTime.now(ZoneId.of("Asia/Seoul")));
+                questOccurrenceRepository.save(occ);
+
+                // 엔티티 상태 반영
+                party.changeCompletionStatus(CompletionStatus.COMPLETED);
+                partyRepository.save(party);
+
+                questOccurrenceRepository.updateStatusByTemplateIdAndPeriodKeyAndQuestSource(
+                        party.getId(), periodKey, QuestSource.PARTY,
+                        "COMPLETED", LocalDateTime.now(ZoneId.of("Asia/Seoul"))
+                );
+
             } else {
+                // 보상 회수
+                user.deductExp(party.getExpReward());
+                user.deductGold(party.getGoldReward());
+                user.updateLevel();
+                userRepository.save(user);
+
                 occ.setStatus("INCOMPLETE");
+                occ.setCompletedAt(null);
+                questOccurrenceRepository.save(occ);
+
+                // 엔티티 상태 반영
+                party.changeCompletionStatus(CompletionStatus.INCOMPLETE);
+                partyRepository.save(party);
+
+                questOccurrenceRepository.updateStatusOnlyByTemplateIdAndPeriodKeyAndQuestSource(
+                        party.getId(), periodKey, QuestSource.PARTY, "INCOMPLETE"
+                );
             }
 
-            questOccurrenceRepository.save(occ);
-            firstCompletionMap.put(party.getId(), firstCompletion);
+            firstCompletionMap.put(party.getId(), true);
         }
 
-        return QuestConverter.toPartyStatusChangeResponse(parties, firstCompletionMap,
-                CompletionStatus.valueOf(request.getCompletionStatus().toUpperCase()));
+        return QuestConverter.toPartyStatusChangeResponse(
+                parties, firstCompletionMap,
+                CompletionStatus.valueOf(request.getCompletionStatus().toUpperCase())
+        );
     }
-
 
     // 파티 조회
     @Transactional(readOnly = true)

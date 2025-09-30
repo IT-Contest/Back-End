@@ -44,6 +44,7 @@ public class AuthResponseDto {
         @AllArgsConstructor
         public static class KakaoAccount {
 
+            @JsonProperty("email")
             private String email;
 
             private Profile profile;

@@ -7,6 +7,7 @@ import com.google.firebase.messaging.FirebaseMessaging;
 import jakarta.annotation.PostConstruct;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.core.io.ClassPathResource;
 
 import java.io.FileInputStream;
 import java.io.InputStream;
@@ -36,6 +37,24 @@ public class FireBaseConfig {
             e.printStackTrace();
         }
     }
+
+//    @PostConstruct
+//    public void init() {
+//        try {
+//            InputStream serviceAccount = new ClassPathResource("firebase-service-account.json").getInputStream();
+//
+//            FirebaseOptions options = FirebaseOptions.builder()
+//                    .setCredentials(GoogleCredentials.fromStream(serviceAccount))
+//                    .build();
+//
+//            if (FirebaseApp.getApps().isEmpty()) {
+//                FirebaseApp.initializeApp(options);
+//                System.out.println("✅ Firebase SDK initialized successfully (local)");
+//            }
+//        } catch (Exception e) {
+//            e.printStackTrace();
+//        }
+//    }
 
     // ✅ FirebaseMessaging Bean 등록
     @Bean
