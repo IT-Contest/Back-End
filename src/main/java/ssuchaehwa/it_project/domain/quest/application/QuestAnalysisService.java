@@ -9,16 +9,16 @@ import java.util.List;
 public interface QuestAnalysisService {
 
     // 일일 분석
-    List<AnalysisResponseDTO.Daily> getDaily(Long userId, LocalDate from, LocalDate to);
+    List<AnalysisResponseDTO.Daily> getDaily(Long userId, LocalDate from, LocalDate to, String questType);
 
     // 주간 분석
-    List<AnalysisResponseDTO.Weekly> getWeekly(Long userId, LocalDate from, LocalDate to);
+    List<AnalysisResponseDTO.Weekly> getWeekly(Long userId, LocalDate from, LocalDate to, String questType);
 
     // 월간 분석
-    List<AnalysisResponseDTO.Monthly> getMonthly(Long userId, LocalDate from, LocalDate to);
+    List<AnalysisResponseDTO.Monthly> getMonthly(Long userId, LocalDate from, LocalDate to, String questType);
 
     // 연간 분석
-    List<AnalysisResponseDTO.Yearly> getYearly(Long userId, LocalDate from, LocalDate to);
+    List<AnalysisResponseDTO.Yearly> getYearly(Long userId, LocalDate from, LocalDate to, String questType);
 
     // 경계 계산 유틸리티 메서드들
     LocalDate currentPeriodKeyFromAnchor(String questType, LocalDate anchor, LocalDate today);
