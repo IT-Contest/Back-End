@@ -84,7 +84,8 @@ public class Party extends BaseTimeEntity {
         this.endTime = endTime;
     }
 
-    public void changeCompletionStatus(CompletionStatus newStatus) {
-        this.completionStatus = newStatus;
+
+    public void changeCompletionStatus(CompletionStatus status) {
+        this.completionStatus = status;
     }
 }

@@ -79,8 +79,7 @@ public class Quest extends BaseTimeEntity {
         this.dueDate = dueDate;
     }
 
-    // 상태 변경용 도메인 메서드
-    public void changeStatus(CompletionStatus newStatus) {
-        this.completionStatus = newStatus;
+    public void changeCompletionStatus(CompletionStatus status) {
+        this.completionStatus = status;
     }
 }

@@ -23,6 +23,9 @@ public class User extends BaseTimeEntity {
     @Column(name = "social_id", nullable = false, unique = true)
     private String socialId;
 
+    @Column(nullable = true)
+    private String email;
+
     private String nickname;
 
     private String fcmToken;

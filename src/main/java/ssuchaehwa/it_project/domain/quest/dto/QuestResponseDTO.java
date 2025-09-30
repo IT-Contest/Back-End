@@ -182,6 +182,7 @@ public class QuestResponseDTO {
     public static class MainPageResponse {
 
         private String nickname;
+        private String email;
         private int exp;
         private double expPercent;
         private int gold;
