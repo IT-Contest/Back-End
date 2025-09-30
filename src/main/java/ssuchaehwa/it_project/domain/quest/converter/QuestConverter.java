@@ -224,12 +224,12 @@ public class QuestConverter {
     }
 
     // 파티 조회
-    public static QuestResponseDTO.PartyListResponse toPartyListResponse(Party party) {
+    public static QuestResponseDTO.PartyListResponse toPartyListResponse(Party party, CompletionStatus actualStatus) {
         return QuestResponseDTO.PartyListResponse.builder()
                 .partyId(party.getId())
                 .partyTitle(party.getPartyTitle())
                 .questName(party.getQuestName())
-                .status(party.getCompletionStatus())
+                .status(actualStatus) // ✅ 엔티티 상태 대신 실제 occurrence 상태 반영
                 .startDate(party.getStartDate())
                 .dueDate(party.getDueDate())
                 .startTime(party.getStartTime())

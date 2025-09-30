@@ -751,34 +751,29 @@ public class QuestServiceImpl implements QuestService {
                 .toList();
 
         LocalDate today = LocalDate.now(ZoneId.of("Asia/Seoul"));
-        distinct.forEach(p -> {
-            LocalDate pk = questAnalysisService.currentPeriodKeyFromAnchor(
-                    p.getQuestType().name(),
-                    p.getStartDate() != null ? p.getStartDate() : today,
-                    today
-            );
-            boolean exists = questOccurrenceRepository
-                    .existsByTemplateIdAndPeriodKeyAndQuestSource(p.getId(), pk, QuestSource.PARTY);
-            if (!exists) {
-                QuestOccurrence occ = QuestOccurrence.builder()
-                        .templateId(p.getId())
-                        .userId(userId)
-                        .questSource(QuestSource.PARTY)
-                        .questType(p.getQuestType().name())
-                        .periodKey(pk)
-                        .status("INCOMPLETE")
-                        .title(p.getQuestName())
-                        .expectedStartTime(p.getStartTime() == null ? null : p.getStartTime().toString())
-                        .expectedEndTime(p.getEndTime() == null ? null : p.getEndTime().toString())
-                        .build();
-                questOccurrenceRepository.save(occ);
-            }
-        });
 
         return distinct.stream()
-                .map(QuestConverter::toPartyListResponse) // DTO 변환
+                .map(p -> {
+                    LocalDate pk = questAnalysisService.currentPeriodKeyFromAnchor(
+                            p.getQuestType().name(),
+                            p.getStartDate() != null ? p.getStartDate() : today,
+                            today
+                    );
+
+                    Optional<QuestOccurrence> occurrence = questOccurrenceRepository
+                            .findByTemplateIdAndPeriodKeyAndQuestSource(p.getId(), pk, QuestSource.PARTY);
+
+                    // Occurrence 상태가 있으면 그대로, 없으면 INCOMPLETE
+                    CompletionStatus actualStatus = (occurrence.isPresent() &&
+                            "COMPLETED".equalsIgnoreCase(occurrence.get().getStatus()))
+                            ? CompletionStatus.COMPLETED
+                            : CompletionStatus.INCOMPLETE;
+
+                    return QuestConverter.toPartyListResponse(p, actualStatus);
+                })
                 .toList();
     }
+
 
     // 파티 수정
     @Transactional
