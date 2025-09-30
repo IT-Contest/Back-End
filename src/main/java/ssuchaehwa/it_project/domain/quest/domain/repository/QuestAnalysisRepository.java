@@ -21,12 +21,14 @@ public interface QuestAnalysisRepository extends JpaRepository<QuestOccurrence, 
             FROM quest_occurrence
             WHERE user_id = :userId
               AND DATE(period_key) BETWEEN :from AND :to
+              AND (:questType IS NULL OR quest_type = :questType)
             GROUP BY DATE(period_key)
             ORDER BY d
             """, nativeQuery = true)
     List<Object[]> countDaily(@Param("userId") Long userId,
                               @Param("from") LocalDate from,
-                              @Param("to") LocalDate to);
+                              @Param("to") LocalDate to,
+                              @Param("questType") String questType);
 
     // 주 단위 집계 (ISO 주차, 월요일 시작)
     @Query(value = """
@@ -37,12 +39,14 @@ public interface QuestAnalysisRepository extends JpaRepository<QuestOccurrence, 
             FROM quest_occurrence
             WHERE user_id = :userId
               AND DATE(period_key) BETWEEN :from AND :to
+              AND (:questType IS NULL OR quest_type = :questType)
             GROUP BY YEARWEEK(period_key, 1)
             ORDER BY week_key
             """, nativeQuery = true)
     List<Object[]> countWeekly(@Param("userId") Long userId,
                                @Param("from") LocalDate from,
-                               @Param("to") LocalDate to);
+                               @Param("to") LocalDate to,
+                               @Param("questType") String questType);
 
     // 월 단위 집계 ("YYYY-MM")
     @Query(value = """
@@ -53,12 +57,14 @@ public interface QuestAnalysisRepository extends JpaRepository<QuestOccurrence, 
             FROM quest_occurrence
             WHERE user_id = :userId
               AND DATE(period_key) BETWEEN :from AND :to
+              AND (:questType IS NULL OR quest_type = :questType)
             GROUP BY DATE_FORMAT(period_key, '%Y-%m')
             ORDER BY month_key
             """, nativeQuery = true)
     List<Object[]> countMonthly(@Param("userId") Long userId,
                                 @Param("from") LocalDate from,
-                                @Param("to") LocalDate to);
+                                @Param("to") LocalDate to,
+                                @Param("questType") String questType);
 
     // 연 단위 집계 (정수 연도)
     @Query(value = """
@@ -69,12 +75,14 @@ public interface QuestAnalysisRepository extends JpaRepository<QuestOccurrence, 
             FROM quest_occurrence
             WHERE user_id = :userId
               AND DATE(period_key) BETWEEN :from AND :to
+              AND (:questType IS NULL OR quest_type = :questType)
             GROUP BY YEAR(period_key)
             ORDER BY year_key
             """, nativeQuery = true)
     List<Object[]> countYearly(@Param("userId") Long userId,
                                @Param("from") LocalDate from,
-                               @Param("to") LocalDate to);
+                               @Param("to") LocalDate to,
+                               @Param("questType") String questType);
 
     // 범위 내 원본 행 조회 (서비스에서 추가 가공 시 사용)
     List<QuestOccurrence> findAllByUserIdAndPeriodKeyBetweenOrderByPeriodKeyAsc(

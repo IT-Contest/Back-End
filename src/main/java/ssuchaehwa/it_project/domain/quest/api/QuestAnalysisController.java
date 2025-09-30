@@ -35,10 +35,11 @@ public class QuestAnalysisController {
     public BaseResponse<List<AnalysisResponseDTO.Daily>> getDailyAnalysis(
             @AuthenticationPrincipal UserPrincipal principal,
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate from,
-            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate to
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate to,
+            @RequestParam(required = false) String questType
     ) {
         Long userId = principal.getId();
-        List<AnalysisResponseDTO.Daily> rows = questAnalysisService.getDaily(userId, from, to);
+        List<AnalysisResponseDTO.Daily> rows = questAnalysisService.getDaily(userId, from, to, questType);
         return QuestConverter.toDailyAnalysisResponse(rows);
     }
 
@@ -50,10 +51,11 @@ public class QuestAnalysisController {
     public BaseResponse<List<AnalysisResponseDTO.Weekly>> getWeeklyAnalysis(
             @AuthenticationPrincipal UserPrincipal principal,
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate from,
-            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate to
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate to,
+            @RequestParam(required = false) String questType
     ) {
         Long userId = principal.getId();
-        List<AnalysisResponseDTO.Weekly> rows = questAnalysisService.getWeekly(userId, from, to);
+        List<AnalysisResponseDTO.Weekly> rows = questAnalysisService.getWeekly(userId, from, to, questType);
         return QuestConverter.toWeeklyAnalysisResponse(rows);
     }
 
@@ -62,10 +64,11 @@ public class QuestAnalysisController {
     public BaseResponse<List<AnalysisResponseDTO.Monthly>> getMonthlyAnalysis(
             @AuthenticationPrincipal UserPrincipal principal,
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate from,
-            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate to
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate to,
+            @RequestParam(required = false) String questType
     ) {
         Long userId = principal.getId();
-        var rows = questAnalysisService.getMonthly(userId, from, to);
+        var rows = questAnalysisService.getMonthly(userId, from, to, questType);
         return QuestConverter.toMonthlyAnalysisResponse(rows);
     }
 
@@ -74,10 +77,11 @@ public class QuestAnalysisController {
     public BaseResponse<List<AnalysisResponseDTO.Yearly>> getYearlyAnalysis(
             @AuthenticationPrincipal UserPrincipal principal,
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate from,
-            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate to
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate to,
+            @RequestParam(required = false) String questType
     ) {
         Long userId = principal.getId();
-        var rows = questAnalysisService.getYearly(userId, from, to);
+        var rows = questAnalysisService.getYearly(userId, from, to, questType);
         return QuestConverter.toYearlyAnalysisResponse(rows);
     }
 }

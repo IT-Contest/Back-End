@@ -15,6 +15,7 @@ import java.io.InputStream;
 @Configuration
 public class FireBaseConfig {
 
+
     @PostConstruct
     public void init() {
         try {
@@ -42,11 +43,11 @@ public class FireBaseConfig {
 //    public void init() {
 //        try {
 //            InputStream serviceAccount = new ClassPathResource("firebase-service-account.json").getInputStream();
-//
+
 //            FirebaseOptions options = FirebaseOptions.builder()
 //                    .setCredentials(GoogleCredentials.fromStream(serviceAccount))
 //                    .build();
-//
+
 //            if (FirebaseApp.getApps().isEmpty()) {
 //                FirebaseApp.initializeApp(options);
 //                System.out.println("✅ Firebase SDK initialized successfully (local)");
@@ -55,7 +56,7 @@ public class FireBaseConfig {
 //            e.printStackTrace();
 //        }
 //    }
-
+  
     // ✅ FirebaseMessaging Bean 등록
     @Bean
     public FirebaseMessaging firebaseMessaging() {

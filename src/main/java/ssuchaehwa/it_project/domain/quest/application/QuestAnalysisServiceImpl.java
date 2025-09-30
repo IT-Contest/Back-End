@@ -19,13 +19,13 @@ public class QuestAnalysisServiceImpl implements QuestAnalysisService {
     private final QuestOccurrenceRepository questOccurrenceRepository;
 
     @Override
-    public List<AnalysisResponseDTO.Daily> getDaily(Long userId, LocalDate from, LocalDate to) {
+    public List<AnalysisResponseDTO.Daily> getDaily(Long userId, LocalDate from, LocalDate to, String questType) {
         // 날짜 검증
         if (from.isAfter(to)) {
             throw new IllegalArgumentException("시작일은 종료일보다 늦을 수 없습니다: from=" + from + ", to=" + to);
         }
 
-        var rows = questAnalysisRepository.countDaily(userId, from, to);
+        var rows = questAnalysisRepository.countDaily(userId, from, to, questType);
 
         // 1) from~to 날짜 버킷 선생성(0으로 채움)
         java.util.Map<LocalDate, int[]> bucket = new java.util.LinkedHashMap<>();
@@ -62,13 +62,13 @@ public class QuestAnalysisServiceImpl implements QuestAnalysisService {
     }
 
     @Override
-    public List<AnalysisResponseDTO.Weekly> getWeekly(Long userId, LocalDate from, LocalDate to) {
+    public List<AnalysisResponseDTO.Weekly> getWeekly(Long userId, LocalDate from, LocalDate to, String questType) {
         // 날짜 검증
         if (from.isAfter(to)) {
             throw new IllegalArgumentException("시작일은 종료일보다 늦을 수 없습니다: from=" + from + ", to=" + to);
         }
 
-        var rows = questAnalysisRepository.countWeekly(userId, from, to);
+        var rows = questAnalysisRepository.countWeekly(userId, from, to, questType);
 
         // 1) 현재 날짜(오늘)를 기준으로 현재 주차부터 과거 4주차까지 총 5개의 주차 버킷을 생성합니다.
         var weekField = java.time.temporal.IsoFields.WEEK_OF_WEEK_BASED_YEAR;
@@ -114,8 +114,8 @@ public class QuestAnalysisServiceImpl implements QuestAnalysisService {
     }
 
     @Override
-    public List<AnalysisResponseDTO.Monthly> getMonthly(Long userId, LocalDate from, LocalDate to) {
-        var rows = questAnalysisRepository.countMonthly(userId, from, to);
+    public List<AnalysisResponseDTO.Monthly> getMonthly(Long userId, LocalDate from, LocalDate to, String questType) {
+        var rows = questAnalysisRepository.countMonthly(userId, from, to, questType);
 
         // 1) YearMonth 버킷 0 채우기
         java.time.YearMonth start = java.time.YearMonth.from(from);
@@ -146,8 +146,8 @@ public class QuestAnalysisServiceImpl implements QuestAnalysisService {
     }
 
     @Override
-    public List<AnalysisResponseDTO.Yearly> getYearly(Long userId, LocalDate from, LocalDate to) {
-        var rows = questAnalysisRepository.countYearly(userId, from, to);
+    public List<AnalysisResponseDTO.Yearly> getYearly(Long userId, LocalDate from, LocalDate to, String questType) {
+        var rows = questAnalysisRepository.countYearly(userId, from, to, questType);
 
         // 1) 연도 버킷 0 채우기
         int startYear = from.getYear();
