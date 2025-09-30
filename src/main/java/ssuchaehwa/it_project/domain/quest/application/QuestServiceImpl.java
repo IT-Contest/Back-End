@@ -331,27 +331,47 @@ public class QuestServiceImpl implements QuestService {
             }
         });
 
+        int dailyCount = 0, weeklyCount = 0, monthlyCount = 0, yearlyCount = 0;
+
         // 퀘스트 유형 별 카운트
-        int dailyCount = (int) quests.stream()
+        dailyCount = (int) quests.stream()
                 .filter(q -> q.getQuestType() == QuestType.DAILY
                         && q.getCompletionStatus() != CompletionStatus.COMPLETED)
                 .count();
 
-        int weeklyCount = (int) quests.stream()
+        weeklyCount = (int) quests.stream()
                 .filter(q -> q.getQuestType() == QuestType.WEEKLY
                         && q.getCompletionStatus() != CompletionStatus.COMPLETED)
                 .count();
 
-        int monthlyCount = (int) quests.stream()
+        monthlyCount = (int) quests.stream()
                 .filter(q -> q.getQuestType() == QuestType.MONTHLY
                         && q.getCompletionStatus() != CompletionStatus.COMPLETED)
                 .count();
 
-        int yearlyCount = (int) quests.stream()
+        yearlyCount = (int) quests.stream()
                 .filter(q -> q.getQuestType() == QuestType.YEARLY
                         && q.getCompletionStatus() != CompletionStatus.COMPLETED)
                 .count();
 
+        List<Party> partyQuests = partyRepository.findAllByUserId(userId);
+
+        dailyCount += (int) partyQuests.stream()
+                .filter(pq -> pq.getQuestType() == QuestType.DAILY
+                        && pq.getCompletionStatus() != CompletionStatus.COMPLETED)
+                .count();
+        weeklyCount += (int) partyQuests.stream()
+                .filter(pq -> pq.getQuestType() == QuestType.WEEKLY
+                        && pq.getCompletionStatus() != CompletionStatus.COMPLETED)
+                .count();
+        monthlyCount += (int) partyQuests.stream()
+                .filter(pq -> pq.getQuestType() == QuestType.MONTHLY
+                        && pq.getCompletionStatus() != CompletionStatus.COMPLETED)
+                .count();
+        yearlyCount += (int) partyQuests.stream()
+                .filter(pq -> pq.getQuestType() == QuestType.YEARLY
+                        && pq.getCompletionStatus() != CompletionStatus.COMPLETED)
+                .count();
 
         // 친구 관계에서 ACCEPTED만 추출
         List<InvitedFriend> allFriends = invitedFriendRepository.findAcceptedFriends(userId);
