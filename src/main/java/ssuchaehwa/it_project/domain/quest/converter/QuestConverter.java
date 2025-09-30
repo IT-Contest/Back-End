@@ -27,6 +27,21 @@ public class QuestConverter {
                 .build();
     }
 
+    // 퀘스트 생성 (EXP 정보 포함)
+    public static QuestResponseDTO.QuestCreateResponse toQuestCreateResponse(Quest quest, User user, int rewardExp) {
+        return QuestResponseDTO.QuestCreateResponse.builder()
+                .content(quest.getTitle())
+                .questType(quest.getQuestType())
+                .startDate(quest.getStartDate())
+                .dueDate(quest.getDueDate())
+                .startTime(quest.getStartTime())
+                .endTime(quest.getEndTime())
+                .userExp(user.getExp())
+                .userLevel(user.getLevel())
+                .rewardExp(rewardExp)
+                .build();
+    }
+
     // 친구 초대
 
     // 친구 조회
@@ -57,9 +72,6 @@ public class QuestConverter {
                                         .map(hq -> hq.getHashtag().getName()) // Hashtag → String
                                         .toList()
                         )
-                        .partyName(
-                                quest.getParty() != null ? quest.getParty().getTitle() : null
-                        )
                         .questType(quest.getQuestType())
                         .completionStatus(quest.getCompletionStatus())
                         .startTime(quest.getStartTime())
@@ -82,9 +94,6 @@ public class QuestConverter {
                         quest.getHashtagQuests().stream()
                                 .map(hq -> hq.getHashtag().getName())
                                 .toList()
-                )
-                .partyName(
-                        quest.getParty() != null ? quest.getParty().getTitle() : null
                 )
                 .questType(quest.getQuestType())
                 .completionStatus(actualStatus) // 실제 완료 상태 사용
@@ -170,16 +179,20 @@ public class QuestConverter {
                 .toList();
     }
 
-    // 파티 생성
-    public static QuestResponseDTO.PartyCreateResponse toPartyCreateResponse(Party party) {
+    // 파티 생성 (EXP 정보 포함)
+    public static QuestResponseDTO.PartyCreateResponse toPartyCreateResponse(Party party, User user, int rewardExp) {
         return QuestResponseDTO.PartyCreateResponse.builder()
-                .questId(party.getQuest().getId())
-                .content(party.getTitle())
+                .partyId(party.getId())
+                .partyTitle(party.getPartyTitle())
+                .questName(party.getQuestName())
                 .questType(party.getQuestType())
                 .startDate(party.getStartDate())
                 .dueDate(party.getDueDate())
                 .startTime(party.getStartTime())
                 .endTime(party.getEndTime())
+                .userExp(user.getExp())
+                .userLevel(user.getLevel())
+                .rewardExp(rewardExp)
                 .build();
     }
 
@@ -211,14 +224,12 @@ public class QuestConverter {
     }
 
     // 파티 조회
-    public static QuestResponseDTO.PartyListResponse toPartyListResponse(Party party) {
+    public static QuestResponseDTO.PartyListResponse toPartyListResponse(Party party, CompletionStatus actualStatus) {
         return QuestResponseDTO.PartyListResponse.builder()
                 .partyId(party.getId())
-                .title(party.getTitle())
-                .questTitle(
-                        party.getQuest() != null ? party.getQuest().getTitle() : null
-                )
-                .status(party.getCompletionStatus())
+                .partyTitle(party.getPartyTitle())
+                .questName(party.getQuestName())
+                .status(actualStatus) // ✅ 엔티티 상태 대신 실제 occurrence 상태 반영
                 .startDate(party.getStartDate())
                 .dueDate(party.getDueDate())
                 .startTime(party.getStartTime())
@@ -226,37 +237,43 @@ public class QuestConverter {
                 .priority(party.getPriority())
                 .questType(party.getQuestType())
                 .hashtags(
-                        party.getQuest() != null
-                                ? party.getQuest().getHashtagQuests().stream()
-                                .map(hq -> hq.getHashtag().getName())
+                        party.getHashtagParties() != null
+                                ? party.getHashtagParties().stream()
+                                .map(hp -> hp.getHashtag().getName())
                                 .toList()
                                 : List.of()
                 )
-                .expiresAt(party.getExpiresAt())
                 .build();
     }
 
     // 파티 초대 리스트
-    public static List<QuestResponseDTO.PartyInvitationListResponse> toInvitedPartyListResponse(List<PartyUser> invitations) {
-        return invitations.stream().map(pu -> {
-            Party party = pu.getParty();
-            Quest quest = party.getQuest();
-            User host = party.getUser();
+    public static List<QuestResponseDTO.PartyInvitationListResponse> toInvitedPartyListResponse(List<PartyUser> partyUsers) {
+        return partyUsers.stream()
+                .map(partyUser -> {
+                    Party party = partyUser.getParty();
+                    User inviter = party.getUser(); // 파티 만든 사람
 
-            return QuestResponseDTO.PartyInvitationListResponse.builder()
-                    .nickname(host.getNickname())
-                    .partyName(party.getTitle())
-                    .questName(quest.getTitle())
-                    .expReward(party.getExpReward())
-                    .build();
-        }).toList();
+                    return QuestResponseDTO.PartyInvitationListResponse.builder()
+                            .partyId(party.getId())
+                            .partyName(party.getPartyTitle())
+                            .questName(party.getQuestName())
+                            .inviterNickname(inviter.getNickname())
+                            .inviterProfileUrl(inviter.getProfileImageUrl())
+                            .invitationStatus(partyUser.getInvitationStatus())
+                            .expReward(party.getExpReward())
+                            .startDate(party.getStartDate())
+                            .dueDate(party.getDueDate())
+                            .build();
+                })
+                .toList();
     }
 
     // 파티 수정 응답 변환
     public static QuestResponseDTO.PartyUpdateResponse toPartyUpdateResponse(Party party) {
         return QuestResponseDTO.PartyUpdateResponse.builder()
                 .partyId(party.getId())
-                .content(party.getTitle())
+                .partyTitle(party.getPartyTitle())
+                .questName(party.getQuestName())
                 .questType(party.getQuestType())
                 .completionStatus(party.getCompletionStatus())
                 .startTime(party.getStartTime())
@@ -280,9 +297,25 @@ public class QuestConverter {
     public static QuestResponseDTO.PartyInvitationResponse toPartyInvitationResponse(Party party, PartyUser partyUser) {
         return QuestResponseDTO.PartyInvitationResponse.builder()
                 .partyId(party.getId())
-                .partyName(party.getTitle())
+                .partyName(party.getPartyTitle())
                 .invitationStatus(partyUser.getInvitationStatus())
                 .build();
+    }
+
+    // 파티 완료 / 취소
+    public static List<QuestResponseDTO.PartyStatusChangeResponse> toPartyStatusChangeResponse(
+            List<Party> parties,
+            java.util.Map<Long, Boolean> firstCompletionMap,
+            CompletionStatus targetStatus) {
+
+        return parties.stream()
+                .map(p -> QuestResponseDTO.PartyStatusChangeResponse.builder()
+                        .partyId(p.getId())
+                        .title(p.getPartyTitle())
+                        .completionStatus(targetStatus)
+                        .isFirstCompletion(firstCompletionMap.getOrDefault(p.getId(), false))
+                        .build())
+                .toList();
     }
 
     // 퀘스트 수정 응답 변환

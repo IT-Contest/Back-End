@@ -7,6 +7,7 @@ import org.springframework.transaction.annotation.Transactional;
 import ssuchaehwa.it_project.domain.pomodoro.domain.entity.Pomodoro;
 import ssuchaehwa.it_project.domain.pomodoro.domain.entity.PomodoroStatus;
 import ssuchaehwa.it_project.domain.pomodoro.domain.repository.PomodoroRepository;
+import ssuchaehwa.it_project.domain.pomodoro.dto.PomodoroRequestDTO;
 import ssuchaehwa.it_project.domain.pomodoro.dto.PomodoroResponseDTO;
 import ssuchaehwa.it_project.domain.pomodoro.exception.PomodoroException;
 import ssuchaehwa.it_project.domain.user.domain.entity.User;
@@ -64,7 +65,7 @@ public class PomodoroImpl implements PomodoroService {
             log.info("🎉 뽀모도로 완료로 레벨업! {} -> {} (exp: {})", oldLevel, newLevel, user.getExp());
         }
 
-        return PomodoroConverter.toCompleteResponse(session);
+        return PomodoroConverter.toCompleteResponse(session, user);
     }
 
     @Transactional
@@ -74,5 +75,40 @@ public class PomodoroImpl implements PomodoroService {
                 .orElseThrow(() -> new PomodoroException(ErrorStatus.NO_SUCH_POMODORO));
         
         session.cancel();
+    }
+    
+    @Transactional
+    @Override
+    public PomodoroResponseDTO.PomodoroCompleteResponse completeSession(Long userId, PomodoroRequestDTO.PomodoroCompleteRequest request) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new PomodoroException(ErrorStatus.NO_SUCH_USER));
+
+        // 프론트엔드 데이터로 뽀모도로 세션 생성 및 즉시 완료 처리
+        LocalDateTime startTime = request.getCompletedAt().minusMinutes(request.getTotalMinutes());
+        LocalDateTime endTime = request.getCompletedAt();
+        
+        // 뽀모도로 세션 생성 (이미 완료된 상태로)
+        Pomodoro session = Pomodoro.builder()
+                .user(user)
+                .startTime(startTime)
+                .endTime(endTime)
+                .status(PomodoroStatus.COMPLETED)
+                .rewardExp(5)   // 고정 보상
+                .rewardGold(5)  // 고정 보상
+                .build();
+
+        Pomodoro savedSession = pomodoroRepository.save(session);
+        
+        // 사용자에게 보상 지급 및 레벨 자동 계산
+        int oldLevel = user.getLevel();
+        user.addExpAndUpdateLevel(session.getRewardExp());
+        user.addGoldAndUpdateLevel(session.getRewardGold());
+        int newLevel = user.getLevel();
+        
+        if (newLevel > oldLevel) {
+            log.info("🎉 뽀모도로 완료로 레벨업! {} -> {} (exp: {})", oldLevel, newLevel, user.getExp());
+        }
+
+        return PomodoroConverter.toCompleteResponse(savedSession, user);
     }
 }

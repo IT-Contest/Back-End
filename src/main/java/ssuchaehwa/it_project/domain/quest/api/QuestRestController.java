@@ -112,12 +112,12 @@ public class QuestRestController {
                     description = "이미 처리된 초대입니다."
             )
     })
-    public BaseResponse<String> acceptFriendInvite(
+    public BaseResponse<QuestResponseDTO.FriendInviteAcceptResponse> acceptFriendInvite(
             @RequestParam("token") String token,
             @AuthenticationPrincipal UserPrincipal principal
     ) {
-        questService.acceptFriendInvite(token, principal.getId());
-        return BaseResponse.onSuccess(SuccessStatus.FRIEND_ADDED, "친구 추가 완료");
+        QuestResponseDTO.FriendInviteAcceptResponse response = questService.acceptFriendInvite(token, principal.getId());
+        return BaseResponse.onSuccess(SuccessStatus.FRIEND_ADDED, response);
     }
 
     // 친구 초대 거절
@@ -195,6 +195,26 @@ public class QuestRestController {
         List<QuestResponseDTO.QuestStatusChangeResponse> result = questService.changeQuestStatus(questStatusChangeRequest, principal.getId());
 
         return BaseResponse.onSuccess(SuccessStatus.QUEST_STATUS_CHANGE, result);
+    }
+
+    // 파티 퀘스트 완료 상태 변경 API
+    @PatchMapping("/party/change")
+    @Operation(summary = "파티 퀘스트 완료 상태 변경 API",
+            description = "유저의 파티 퀘스트 상태를 변경합니다. 파티 ID 리스트와 상태(COMPLETED/INCOMPLETE)를 request body로 전달하세요.")
+    @ApiResponses({
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(
+                    responseCode = "PARTY_201",
+                    description = "CREATED, 파티 퀘스트의 상태 변경이 완료되었습니다."
+            )
+    })
+    public BaseResponse<List<QuestResponseDTO.PartyStatusChangeResponse>> updatePartyStatus(
+            @AuthenticationPrincipal UserPrincipal principal,
+            @RequestBody @Valid QuestRequestDTO.PartyStatusChangeRequest partyStatusChangeRequest
+    ) {
+        List<QuestResponseDTO.PartyStatusChangeResponse> result =
+                questService.changePartyStatus(partyStatusChangeRequest, principal.getId());
+
+        return BaseResponse.onSuccess(SuccessStatus.PARTY_STATUS_CHANGE, result);
     }
 
     // 파티 생성 API

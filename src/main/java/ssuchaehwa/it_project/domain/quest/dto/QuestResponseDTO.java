@@ -28,6 +28,9 @@ public class QuestResponseDTO {
         private LocalTime endTime;
         private LocalDate startDate;
         private LocalDate dueDate;
+        private int userExp;        // 현재 총 경험치
+        private int userLevel;      // 현재 레벨
+        private int rewardExp;      // 받은 보상 경험치
     }
 
     // 파티 생성
@@ -37,13 +40,17 @@ public class QuestResponseDTO {
     @NoArgsConstructor
     public static class PartyCreateResponse {
 
-        private Long questId;
-        private String content;
+        private Long partyId;
+        private String partyTitle;
+        private String questName;
         private QuestType questType;
         private LocalTime startTime;
         private LocalTime endTime;
         private LocalDate startDate;
         private LocalDate dueDate;
+        private int userExp;        // 현재 총 경험치
+        private int userLevel;      // 현재 레벨
+        private int rewardExp;      // 받은 보상 경험치
     }
 
     // 파티 수정
@@ -53,7 +60,8 @@ public class QuestResponseDTO {
     @NoArgsConstructor
     public static class PartyUpdateResponse {
         private Long partyId;
-        private String content;
+        private String partyTitle;
+        private String questName;
         private QuestType questType;
         private CompletionStatus completionStatus;
         private LocalTime startTime;
@@ -116,6 +124,18 @@ public class QuestResponseDTO {
         private String inviteLink;
     }
 
+    // 친구 초대 수락 응답
+    @Builder
+    @Getter
+    @AllArgsConstructor
+    @NoArgsConstructor
+    public static class FriendInviteAcceptResponse {
+        private int userExp;        // 현재 총 경험치
+        private int userLevel;      // 현재 레벨
+        private int rewardExp;      // 받은 보상 경험치
+        private String message;     // 성공 메시지
+    }
+
     // 친구 조회
     @Builder
     @Getter
@@ -162,6 +182,7 @@ public class QuestResponseDTO {
     public static class MainPageResponse {
 
         private String nickname;
+        private String email;
         private int exp;
         private double expPercent;
         private int gold;
@@ -228,10 +249,15 @@ public class QuestResponseDTO {
     @AllArgsConstructor
     public static class PartyInvitationListResponse {
 
-        private String nickname;
-        private String partyName;
-        private String questName;
-        private int expReward;
+        private Long partyId;                 // ✅ 파티 ID
+        private String partyName;             // 파티 이름
+        private String questName;             // 퀘스트 이름
+        private String inviterNickname;       // 초대한 사람 닉네임
+        private String inviterProfileUrl;     // 초대한 사람 프로필 이미지
+        private InvitationStatus invitationStatus; // ✅ PENDING / DECLINED / ACCEPTED
+        private int expReward;                // 보상
+        private LocalDate startDate;
+        private LocalDate dueDate;
     }
 
     // 파티 조회
@@ -239,9 +265,9 @@ public class QuestResponseDTO {
     @Builder
     public static class PartyListResponse {
 
-        private String questTitle;
         private Long partyId;                 // 파티 ID
-        private String title;                 // 파티 제목
+        private String partyTitle;
+        private String questName;
         private CompletionStatus status;      // 파티 상태 (INCOMPLETE, IN_PROGRESS, COMPLETED)
         private LocalDate startDate;          // 시작 날짜 추가
         private LocalDate dueDate;            // 마감 날짜 추가
@@ -273,6 +299,24 @@ public class QuestResponseDTO {
         private Long partyId;
         private String partyName;
         private InvitationStatus invitationStatus;
+    }
+
+    // 파티 완료 / 취소 처리
+    @Builder
+    @Getter
+    @NoArgsConstructor
+    @AllArgsConstructor
+    public static class PartyStatusChangeResponse {
+        private Long partyId;
+        private String title;
+        private CompletionStatus completionStatus;
+        @com.fasterxml.jackson.annotation.JsonProperty("isFirstCompletion")
+        private boolean isFirstCompletion;
+
+        // 명시적 getter (JSON 직렬화)
+        public boolean getIsFirstCompletion() {
+            return isFirstCompletion;
+        }
     }
 
     // 퀘스트 수정 응답 DTO

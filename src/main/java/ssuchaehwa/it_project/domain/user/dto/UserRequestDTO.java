@@ -29,4 +29,11 @@ public class UserRequestDTO {
         private boolean isRequired;
     }
 
+    @Getter
+    @NoArgsConstructor
+    @AllArgsConstructor
+    public static class FcmTokenRequest {
+        private String token;
+    }
+
 }

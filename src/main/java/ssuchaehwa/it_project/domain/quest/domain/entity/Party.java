@@ -23,9 +23,13 @@ public class Party extends BaseTimeEntity {
     @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    // 파티명
+    @Column(nullable = false, length = 100)
+    private String partyTitle;
+
     // 퀘스트 내용
     @Column(nullable = false, length = 100)
-    private String title;
+    private String questName;
 
     // 경험치 보상
     private int expReward;
@@ -60,19 +64,17 @@ public class Party extends BaseTimeEntity {
     @JoinColumn(name = "user_id", nullable = false)
     private User user;
 
-    @OneToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "quest_id", unique = true)
-    private Quest quest;
-
     @OneToMany(mappedBy = "party", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<PartyUser> partyUsers = new ArrayList<>();
 
-    @Column(nullable = false)
-    private LocalDateTime expiresAt;
+    @OneToMany(mappedBy = "party", fetch = FetchType.LAZY, cascade = CascadeType.ALL)
+    private List<HashtagParty> hashtagParties = new ArrayList<>();
 
-    public void update(String content, int priority, QuestType questType, CompletionStatus completionStatus,
+    public void update(String partyTitle, String questName, int priority, QuestType questType, CompletionStatus completionStatus,
                        LocalDate startDate, LocalDate dueDate, LocalTime startTime, LocalTime endTime) {
-        this.title = content;
+
+        this.partyTitle = partyTitle;
+        this.questName = questName;
         this.priority = priority;
         this.questType = questType;
         this.completionStatus = completionStatus;
@@ -82,7 +84,8 @@ public class Party extends BaseTimeEntity {
         this.endTime = endTime;
     }
 
-    public void changeCompletionStatus(CompletionStatus newStatus) {
-        this.completionStatus = newStatus;
+
+    public void changeCompletionStatus(CompletionStatus status) {
+        this.completionStatus = status;
     }
 }

@@ -1,7 +1,10 @@
 package ssuchaehwa.it_project.domain.login.application;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.redis.core.RedisTemplate;
 
 import java.util.Optional;
@@ -25,6 +28,7 @@ import ssuchaehwa.it_project.global.error.code.status.ErrorStatus;
 import ssuchaehwa.it_project.global.exception.GeneralException;
 
 @Service
+@Slf4j
 @RequiredArgsConstructor
 public class LoginServiceImpl implements LoginService {
 
@@ -106,6 +110,13 @@ public class LoginServiceImpl implements LoginService {
     public AuthResponseDto.LoginResult kakaoLoginWithAccessToken(String kakaoAccessToken, @Nullable String inviterCode) {
         // 1. accessToken으로 사용자 정보 요청
         AuthResponseDto.KakaoUserInfo userInfo = kakaoOAuthClient.requestUserInfo(kakaoAccessToken);
+        try {
+            ObjectMapper objectMapper = new ObjectMapper();
+            String json = objectMapper.writeValueAsString(userInfo);
+            log.info("카카오 응답 전체(JSON): {}", json);
+        } catch (JsonProcessingException e) {
+            log.error("JSON 변환 실패", e);
+        }
         String socialId = String.valueOf(userInfo.getId());
 
         // 2. 유저 존재 여부 먼저 판단
@@ -118,6 +129,7 @@ public class LoginServiceImpl implements LoginService {
                         .socialId(socialId)
                         .nickname(userInfo.getKakaoAccount().getProfile().getNickname())
                         .profileImageUrl(userInfo.getKakaoAccount().getProfile().getProfileImageUrl())
+                        .email(userInfo.getKakaoAccount().getEmail())
                         .level(1)
                         .exp(0)
                         .gold(0)
@@ -199,11 +211,9 @@ public class LoginServiceImpl implements LoginService {
                 User.builder()
                         .socialId(deviceId)
                         .nickname("게스트_" + deviceId.substring(0, 5))
+                        .exp(0)
+                        .gold(0)
                         .profileImageUrl(null)
-                        .level(1)
-                        .exp(5000)
-                        .gold(1000)
-                        .diamond(0)
                         .onboardingCompleted(false)
                         .inviteCode(UUID.randomUUID().toString().substring(0, 8))
                         .build()

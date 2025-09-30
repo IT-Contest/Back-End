@@ -15,7 +15,7 @@ public interface QuestService {
     QuestResponseDTO.FriendInviteResponse friendInvite(Long fromUserId);
 
     // 친구 초대 수락
-    void acceptFriendInvite(String token, Long toUserId);
+    QuestResponseDTO.FriendInviteAcceptResponse acceptFriendInvite(String token, Long toUserId);
 
     // 친구 초대 거절
     void rejectFriendInvite(String token, Long toUserId);
@@ -52,6 +52,10 @@ public interface QuestService {
 
     // 파티 수락 / 거절
     QuestResponseDTO.PartyInvitationResponse respondToInvitation(Long userId, QuestRequestDTO.PartyInvitationResponseRequest request);
+
+    // 파티 완료 / 취소
+    List<QuestResponseDTO.PartyStatusChangeResponse> changePartyStatus(
+            QuestRequestDTO.PartyStatusChangeRequest request, Long userId);
 
     // 퀘스트 수정
     QuestResponseDTO.QuestUpdateResponse updateQuest(Long questId, QuestRequestDTO.QuestUpdateRequest request, Long userId);

@@ -23,6 +23,7 @@ public enum SuccessStatus implements BaseCode {
     INVITE_PARTY_LIST_VIEW_SUCCESS(HttpStatus.OK, "PARTY_200", "초대 받은 파티 리스트 조회를 완료했습니다."),
     INVITE_PARTY_STATUS_CHANGE(HttpStatus.CREATED, "PARTY_201", "초대 받은 파티에 대한 응답을 완료했습니다."),
     PARTY_LIST_VIEW_SUCCESS(HttpStatus.OK, "PARTY_200", "파티 리스트 조회를 완료했습니다."),
+    PARTY_STATUS_CHANGE(HttpStatus.CREATED, "PARTY_201", "파티 퀘스트 상태가 변경되었습니다."),
 
 
     INVITE_FRIEND_CREATED(HttpStatus.CREATED, "INVITE_FRIEND_201", "친구 초대를 완료했습니다."),
@@ -42,13 +43,17 @@ public enum SuccessStatus implements BaseCode {
     // user
     MAIN_PAGE_VIEW_SUCCESS(HttpStatus.OK, "USER_200", "메인 페이지 조회를 완료했습니다."),
     FRIEND_ADDED(HttpStatus.CREATED, "FRIEND_201", "친구 추가가 완료되었습니다."),
+    USER_UPDATE_SUCCESS(HttpStatus.OK, "USER_200", "사용자 정보가 성공적으로 업데이트되었습니다."),
 
 
     // term
     TERM_FETCH_SUCCESS(HttpStatus.OK, "TERM_200", "약관 목록 조회 성공"),
     TERM_AGREE_SUCCESS(HttpStatus.OK, "TERM_200", "약관 동의 성공"),
     TERM_CHECK_SUCCESS(HttpStatus.OK, "TERM_200", "필수 약관 동의 여부 확인 성공"),
-    TERMS_CREATE_SUCCESS(HttpStatus.CREATED, "TERM_201", "약관 생성 완료");
+    TERMS_CREATE_SUCCESS(HttpStatus.CREATED, "TERM_201", "약관 생성 완료"),
+    
+    // onboarding
+    ONBOARDING_COMPLETE_SUCCESS(HttpStatus.OK, "ONBOARD_200", "온보딩 완료 및 보상 지급 성공");
 
     private final HttpStatus httpStatus;
     private final String code;

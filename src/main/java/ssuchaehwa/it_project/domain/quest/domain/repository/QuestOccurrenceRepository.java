@@ -6,6 +6,7 @@ import org.springframework.data.repository.query.Param;
 import ssuchaehwa.it_project.domain.quest.domain.entity.QuestOccurrence;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.transaction.annotation.Transactional;
+import ssuchaehwa.it_project.domain.quest.domain.enums.QuestSource;
 
 import java.time.LocalDate;
 import java.util.List;
@@ -15,22 +16,34 @@ public interface QuestOccurrenceRepository extends JpaRepository<QuestOccurrence
 
     /* ===== 단건 조회/존재 확인 (완료 처리 upsert 시 사용) ===== */
 
-    Optional<QuestOccurrence> findByTemplateIdAndPeriodKey(Long templateId, LocalDate periodKey);
+    // ✅ questSource 포함하도록 수정
+    Optional<QuestOccurrence> findByTemplateIdAndPeriodKeyAndQuestSource(
+            Long templateId,
+            LocalDate periodKey,
+            QuestSource questSource
+    );
 
-    boolean existsByTemplateIdAndPeriodKey(Long templateId, LocalDate periodKey);
-
+    boolean existsByTemplateIdAndPeriodKeyAndQuestSource(
+            Long templateId,
+            LocalDate periodKey,
+            QuestSource questSource
+    );
 
     /* ===== 범위 조회 (오늘 할 일/리스트용) ===== */
 
     List<QuestOccurrence> findAllByUserIdAndPeriodKeyBetweenOrderByPeriodKeyAsc(
-            Long userId, LocalDate from, LocalDate to
+            Long userId,
+            LocalDate from,
+            LocalDate to
     );
-
 
     /* ===== 집계(분석용) — 상태별 카운트 ===== */
 
     long countByUserIdAndStatusAndPeriodKeyBetween(
-            Long userId, String status, LocalDate from, LocalDate to
+            Long userId,
+            String status,
+            LocalDate from,
+            LocalDate to
     );
 
     /* 버킷별(group by periodKey) 카운트 — 일/주/월/연 버킷에 맞춰 한 번에 가져올 때 사용 */
@@ -56,7 +69,8 @@ public interface QuestOccurrenceRepository extends JpaRepository<QuestOccurrence
         long getCnt();
     }
 
-    //
+    /* ===== 삭제 관련 ===== */
+
     @Transactional
     @Modifying
     void deleteAllByTemplateId(Long templateId);
@@ -64,22 +78,40 @@ public interface QuestOccurrenceRepository extends JpaRepository<QuestOccurrence
     @Transactional(readOnly = true)
     List<QuestOccurrence> findAllByTemplateId(Long templateId);
 
+    void deleteAllByTemplateIdAndQuestSource(Long templateId, QuestSource questSource);
+
+    /* ===== 상태 업데이트 (questSource 포함) ===== */
+
     @Modifying(clearAutomatically = true)
     @Transactional
-    @Query("UPDATE QuestOccurrence q SET q.status = :status, q.completedAt = :completedAt WHERE q.templateId = :templateId AND q.periodKey = :periodKey")
-    int updateStatusByTemplateIdAndPeriodKey(
+    @Query("""
+           UPDATE QuestOccurrence q
+           SET q.status = :status, q.completedAt = :completedAt
+           WHERE q.templateId = :templateId
+             AND q.periodKey = :periodKey
+             AND q.questSource = :questSource
+           """)
+    int updateStatusByTemplateIdAndPeriodKeyAndQuestSource(
             @Param("templateId") Long templateId,
             @Param("periodKey") LocalDate periodKey,
+            @Param("questSource") QuestSource questSource,
             @Param("status") String status,
             @Param("completedAt") java.time.LocalDateTime completedAt
     );
 
     @Modifying(clearAutomatically = true)
     @Transactional
-    @Query("UPDATE QuestOccurrence q SET q.status = :status WHERE q.templateId = :templateId AND q.periodKey = :periodKey")
-    int updateStatusOnlyByTemplateIdAndPeriodKey(
+    @Query("""
+           UPDATE QuestOccurrence q
+           SET q.status = :status
+           WHERE q.templateId = :templateId
+             AND q.periodKey = :periodKey
+             AND q.questSource = :questSource
+           """)
+    int updateStatusOnlyByTemplateIdAndPeriodKeyAndQuestSource(
             @Param("templateId") Long templateId,
             @Param("periodKey") LocalDate periodKey,
+            @Param("questSource") QuestSource questSource,
             @Param("status") String status
     );
 

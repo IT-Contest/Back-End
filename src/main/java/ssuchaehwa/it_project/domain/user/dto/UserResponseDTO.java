@@ -18,4 +18,17 @@ public class UserResponseDTO {
         private String content;
         private boolean isRequired;
     }
+    
+    // 온보딩 완료 응답
+    @Getter
+    @Builder
+    @AllArgsConstructor
+    @NoArgsConstructor
+    public static class OnboardingCompleteResponse {
+        private Long userId;
+        private int exp;
+        private int level;
+        private boolean onboardingCompleted;
+        private int rewardExp;
+    }
 }

@@ -24,11 +24,6 @@ public interface PartyUserRepository extends JpaRepository<PartyUser, Long> {
     @Query("DELETE FROM PartyUser pu WHERE pu.invitationStatus = 'PENDING' AND pu.expiresAt < :now")
     void deleteExpiredInvites(LocalDateTime now);
 
-    boolean existsByPartyIdAndInvitationStatus(Long partyId, InvitationStatus status);
-
-    long countByPartyIdAndInvitationStatus(Long partyId, InvitationStatus status);
-
-    long countByPartyId(Long partyId);
-
+    List<PartyUser> findAllByUserIdAndInvitationStatusIn(Long userId, List<InvitationStatus> statuses);
 
 }

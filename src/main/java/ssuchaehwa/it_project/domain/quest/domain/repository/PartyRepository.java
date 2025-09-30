@@ -14,7 +14,8 @@ public interface PartyRepository extends JpaRepository<Party, Long> {
 
     void deleteByUser(User user);
 
-    List<Party> findAllByCompletionStatusAndExpiresAtBefore(CompletionStatus status, LocalDateTime now);
+    // INCOMPLETE 상태의 모든 파티 조회
+    List<Party> findAllByCompletionStatus(CompletionStatus status);
 
     // 내가 만든 파티
     List<Party> findAllByUserId(Long userId);

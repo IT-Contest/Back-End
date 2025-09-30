@@ -23,7 +23,12 @@ public class User extends BaseTimeEntity {
     @Column(name = "social_id", nullable = false, unique = true)
     private String socialId;
 
+    @Column(nullable = true)
+    private String email;
+
     private String nickname;
+
+    private String fcmToken;
 
     private int level;
 
@@ -194,5 +199,15 @@ public class User extends BaseTimeEntity {
     // 현재 레벨 업데이트 메서드
     public void updateLevel() {
         this.level = calculateLevelFromExp(this.exp);
+    }
+
+    // 토큰 값 변경
+    public void updateFcmToken(String newToken) {
+        this.fcmToken = newToken;
+    }
+
+    // 온보딩 완료 메서드
+    public void completeOnboarding() {
+        this.onboardingCompleted = true;
     }
 }
