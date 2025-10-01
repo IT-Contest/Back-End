@@ -479,11 +479,6 @@ public class QuestServiceImpl implements QuestService {
                 quest.changeCompletionStatus(CompletionStatus.COMPLETED);
                 questRepository.save(quest);
 
-                questOccurrenceRepository.updateStatusByTemplateIdAndPeriodKeyAndQuestSource(
-                        quest.getId(), periodKey, QuestSource.QUEST,
-                        "COMPLETED", LocalDateTime.now(ZoneId.of("Asia/Seoul"))
-                );
-
             } else {
                 // 보상 회수
                 user.deductExp(quest.getExpReward());
@@ -499,9 +494,6 @@ public class QuestServiceImpl implements QuestService {
                 quest.changeCompletionStatus(CompletionStatus.INCOMPLETE);
                 questRepository.save(quest);
 
-                questOccurrenceRepository.updateStatusOnlyByTemplateIdAndPeriodKeyAndQuestSource(
-                        quest.getId(), periodKey, QuestSource.QUEST, "INCOMPLETE"
-                );
             }
 
             firstCompletionMap.put(quest.getId(), true);
@@ -716,10 +708,6 @@ public class QuestServiceImpl implements QuestService {
                 party.changeCompletionStatus(CompletionStatus.COMPLETED);
                 partyRepository.save(party);
 
-                questOccurrenceRepository.updateStatusByTemplateIdAndPeriodKeyAndQuestSource(
-                        party.getId(), periodKey, QuestSource.PARTY,
-                        "COMPLETED", LocalDateTime.now(ZoneId.of("Asia/Seoul"))
-                );
 
             } else {
                 // 보상 회수
@@ -736,9 +724,6 @@ public class QuestServiceImpl implements QuestService {
                 party.changeCompletionStatus(CompletionStatus.INCOMPLETE);
                 partyRepository.save(party);
 
-                questOccurrenceRepository.updateStatusOnlyByTemplateIdAndPeriodKeyAndQuestSource(
-                        party.getId(), periodKey, QuestSource.PARTY, "INCOMPLETE"
-                );
             }
 
             firstCompletionMap.put(party.getId(), true);
