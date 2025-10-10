@@ -274,6 +274,8 @@ public class QuestResponseDTO {
         private LocalTime startTime;          // 시작 시간 추가
         private LocalTime endTime;            // 종료 시간 추가
         private int priority;                 // 우선순위 추가
+        private int expReward;
+        private int goldReward;
         private QuestType questType;          // 일일/주간/월간/연간 구분
         private List<String> hashtags;        // 카테고리(태그)
         private LocalDateTime expiresAt;      // 만료 시간

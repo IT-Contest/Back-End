@@ -230,6 +230,8 @@ public class QuestConverter {
                 .partyTitle(party.getPartyTitle())
                 .questName(party.getQuestName())
                 .status(actualStatus) // ✅ 엔티티 상태 대신 실제 occurrence 상태 반영
+                .expReward(party.getExpReward())
+                .goldReward(party.getGoldReward())
                 .startDate(party.getStartDate())
                 .dueDate(party.getDueDate())
                 .startTime(party.getStartTime())

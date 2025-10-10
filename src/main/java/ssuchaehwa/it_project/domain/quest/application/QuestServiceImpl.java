@@ -672,6 +672,12 @@ public class QuestServiceImpl implements QuestService {
         Map<Long, Boolean> firstCompletionMap = new HashMap<>();
 
         for (Party party : parties) {
+
+            // ✅ 파티 생성자만 상태 변경 가능
+            if (!party.getUser().getId().equals(userId)) {
+                throw new QuestException(ErrorStatus.PARTY_ACCESS_DENIED);
+            }
+
             LocalDate periodKey = questAnalysisService.currentPeriodKeyFromAnchor(
                     party.getQuestType().name(),
                     party.getStartDate() != null ? party.getStartDate() : today,
