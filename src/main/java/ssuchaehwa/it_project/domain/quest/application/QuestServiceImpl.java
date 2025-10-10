@@ -672,6 +672,12 @@ public class QuestServiceImpl implements QuestService {
         Map<Long, Boolean> firstCompletionMap = new HashMap<>();
 
         for (Party party : parties) {
+
+            // ✅ 파티 생성자만 상태 변경 가능
+            if (!party.getUser().getId().equals(userId)) {
+                throw new QuestException(ErrorStatus.PARTY_ACCESS_DENIED);
+            }
+
             LocalDate periodKey = questAnalysisService.currentPeriodKeyFromAnchor(
                     party.getQuestType().name(),
                     party.getStartDate() != null ? party.getStartDate() : today,
@@ -968,7 +974,7 @@ public class QuestServiceImpl implements QuestService {
         invitedFriendRepository.save(invitedFriend);
 
         // 링크 생성
-        String link = "https://ssuchaehwa.duckdns.org/invite.html?code=" + token;
+        String link = "http://192.168.45.148:8080/invite.html?code=" + token;
 
         return QuestResponseDTO.FriendInviteResponse.builder()
                 .inviteLink(link)
