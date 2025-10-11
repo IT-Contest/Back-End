@@ -50,10 +50,6 @@ public class CoachingServiceImpl implements CoachingService {
         // ChatGPT API 호출하여 AI 코칭 생성
         String coachingContent = chatGPTService.generateCoaching(analysisData);
 
-        // 코칭 기록 저장
-        CoachingRecordDTO savedRecord = saveCoachingRecord(userId, coachingContent, 
-                request.getAnalysisType(), request.getQuestOrPomodoro());
-
         return CoachingResponseDTO.builder()
                 .canAnalyze(true)
                 .coachingContent(coachingContent)
