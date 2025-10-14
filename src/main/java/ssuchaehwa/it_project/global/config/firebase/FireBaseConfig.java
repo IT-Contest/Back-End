@@ -16,46 +16,46 @@ import java.io.InputStream;
 public class FireBaseConfig {
 
 
-//    @PostConstruct
-//    public void init() {
-//        try {
-//            String filePath = System.getenv("FIREBASE_CONFIG_PATH");
-//            if (filePath == null) {
-//                filePath = "/home/ubuntu/config/firebase-service-account.json"; // 기본 경로
-//            }
-//
-//            FileInputStream serviceAccount = new FileInputStream(filePath);
-//
-//            FirebaseOptions options = FirebaseOptions.builder()
-//                    .setCredentials(GoogleCredentials.fromStream(serviceAccount))
-//                    .build();
-//
-//            if (FirebaseApp.getApps().isEmpty()) {
-//                FirebaseApp.initializeApp(options);
-//                System.out.println("✅ Firebase SDK initialized successfully");
-//            }
-//        } catch (Exception e) {
-//            e.printStackTrace();
-//        }
-//    }
+   @PostConstruct
+   public void init() {
+       try {
+           String filePath = System.getenv("FIREBASE_CONFIG_PATH");
+           if (filePath == null) {
+               filePath = "/home/ubuntu/config/firebase-service-account.json"; // 기본 경로
+           }
 
-    @PostConstruct
-    public void init() {
-        try {
-            InputStream serviceAccount = new ClassPathResource("firebase-service-account.json").getInputStream();
+           FileInputStream serviceAccount = new FileInputStream(filePath);
 
-            FirebaseOptions options = FirebaseOptions.builder()
-                    .setCredentials(GoogleCredentials.fromStream(serviceAccount))
-                    .build();
+           FirebaseOptions options = FirebaseOptions.builder()
+                   .setCredentials(GoogleCredentials.fromStream(serviceAccount))
+                   .build();
 
-            if (FirebaseApp.getApps().isEmpty()) {
-                FirebaseApp.initializeApp(options);
-                System.out.println("✅ Firebase SDK initialized successfully (local)");
-            }
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-    }
+           if (FirebaseApp.getApps().isEmpty()) {
+               FirebaseApp.initializeApp(options);
+               System.out.println("✅ Firebase SDK initialized successfully");
+           }
+       } catch (Exception e) {
+           e.printStackTrace();
+       }
+   }
+
+    // @PostConstruct
+    // public void init() {
+    //     try {
+    //         InputStream serviceAccount = new ClassPathResource("firebase-service-account.json").getInputStream();
+
+    //         FirebaseOptions options = FirebaseOptions.builder()
+    //                 .setCredentials(GoogleCredentials.fromStream(serviceAccount))
+    //                 .build();
+
+    //         if (FirebaseApp.getApps().isEmpty()) {
+    //             FirebaseApp.initializeApp(options);
+    //             System.out.println("✅ Firebase SDK initialized successfully (local)");
+    //         }
+    //     } catch (Exception e) {
+    //         e.printStackTrace();
+    //     }
+    // }
   
     // ✅ FirebaseMessaging Bean 등록
     @Bean
