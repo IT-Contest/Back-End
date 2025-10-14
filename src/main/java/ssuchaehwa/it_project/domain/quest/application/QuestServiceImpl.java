@@ -260,7 +260,7 @@ public class QuestServiceImpl implements QuestService {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new UserException(ErrorStatus.NO_SUCH_USER));
 
-        List<Quest> quests = questRepository.findAllByUserId(user.getId());
+        List<Quest> quests = questRepository.findActiveQuestsByUserId(user.getId());
         LocalDate today = LocalDate.now(ZoneId.of("Asia/Seoul"));
 
         // 각 퀘스트의 현재 기간 상태를 QuestOccurrence에서 조회하여 반영

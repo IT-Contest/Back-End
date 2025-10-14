@@ -14,6 +14,9 @@ public interface QuestRepository extends JpaRepository<Quest, Long> {
     @Query("SELECT q FROM Quest q WHERE q.user.id = :userId")
     List<Quest> findAllByUserId(@Param("userId") Long userId);
 
+    @Query("SELECT q FROM Quest q WHERE q.user.id = :userId AND (q.dueDate IS NULL OR q.dueDate >= CURRENT_DATE)")
+    List<Quest> findActiveQuestsByUserId(@Param("userId") Long userId);
+
     void deleteByUser(User user);
 
     Optional<Quest> findByUserIdAndTitle(Long userId, String title);
