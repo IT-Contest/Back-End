@@ -84,4 +84,15 @@ public class AuthResponseDto {
         private boolean valid;
         private Long userId;
     }
+
+    // Apple 유저 정보 응답 DTO
+    @Builder
+    @Getter
+    @NoArgsConstructor
+    @AllArgsConstructor
+    public static class AppleUserInfo {
+        private String sub; // Apple 고유 사용자 ID
+        private String email;
+        private boolean emailVerified;
+    }
 }
