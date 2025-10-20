@@ -7,6 +7,8 @@ import ssuchaehwa.it_project.domain.login.dto.AuthResponseDto.LoginResult;
 public interface LoginService {
     LoginResult kakaoLogin(String code, @Nullable String inviterCode);
     AuthResponseDto.LoginResult kakaoLoginWithAccessToken(String kakaoAccessToken, @Nullable String inviterCode);
+    AuthResponseDto.LoginResult appleLoginWithIdentityToken(String identityToken, @Nullable String inviterCode);
+    AuthResponseDto.LoginResult mockAppleLogin(String sub, String email, Boolean emailVerified, @Nullable String inviterCode);
     AuthResponseDto.LoginResult refreshToken(Long userId, String refreshToken);
     AuthResponseDto.LoginResult guestLogin(String deviceId);
     AuthResponseDto.AutoLoginResult autoLogin(String accessToken);

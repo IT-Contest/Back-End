@@ -50,4 +50,18 @@ public class AuthRequestDto {
         @Nullable
         private String inviterCode; // 초대 코드 (딥링크로 받은 값, 없을 수도 있음)
     }
+
+    // Apple Mock 로그인 요청 dto
+    @Builder
+    @Getter
+    @NoArgsConstructor
+    @AllArgsConstructor
+    public static class AppleMockRequest {
+        private String sub; // Apple 고유 사용자 ID
+        private String email; // 이메일
+        private Boolean emailVerified; // 이메일 검증 여부
+        
+        @Nullable
+        private String inviterCode; // 초대 코드
+    }
 }

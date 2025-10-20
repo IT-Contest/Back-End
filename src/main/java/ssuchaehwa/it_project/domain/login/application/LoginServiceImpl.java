@@ -24,6 +24,8 @@ import ssuchaehwa.it_project.domain.user.domain.repository.UserRepository;
 import ssuchaehwa.it_project.domain.user.domain.repository.UserTermRepository;
 import ssuchaehwa.it_project.global.config.security.jwt.JwtUtil;
 import ssuchaehwa.it_project.domain.login.domain.KakaoOAuthClient;
+import ssuchaehwa.it_project.domain.login.domain.AppleOAuthClient;
+import ssuchaehwa.it_project.domain.model.enums.SocialProvider;
 import ssuchaehwa.it_project.global.error.code.status.ErrorStatus;
 import ssuchaehwa.it_project.global.exception.GeneralException;
 
@@ -33,6 +35,7 @@ import ssuchaehwa.it_project.global.exception.GeneralException;
 public class LoginServiceImpl implements LoginService {
 
     private final KakaoOAuthClient kakaoOAuthClient;
+    private final AppleOAuthClient appleOAuthClient;
     private final UserRepository userRepository;
     private final JwtUtil jwtUtil;
     private final RedisTemplate<String, String> redisTemplate;
@@ -56,13 +59,15 @@ public class LoginServiceImpl implements LoginService {
         AuthResponseDto.KakaoUserInfo userInfo = kakaoOAuthClient.requestUserInfo(token.getAccessToken());
 
         // 3. 유저 존재 여부 확인
-        User user = userRepository.findBySocialId(String.valueOf(userInfo.getId()))
+        String socialId = String.valueOf(userInfo.getId());
+        User user = userRepository.findBySocialIdAndProvider(socialId, SocialProvider.KAKAO)
                 .orElseGet(() -> userRepository.save(
                         User.builder()
-                                .socialId(String.valueOf(userInfo.getId()))
+                                .socialId(socialId)
+                                .provider(SocialProvider.KAKAO)
                                 .nickname(userInfo.getKakaoAccount().getProfile().getNickname())
                                 .profileImageUrl(userInfo.getKakaoAccount().getProfile().getProfileImageUrl())
-                                .level(1)
+                                .level(0)
                                 .exp(0)
                                 .gold(0)
                                 .diamond(0)
@@ -71,7 +76,7 @@ public class LoginServiceImpl implements LoginService {
                                 .build()
                 ));
 
-        boolean isNewUser = !userRepository.existsBySocialId(String.valueOf(userInfo.getId()));
+        boolean isNewUser = !userRepository.existsBySocialIdAndProvider(socialId, SocialProvider.KAKAO);
 
         if (isNewUser && inviterCode != null) {
             userRepository.findByInviteCode(inviterCode).ifPresent(inviter -> {
@@ -120,17 +125,18 @@ public class LoginServiceImpl implements LoginService {
         String socialId = String.valueOf(userInfo.getId());
 
         // 2. 유저 존재 여부 먼저 판단
-        Optional<User> existingUser = userRepository.findBySocialId(socialId);
+        Optional<User> existingUser = userRepository.findBySocialIdAndProvider(socialId, SocialProvider.KAKAO);
         boolean isNewUser = existingUser.isEmpty();
 
         // 3. 없으면 새로 저장
         User user = existingUser.orElseGet(() -> userRepository.save(
                 User.builder()
                         .socialId(socialId)
+                        .provider(SocialProvider.KAKAO)
                         .nickname(userInfo.getKakaoAccount().getProfile().getNickname())
                         .profileImageUrl(userInfo.getKakaoAccount().getProfile().getProfileImageUrl())
                         .email(userInfo.getKakaoAccount().getEmail())
-                        .level(1)
+                        .level(0)
                         .exp(0)
                         .gold(0)
                         .diamond(0)
@@ -203,16 +209,19 @@ public class LoginServiceImpl implements LoginService {
     @Override
     public AuthResponseDto.LoginResult guestLogin(String deviceId) {
         // 1. 유저 존재 여부 먼저 판단
-        Optional<User> existingUser = userRepository.findBySocialId(deviceId);
+        Optional<User> existingUser = userRepository.findBySocialIdAndProvider(deviceId, SocialProvider.GUEST);
         boolean isNewUser = existingUser.isEmpty();
 
         // 2. 없으면 새로 저장
         User user = existingUser.orElseGet(() -> userRepository.save(
                 User.builder()
                         .socialId(deviceId)
+                        .provider(SocialProvider.GUEST)
                         .nickname("게스트_" + deviceId.substring(0, 5))
+                        .level(0)
                         .exp(0)
                         .gold(0)
+                        .diamond(0)
                         .profileImageUrl(null)
                         .onboardingCompleted(false)
                         .inviteCode(UUID.randomUUID().toString().substring(0, 8))
@@ -310,6 +319,145 @@ public class LoginServiceImpl implements LoginService {
 
         // refreshToken 삭제
         redisTemplate.delete("refresh:userId:" + userId);
+    }
+
+    // 애플 Mock 로그인 (테스트용)
+    @Override
+    public AuthResponseDto.LoginResult mockAppleLogin(String sub, String email, Boolean emailVerified, @Nullable String inviterCode) {
+        log.info("🍎 애플 Mock 로그인 처리 시작 - sub: {}, email: {}", sub, email);
+
+        // 1. Mock 애플 사용자 정보 생성 (실제 애플 서버 검증 생략)
+        AuthResponseDto.AppleUserInfo mockAppleUserInfo = AuthResponseDto.AppleUserInfo.builder()
+                .sub(sub)
+                .email(email)
+                .emailVerified(emailVerified != null ? emailVerified : false)
+                .build();
+
+        // 2. 실제 애플 로그인과 동일한 비즈니스 로직 수행
+        return processAppleLogin(mockAppleUserInfo, inviterCode);
+    }
+
+    // 애플 로그인 공통 처리 로직 (실제 + Mock 공용)
+    private AuthResponseDto.LoginResult processAppleLogin(AuthResponseDto.AppleUserInfo appleUserInfo, @Nullable String inviterCode) {
+        String socialId = appleUserInfo.getSub();
+
+        // 사용자 조회/생성
+        Optional<User> existingUser = userRepository.findBySocialIdAndProvider(socialId, SocialProvider.APPLE);
+        boolean isNewUser = existingUser.isEmpty();
+
+        User user = existingUser.orElseGet(() -> userRepository.save(
+                User.builder()
+                        .socialId(socialId)
+                        .provider(SocialProvider.APPLE)
+                        .nickname("애플사용자_" + socialId.substring(0, 5))
+                        .email(appleUserInfo.getEmail())
+                        .level(1)
+                        .exp(0)
+                        .gold(0)
+                        .diamond(0)
+                        .onboardingCompleted(false)
+                        .inviteCode(UUID.randomUUID().toString().substring(0, 8))
+                        .build()
+        ));
+
+        // 초대 코드 처리
+        if (isNewUser && inviterCode != null) {
+            userRepository.findByInviteCode(inviterCode).ifPresent(inviter -> {
+                InvitedFriend invitedFriend = InvitedFriend.builder()
+                        .fromUser(inviter)
+                        .toUser(user)
+                        .status(FriendStatus.ACCEPTED)
+                        .build();
+                invitedFriendRepository.save(invitedFriend);
+            });
+        }
+
+        // JWT 토큰 발급
+        String jwtAccessToken = jwtUtil.generateAccessToken(String.valueOf(user.getId()));
+        String jwtRefreshToken = jwtUtil.generateRefreshToken(String.valueOf(user.getId()));
+
+        // Redis에 refreshToken 저장
+        redisTemplate.opsForValue().set(
+                "refresh:userId:" + user.getId(),
+                jwtRefreshToken,
+                jwtUtil.getRefreshTokenValidity(),
+                TimeUnit.MILLISECONDS
+        );
+
+        log.info("🍎 애플 로그인 완료 - userId: {}, isNewUser: {}", user.getId(), isNewUser);
+
+        return AuthResponseDto.LoginResult.builder()
+                .accessToken(jwtAccessToken)
+                .refreshToken(jwtRefreshToken)
+                .isNewUser(isNewUser)
+                .kakaoAccessToken(null)
+                .kakaoRefreshToken(null)
+                .build();
+    }
+
+    // 애플 로그인
+    @Override
+    public AuthResponseDto.LoginResult appleLoginWithIdentityToken(String identityToken, @Nullable String inviterCode) {
+        // 1. Apple Identity Token 검증 및 사용자 정보 추출
+        AuthResponseDto.AppleUserInfo appleUserInfo = appleOAuthClient.verifyIdentityToken(identityToken);
+        
+        String socialId = appleUserInfo.getSub(); // Apple 고유 사용자 ID
+        log.info("🍎 애플 로그인 처리 시작 - sub: {}, email: {}", socialId, appleUserInfo.getEmail());
+
+        // 2. 유저 존재 여부 먼저 판단
+        Optional<User> existingUser = userRepository.findBySocialIdAndProvider(socialId, SocialProvider.APPLE);
+        boolean isNewUser = existingUser.isEmpty();
+
+        // 3. 없으면 새로 저장
+        User user = existingUser.orElseGet(() -> userRepository.save(
+                User.builder()
+                        .socialId(socialId)
+                        .provider(SocialProvider.APPLE)
+                        .nickname("애플사용자_" + socialId.substring(0, 5))
+                        .email(appleUserInfo.getEmail())
+                        .level(1)
+                        .exp(0)
+                        .gold(0)
+                        .diamond(0)
+                        .onboardingCompleted(false)
+                        .inviteCode(UUID.randomUUID().toString().substring(0, 8))
+                        .build()
+        ));
+
+        // 4. 초대한 유저와 친구 관계 저장
+        if (isNewUser && inviterCode != null) {
+            userRepository.findByInviteCode(inviterCode).ifPresent(inviter -> {
+                InvitedFriend invitedFriend = InvitedFriend.builder()
+                        .fromUser(inviter) // 초대한 사람
+                        .toUser(user)       // 새로 가입한 사람
+                        .status(FriendStatus.ACCEPTED)
+                        .build();
+                invitedFriendRepository.save(invitedFriend);
+            });
+        }
+
+        // 5. JWT 토큰 발급
+        String jwtAccessToken = jwtUtil.generateAccessToken(String.valueOf(user.getId()));
+        String jwtRefreshToken = jwtUtil.generateRefreshToken(String.valueOf(user.getId()));
+        
+        // Redis에 refreshToken 저장
+        redisTemplate.opsForValue().set(
+                "refresh:userId:" + user.getId(),
+                jwtRefreshToken,
+                jwtUtil.getRefreshTokenValidity(),
+                TimeUnit.MILLISECONDS
+        );
+
+        log.info("🍎 애플 로그인 완료 - userId: {}, isNewUser: {}", user.getId(), isNewUser);
+
+        // 6. 최종 응답
+        return AuthResponseDto.LoginResult.builder()
+                .accessToken(jwtAccessToken)
+                .refreshToken(jwtRefreshToken)
+                .isNewUser(isNewUser)
+                .kakaoAccessToken(null)
+                .kakaoRefreshToken(null)
+                .build();
     }
 
 }
