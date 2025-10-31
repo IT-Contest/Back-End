@@ -46,7 +46,10 @@ public class AuthRequestDto {
     @AllArgsConstructor
     public static class AppleIdentityToken {
         private String identityToken; // Apple에서 발급받은 Identity Token
-        
+
+        @Nullable
+        private String name; // 사용자 이름 (Apple에서 제공, 초회 로그인 시에만 제공될 수 있음)
+
         @Nullable
         private String inviterCode; // 초대 코드 (딥링크로 받은 값, 없을 수도 있음)
     }

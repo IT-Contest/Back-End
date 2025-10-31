@@ -64,9 +64,10 @@ public class LoginController {
     @PostMapping("/login/apple")
     public ResponseEntity<AuthResponseDto.LoginResult> appleLoginWithIdentityToken(@RequestBody AuthRequestDto.AppleIdentityToken request) {
         String identityToken = request.getIdentityToken();
+        String name = request.getName();
         String inviterCode = request.getInviterCode();
 
-        AuthResponseDto.LoginResult result = loginService.appleLoginWithIdentityToken(identityToken, inviterCode);
+        AuthResponseDto.LoginResult result = loginService.appleLoginWithIdentityToken(identityToken, name, inviterCode);
         return ResponseEntity.ok(result);
     }
 

@@ -115,15 +115,40 @@ public class AppleOAuthClient {
             throw new RuntimeException("Invalid issuer: " + iss);
         }
 
-        // aud (audience) 검증
-        String aud = (String) claims.get("aud");
+        // aud (audience) 검증 - String 또는 List 처리
+        Object audObj = claims.get("aud");
+        String aud;
+        if (audObj instanceof String) {
+            aud = (String) audObj;
+        } else if (audObj instanceof java.util.List) {
+            java.util.List<?> audList = (java.util.List<?>) audObj;
+            if (audList.isEmpty()) {
+                throw new RuntimeException("Audience list is empty");
+            }
+            aud = (String) audList.get(0);
+        } else {
+            throw new RuntimeException("Invalid audience format: " + audObj);
+        }
+
         if (!clientId.equals(aud)) {
             throw new RuntimeException("Invalid audience: " + aud);
         }
 
         // exp (expiration time) 검증
-        Long exp = (Long) claims.get("exp");
-        if (exp == null || new Date(exp * 1000).before(new Date())) {
+        Object expObj = claims.get("exp");
+        Date expirationDate;
+
+        if (expObj instanceof Long) {
+            expirationDate = new Date((Long) expObj * 1000);
+        } else if (expObj instanceof Integer) {
+            expirationDate = new Date(((Integer) expObj).longValue() * 1000);
+        } else if (expObj instanceof Date) {
+            expirationDate = (Date) expObj;
+        } else {
+            throw new RuntimeException("Invalid expiration time format: " + expObj);
+        }
+
+        if (expirationDate.before(new Date())) {
             throw new RuntimeException("Token expired");
         }
 

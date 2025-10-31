@@ -397,23 +397,29 @@ public class LoginServiceImpl implements LoginService {
 
     // 애플 로그인
     @Override
-    public AuthResponseDto.LoginResult appleLoginWithIdentityToken(String identityToken, @Nullable String inviterCode) {
+    public AuthResponseDto.LoginResult appleLoginWithIdentityToken(String identityToken, @Nullable String name, @Nullable String inviterCode) {
         // 1. Apple Identity Token 검증 및 사용자 정보 추출
         AuthResponseDto.AppleUserInfo appleUserInfo = appleOAuthClient.verifyIdentityToken(identityToken);
-        
+
         String socialId = appleUserInfo.getSub(); // Apple 고유 사용자 ID
-        log.info("🍎 애플 로그인 처리 시작 - sub: {}, email: {}", socialId, appleUserInfo.getEmail());
+        log.info("🍎 애플 로그인 처리 시작 - sub: {}, email: {}, name: {}", socialId, appleUserInfo.getEmail(), name);
 
         // 2. 유저 존재 여부 먼저 판단
         Optional<User> existingUser = userRepository.findBySocialIdAndProvider(socialId, SocialProvider.APPLE);
         boolean isNewUser = existingUser.isEmpty();
 
         // 3. 없으면 새로 저장
-        User user = existingUser.orElseGet(() -> userRepository.save(
+        User user = existingUser.orElseGet(() -> {
+            // 닉네임 결정: name이 있으면 사용, 없으면 기본값
+            String nickname = (name != null && !name.trim().isEmpty())
+                ? name
+                : "애플사용자_" + socialId.substring(0, 5);
+
+            return userRepository.save(
                 User.builder()
                         .socialId(socialId)
                         .provider(SocialProvider.APPLE)
-                        .nickname("애플사용자_" + socialId.substring(0, 5))
+                        .nickname(nickname)
                         .email(appleUserInfo.getEmail())
                         .level(1)
                         .exp(0)
@@ -422,7 +428,8 @@ public class LoginServiceImpl implements LoginService {
                         .onboardingCompleted(false)
                         .inviteCode(UUID.randomUUID().toString().substring(0, 8))
                         .build()
-        ));
+            );
+        });
 
         // 4. 초대한 유저와 친구 관계 저장
         if (isNewUser && inviterCode != null) {
