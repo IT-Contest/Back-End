@@ -207,17 +207,20 @@ public class LoginServiceImpl implements LoginService {
         boolean isNewUser = existingUser.isEmpty();
 
         // 2. 없으면 새로 저장
-        User user = existingUser.orElseGet(() -> userRepository.save(
-                User.builder()
-                        .socialId(deviceId)
-                        .nickname("게스트_" + deviceId.substring(0, 5))
-                        .exp(0)
-                        .gold(0)
-                        .profileImageUrl(null)
-                        .onboardingCompleted(false)
-                        .inviteCode(UUID.randomUUID().toString().substring(0, 8))
-                        .build()
-        ));
+        User user = existingUser.orElseGet(() -> {
+            String nickname = generateUniqueGuestNickname(deviceId);
+            return userRepository.save(
+                    User.builder()
+                            .socialId(deviceId)
+                            .nickname(nickname)
+                            .exp(0)
+                            .gold(0)
+                            .profileImageUrl(null)
+                            .onboardingCompleted(false)
+                            .inviteCode(UUID.randomUUID().toString().substring(0, 8))
+                            .build()
+            );
+        });
 
         // 3. 토큰 발급
         String accessToken = jwtUtil.generateAccessToken(String.valueOf(user.getId()));
@@ -312,4 +315,18 @@ public class LoginServiceImpl implements LoginService {
         redisTemplate.delete("refresh:userId:" + userId);
     }
 
+    // 게스트 닉네임 중복 검사
+    private String generateUniqueGuestNickname(String deviceId) {
+        String baseNickname = "게스트_" + deviceId.substring(0, 5);
+        String nickname = baseNickname;
+        int suffix = 1;
+
+        // nickname이 이미 존재하면 뒤에 숫자를 붙여서 유일하게 만듦
+        while (userRepository.existsByNickname(nickname)) {
+            nickname = baseNickname + "_" + suffix;
+            suffix++;
+        }
+
+        return nickname;
+    }
 }

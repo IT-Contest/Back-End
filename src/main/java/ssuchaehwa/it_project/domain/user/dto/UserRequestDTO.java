@@ -36,4 +36,12 @@ public class UserRequestDTO {
         private String token;
     }
 
+    @Getter
+    @NoArgsConstructor
+    @AllArgsConstructor
+    public static class PartyNotificationRequest {
+        private boolean enabled;
+    }
+
+
 }

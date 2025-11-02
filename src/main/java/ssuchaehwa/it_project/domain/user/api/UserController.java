@@ -103,4 +103,23 @@ public class UserController {
                 userService.completeOnboarding(principal.getId()));
     }
 
+    @PatchMapping("/notifications/party")
+    @Operation(summary = "파티 초대장 알림 설정 변경", description = "사용자의 파티 초대장 푸시 알림 수신 여부를 변경합니다.")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "파티 초대장 알림 설정 변경 성공"),
+            @ApiResponse(responseCode = "USER_404", description = "존재하지 않는 사용자입니다."),
+    })
+    public BaseResponse<UserResponseDTO.PartyNotificationResponse> updatePartyNotification(
+            @AuthenticationPrincipal UserPrincipal principal,
+            @RequestBody UserRequestDTO.PartyNotificationRequest request
+    ) {
+        log.info("📩 파티 알림 설정 변경 요청: userId={}, enabled={}", principal.getId(), request.isEnabled());
+
+        UserResponseDTO.PartyNotificationResponse response =
+                userService.updatePartyNotification(principal.getId(), request.isEnabled());
+
+        return BaseResponse.onSuccess(SuccessStatus.USER_UPDATE_SUCCESS, response);
+    }
+
+
 }
