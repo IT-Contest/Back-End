@@ -38,4 +38,33 @@ public class AuthRequestDto {
     public static class GuestRequest {
         private String deviceId; // 예: UUID 또는 디바이스 고유값
     }
+
+    // Apple 로그인 요청 dto
+    @Builder
+    @Getter
+    @NoArgsConstructor
+    @AllArgsConstructor
+    public static class AppleIdentityToken {
+        private String identityToken; // Apple에서 발급받은 Identity Token
+
+        @Nullable
+        private String name; // 사용자 이름 (Apple에서 제공, 초회 로그인 시에만 제공될 수 있음)
+
+        @Nullable
+        private String inviterCode; // 초대 코드 (딥링크로 받은 값, 없을 수도 있음)
+    }
+
+    // Apple Mock 로그인 요청 dto
+    @Builder
+    @Getter
+    @NoArgsConstructor
+    @AllArgsConstructor
+    public static class AppleMockRequest {
+        private String sub; // Apple 고유 사용자 ID
+        private String email; // 이메일
+        private Boolean emailVerified; // 이메일 검증 여부
+        
+        @Nullable
+        private String inviterCode; // 초대 코드
+    }
 }
