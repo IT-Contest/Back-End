@@ -58,6 +58,35 @@ public class LoginController {
     }
 
     @Operation(
+        summary = "애플 로그인",
+        description = "앱에서 받은 Apple Identity Token을 사용해 JWT access/refresh 토큰을 발급하고 refresh token은 Redis에 저장"
+    )
+    @PostMapping("/login/apple")
+    public ResponseEntity<AuthResponseDto.LoginResult> appleLoginWithIdentityToken(@RequestBody AuthRequestDto.AppleIdentityToken request) {
+        String identityToken = request.getIdentityToken();
+        String name = request.getName();
+        String inviterCode = request.getInviterCode();
+
+        AuthResponseDto.LoginResult result = loginService.appleLoginWithIdentityToken(identityToken, name, inviterCode);
+        return ResponseEntity.ok(result);
+    }
+
+    @Operation(
+        summary = "애플 로그인 Mock 테스트",
+        description = "애플 서버 검증 없이 가짜 데이터로 애플 로그인 로직을 테스트합니다. (개발/테스트용)"
+    )
+    @PostMapping("/login/apple/mock")
+    public ResponseEntity<AuthResponseDto.LoginResult> mockAppleLogin(@RequestBody AuthRequestDto.AppleMockRequest request) {
+        String sub = request.getSub();
+        String email = request.getEmail();
+        Boolean emailVerified = request.getEmailVerified();
+        String inviterCode = request.getInviterCode();
+
+        AuthResponseDto.LoginResult result = loginService.mockAppleLogin(sub, email, emailVerified, inviterCode);
+        return ResponseEntity.ok(result);
+    }
+
+    @Operation(
             summary = "자동 로그인 - accessToken 인증",
             description = "앱 실행 시 저장된 accessToken이 유효한지 확인하여 자동 로그인 수행"
     )

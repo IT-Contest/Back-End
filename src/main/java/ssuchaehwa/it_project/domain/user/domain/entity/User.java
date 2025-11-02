@@ -5,9 +5,12 @@ import lombok.*;
 import org.hibernate.annotations.DynamicInsert;
 import org.hibernate.annotations.DynamicUpdate;
 import ssuchaehwa.it_project.domain.model.entity.BaseTimeEntity;
+import ssuchaehwa.it_project.domain.model.enums.SocialProvider;
 
 @Entity
-@Table(name = "user")
+@Table(name = "user", uniqueConstraints = {
+    @UniqueConstraint(columnNames = {"social_id", "provider"})
+})
 @Getter
 @DynamicUpdate
 @DynamicInsert
@@ -20,8 +23,12 @@ public class User extends BaseTimeEntity {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(name = "social_id", nullable = false, unique = true)
+    @Column(name = "social_id", nullable = false)
     private String socialId;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "provider", nullable = false)
+    private SocialProvider provider;
 
     @Column(nullable = true)
     private String email;

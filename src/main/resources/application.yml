@@ -24,6 +24,12 @@ spring:
       redirect-uri: http://localhost:8080/login/oauth/kakao
       token-uri: https://kauth.kakao.com/oauth/token
       user-info-uri: https://kapi.kakao.com/v2/user/me
+    apple:
+      team-id: ${APPLE_TEAM_ID:}
+      key-id: ${APPLE_KEY_ID:}
+      client-id: ${APPLE_CLIENT_ID:}
+      private-key: ${APPLE_PRIVATE_KEY:}
+      issuer: https://appleid.apple.com
 
   jwt:
     secret: ${JWT_SECRET}

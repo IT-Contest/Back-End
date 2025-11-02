@@ -46,6 +46,9 @@ dependencies {
 	runtimeOnly 'io.jsonwebtoken:jjwt-impl:0.11.5' // JWT 내부 구현체 - 런타임에 필요한 실제 로직 (암호화, 서명 처리 등)
 	runtimeOnly 'io.jsonwebtoken:jjwt-jackson:0.11.5' // JWT와 JSON 매핑 처리를 위한 Jackson 지원 모듈
 
+	// apple sign-in
+	implementation 'com.nimbusds:nimbus-jose-jwt:9.37.3' // Apple JWT 검증용
+
 	// thymeleaf
 	implementation 'org.springframework.boot:spring-boot-starter-thymeleaf'
 
