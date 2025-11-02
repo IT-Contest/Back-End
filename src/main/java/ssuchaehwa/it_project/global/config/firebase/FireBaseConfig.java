@@ -15,7 +15,6 @@ import java.io.InputStream;
 @Configuration
 public class FireBaseConfig {
 
-
    @PostConstruct
    public void init() {
        try {
