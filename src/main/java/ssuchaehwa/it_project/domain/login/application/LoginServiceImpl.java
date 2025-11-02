@@ -213,20 +213,23 @@ public class LoginServiceImpl implements LoginService {
         boolean isNewUser = existingUser.isEmpty();
 
         // 2. 없으면 새로 저장
-        User user = existingUser.orElseGet(() -> userRepository.save(
-                User.builder()
-                        .socialId(deviceId)
-                        .provider(SocialProvider.GUEST)
-                        .nickname("게스트_" + deviceId.substring(0, 5))
-                        .level(0)
-                        .exp(0)
-                        .gold(0)
-                        .diamond(0)
-                        .profileImageUrl(null)
-                        .onboardingCompleted(false)
-                        .inviteCode(UUID.randomUUID().toString().substring(0, 8))
-                        .build()
-        ));
+        User user = existingUser.orElseGet(() -> {
+            String nickname = generateUniqueGuestNickname(deviceId);
+            return userRepository.save(
+                    User.builder()
+                            .socialId(deviceId)
+                            .provider(SocialProvider.GUEST)
+                            .nickname(nickname)
+                            .level(0)
+                            .exp(0)
+                            .gold(0)
+                            .diamond(0)
+                            .profileImageUrl(null)
+                            .onboardingCompleted(false)
+                            .inviteCode(UUID.randomUUID().toString().substring(0, 8))
+                            .build()
+            );
+        });
 
         // 3. 토큰 발급
         String accessToken = jwtUtil.generateAccessToken(String.valueOf(user.getId()));
@@ -446,7 +449,7 @@ public class LoginServiceImpl implements LoginService {
         // 5. JWT 토큰 발급
         String jwtAccessToken = jwtUtil.generateAccessToken(String.valueOf(user.getId()));
         String jwtRefreshToken = jwtUtil.generateRefreshToken(String.valueOf(user.getId()));
-        
+
         // Redis에 refreshToken 저장
         redisTemplate.opsForValue().set(
                 "refresh:userId:" + user.getId(),
@@ -467,4 +470,18 @@ public class LoginServiceImpl implements LoginService {
                 .build();
     }
 
+    // 게스트 닉네임 중복 검사
+    private String generateUniqueGuestNickname(String deviceId) {
+        String baseNickname = "게스트_" + deviceId.substring(0, 5);
+        String nickname = baseNickname;
+        int suffix = 1;
+
+        // nickname이 이미 존재하면 뒤에 숫자를 붙여서 유일하게 만듦
+        while (userRepository.existsByNickname(nickname)) {
+            nickname = baseNickname + "_" + suffix;
+            suffix++;
+        }
+
+        return nickname;
+    }
 }

@@ -628,28 +628,40 @@ public class QuestServiceImpl implements QuestService {
             userRepository.save(inviter);
         }
 
-        // 여기서 푸시 알림 발송
+        // 파티 초대 푸시 알림 — 사용자 설정 반영
         invitedUsers.forEach(user -> {
-            String fcmToken = user.getFcmToken(); // User 엔티티에 fcmToken 필드 있다고 가정
-            if (fcmToken != null && !fcmToken.isBlank()) {
-                Message message = Message.builder()
-                        .setToken(fcmToken)
-                        .putData("type", "PARTY_INVITE")
-                        .putData("partyId", party.getId().toString())
-                        .putData("inviter", inviter.getNickname())
-                        .putData("questTitle", party.getPartyTitle())
-                        .setNotification(Notification.builder()
-                                .setTitle("파티 초대 알림")
-                                .setBody(inviter.getNickname() + " 님이 '" + party.getPartyTitle() + "' 파티에 초대했어요!")
-                                .build())
-                        .build();
 
-                try {
-                    String response = firebaseMessaging.send(message);
-                    log.info("✅ FCM 전송 성공: {}", response);
-                } catch (Exception e) {
-                    log.error("❌ FCM 전송 실패: {}", e.getMessage(), e);
-                }
+            // 알림 설정 확인
+            if (!user.isPartyNotificationEnabled()) {
+                log.info("⚠️ [{}] 님은 파티 초대장 알림이 OFF 상태 — 푸시 전송 생략", user.getNickname());
+                return;
+            }
+
+            // FCM 토큰 유효성 확인
+            String fcmToken = user.getFcmToken();
+            if (fcmToken == null || fcmToken.isBlank()) {
+                log.warn("⚠️ [{}] 님의 FCM 토큰이 비어있음 — 푸시 전송 생략", user.getNickname());
+                return;
+            }
+
+            // 푸시 메시지 생성 및 발송
+            Message message = Message.builder()
+                    .setToken(fcmToken)
+                    .putData("type", "PARTY_INVITE")
+                    .putData("partyId", party.getId().toString())
+                    .putData("inviter", inviter.getNickname())
+                    .putData("questTitle", party.getPartyTitle())
+                    .setNotification(Notification.builder()
+                            .setTitle("파티 초대 알림")
+                            .setBody(inviter.getNickname() + " 님이 '" + party.getPartyTitle() + "' 파티에 초대했어요!")
+                            .build())
+                    .build();
+
+            try {
+                String response = firebaseMessaging.send(message);
+                log.info("✅ [{}] 님에게 FCM 전송 성공: {}", user.getNickname(), response);
+            } catch (Exception e) {
+                log.error("❌ [{}] 님에게 FCM 전송 실패: {}", user.getNickname(), e.getMessage(), e);
             }
         });
 

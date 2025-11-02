@@ -45,6 +45,9 @@ public class User extends BaseTimeEntity {
 
     private int diamond;
 
+    @Column(name = "party_notification_enabled", nullable = false)
+    private boolean partyNotificationEnabled = true;
+
     @Column(name = "onboarding_completed")
     private boolean onboardingCompleted;
 
@@ -216,5 +219,18 @@ public class User extends BaseTimeEntity {
     // 온보딩 완료 메서드
     public void completeOnboarding() {
         this.onboardingCompleted = true;
+    }
+
+    public void updatePartyNotificationSetting(boolean enabled) {
+        this.partyNotificationEnabled = enabled;
+    }
+
+    public boolean isPartyNotificationEnabled() {
+        return this.partyNotificationEnabled;
+    }
+
+    @PrePersist
+    protected void onCreate() {
+        this.partyNotificationEnabled = true;
     }
 }
