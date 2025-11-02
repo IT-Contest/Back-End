@@ -26,4 +26,6 @@ public interface UserService {
 
     // 온보딩 완료
     UserResponseDTO.OnboardingCompleteResponse completeOnboarding(Long userId);
+
+    UserResponseDTO.PartyNotificationResponse updatePartyNotification(Long userId, boolean enabled);
 }

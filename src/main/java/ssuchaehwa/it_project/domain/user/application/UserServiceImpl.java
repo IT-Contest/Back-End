@@ -165,4 +165,22 @@ public class UserServiceImpl implements UserService {
         user.updateFcmToken(token);
         userRepository.save(user);
     }
+
+    @Transactional
+    @Override
+    public UserResponseDTO.PartyNotificationResponse updatePartyNotification(Long userId, boolean enabled) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new UserException(ErrorStatus.NO_SUCH_USER));
+
+        user.updatePartyNotificationSetting(enabled); // ✅ 도메인 메서드 호출
+        userRepository.save(user);
+
+        log.info("🔔 {}님의 파티 초대장 알림 설정 변경: {}", user.getNickname(), enabled);
+
+        return UserResponseDTO.PartyNotificationResponse.builder()
+                .userId(user.getId())
+                .enabled(user.isPartyNotificationEnabled())
+                .build();
+    }
+
 }

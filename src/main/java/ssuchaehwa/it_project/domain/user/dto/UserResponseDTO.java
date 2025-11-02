@@ -31,4 +31,14 @@ public class UserResponseDTO {
         private boolean onboardingCompleted;
         private int rewardExp;
     }
+
+    @Getter
+    @Builder
+    @AllArgsConstructor
+    @NoArgsConstructor
+    public static class PartyNotificationResponse {
+        private Long userId;
+        private boolean enabled;
+    }
+
 }
