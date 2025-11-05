@@ -38,3 +38,4 @@ out/
 
 # firebase
 firebase-service-account.json
+firebase-service-account.json.backup

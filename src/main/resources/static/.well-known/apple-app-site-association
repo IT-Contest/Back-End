@@ -1,0 +1,9 @@
+{
+  "applinks": {
+    "apps": [],
+    "details": [{
+      "appID": "3S87375N5H.com.ssucheahwa.questplanner",
+      "paths": ["/invite.html", "/invite.html/*"]
+    }]
+  }
+}
