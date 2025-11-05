@@ -2,20 +2,68 @@
 <html lang="ko">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>퀘스트플래너 초대</title>
+
+    <meta property="og:type" content="website">
+    <meta property="og:title" content="퀘스트플래너 초대">
+    <meta property="og:description" content="친구가 당신을 퀘스트플래너에 초대했어요! 함께 파티 퀘스트를 도전하고 보상을 받아보세요 🎮">
+    <meta property="og:image" content="https://ssuchaehwa.duckdns.org/logo_3d.png">
+    <meta property="og:url" content="https://ssuchaehwa.duckdns.org/invite.html">
+
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="퀘스트플래너 초대">
+    <meta name="twitter:description" content="친구가 당신을 퀘스트플래너에 초대했어요! 함께 파티 퀘스트를 도전하고 보상을 받아보세요 🎮">
+    <meta name="twitter:image" content="https://ssuchaehwa.duckdns.org/logo_3d.png">
+
     <script>
+        const urlParams = new URLSearchParams(window.location.search);
+        const code = urlParams.get('code');
+
+        // User-Agent로 iOS/Android 구분
+        const userAgent = navigator.userAgent || navigator.vendor || window.opera;
+
+        // iOS 감지 (더 강력한 로직)
+        const isIOS = (/iPad|iPhone|iPod/.test(userAgent) && !window.MSStream) ||
+                      (navigator.platform && /iPad|iPhone|iPod/.test(navigator.platform)) ||
+                      (navigator.maxTouchPoints && navigator.maxTouchPoints > 1 && /Mac/.test(navigator.platform));
+
+        const isAndroid = /android/i.test(userAgent);
+
+        // 플랫폼별 스토어 URL
+        const APP_STORE_URL = 'https://apps.apple.com/app/idXXXXXXXX'; // ⚠️ 심사 통과 후 실제 App Store ID로 변경 필요
+        const PLAY_STORE_URL = 'https://play.google.com/store/apps/details?id=com.ssucheahwa.questplanner';
+
         window.onload = function() {
-            const code = new URLSearchParams(window.location.search).get("code");
-
             // 1) 앱 열기 시도
-            window.location.href = "questplanner://invite?code=" + code;
+            if (code) {
+                // iOS는 iframe 방식으로 시도 (더 안정적)
+                if (isIOS) {
+                    const iframe = document.createElement('iframe');
+                    iframe.style.display = 'none';
+                    iframe.src = "questplanner://invite?code=" + code;
+                    document.body.appendChild(iframe);
+                    setTimeout(() => document.body.removeChild(iframe), 100);
+                } else {
+                    // Android는 기존 방식
+                    window.location.href = "questplanner://invite?code=" + code;
+                }
+            }
 
-            // 2) fallback 타이머 시작
+            // 2) fallback 타이머 시작 (플랫폼별 스토어로 분기)
             const fallback = setTimeout(() => {
-                window.location.href = "https://play.google.com/store/apps/details?id=com.ssucheahwa.questplanner";
-            }, 2000);
+                // 앱이 설치되지 않았을 경우, 각 OS의 스토어로 이동
+                if (isIOS) {
+                    window.location.href = APP_STORE_URL;
+                } else if (isAndroid) {
+                    window.location.href = PLAY_STORE_URL;
+                } else {
+                    // 혹시 모를 예외 처리 (PC 등)
+                    window.location.href = PLAY_STORE_URL;
+                }
+            }, 3000); // 3초 정도로 시간을 조절하는 것이 일반적입니다.
 
-            // 3) 👉 앱이 정상적으로 열리면 브라우저가 백그라운드로 가므로 fallback 취소
+            // 3) 앱이 정상적으로 열리면 브라우저가 백그라운드로 가므로 fallback 취소
             document.addEventListener("visibilitychange", () => {
                 if (document.hidden) {
                     clearTimeout(fallback);
@@ -23,8 +71,48 @@
             });
         };
     </script>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            margin: 0;
+            padding: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            text-align: center;
+            box-sizing: border-box; /* 패딩이 화면 크기를 넘지 않도록 */
+        }
+        h1 { font-size: 24px; margin-bottom: 20px; }
+        p { font-size: 16px; margin: 10px 0; }
+        .code {
+            background: rgba(255,255,255,0.2);
+            padding: 10px 20px;
+            border-radius: 8px;
+            margin: 20px 0;
+            font-weight: bold;
+            word-break: break-all; /* 코드가 길 경우 줄바꿈 */
+        }
+    </style>
 </head>
 <body>
-<p>퀘스트플래너 앱을 여는 중입니다...</p>
+    <h1>🎮 퀘스트플래너로 초대되었습니다!</h1>
+    <p id="platform-info">앱을 여는 중입니다...</p>
+    <p class="code" id="invite-code">초대 코드를 확인 중입니다.</p>
+    <p style="font-size: 14px; opacity: 0.8;">
+        앱이 설치되어 있지 않다면<br>스토어로 자동 이동합니다.
+    </p>
+
+    <script>
+        // 초대 코드가 있으면 화면에 표시
+        if (code) {
+            document.getElementById('invite-code').textContent = '초대 코드: ' + code;
+        } else {
+            document.getElementById('invite-code').textContent = '유효하지 않은 초대입니다.';
+        }
+    </script>
 </body>
 </html>
