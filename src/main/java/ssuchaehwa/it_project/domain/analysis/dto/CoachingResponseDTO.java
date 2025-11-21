@@ -25,7 +25,7 @@ public class CoachingResponseDTO {
     
     // 분석 가능 여부 (일일 제한 확인)
     private boolean canAnalyze;
-    
-    // 오류 메시지 (분석 불가능한 경우)
-    private String errorMessage;
+
+    // 메시지 (분석 불가능한 경우 오류 메시지)
+    private String message;
 }

@@ -42,7 +42,18 @@ public class CoachingServiceImpl implements CoachingService {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new CoachingException(ErrorStatus.NO_SUCH_USER));
 
+        // 하루 제한 체크 - 오늘 이미 분석한 기록이 있는지 확인
+        LocalDate today = LocalDate.now();
+        boolean alreadyAnalyzedToday = coachingRecordRepository.existsByUserIdAndAnalysisDate(userId, today);
 
+        if (alreadyAnalyzedToday) {
+            log.info("하루 분석 제한 도달 - 사용자 ID: {}, 날짜: {}", userId, today);
+            return CoachingResponseDTO.builder()
+                    .canAnalyze(false)
+                    .message("daily_limit_reached")
+                    .analysisDate(today.format(DateTimeFormatter.ofPattern("yyyy.MM.dd")))
+                    .build();
+        }
 
         // 분석 데이터 수집
         AnalysisDataDTO analysisData = collectAnalysisData(userId, request.getAnalysisType(), request.getQuestOrPomodoro());
@@ -55,7 +66,7 @@ public class CoachingServiceImpl implements CoachingService {
                 .coachingContent(coachingContent)
                 .analysisType(request.getAnalysisType())
                 .questOrPomodoro(request.getQuestOrPomodoro())
-                .analysisDate(LocalDate.now().format(DateTimeFormatter.ofPattern("yyyy.MM.dd")))
+                .analysisDate(today.format(DateTimeFormatter.ofPattern("yyyy.MM.dd")))
                 .build();
     }
 
